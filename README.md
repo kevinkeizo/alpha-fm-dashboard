@@ -33,11 +33,18 @@ Dashboard em tempo real (seguidores, alcance, publicações, engajamento) conect
 ## Limitações atuais (importante pro time de dev)
 
 - **Token fica no navegador**: qualquer pessoa com acesso ao DevTools daquele navegador consegue ver o token. Funciona bem pra uso interno, mas não é o ideal pra algo 100% público.
-- **Histórico é local por navegador**: o gráfico de evolução de seguidores usa `localStorage`, então só existe naquele navegador/computador específico. Trocar de máquina ou limpar dados de navegação reseta o histórico.
+- **Histórico é local por navegador**: o gráfico de evolução de seguidores usa `localStorage`, então só existe naquele navegador/computador específico. Trocar de máquina ou limpar dados de navegação reseta o histórico. Guarda até 800 dias (~2 anos e 2 meses), o suficiente pra comparar ano contra ano. **Exporte em CSV de vez em quando** — é o único backup que existe.
+- **O histórico tem buracos**: o registro do dia só é gravado quando a página está aberta. Telão desligado no fim de semana = dias faltando, e não dá pra preencher depois (a Meta não devolve contagem de seguidores retroativa). Pelo mesmo motivo, o valor salvo de cada dia é o da última vez que a página carregou naquele dia, não de um horário fixo.
 - **Sem automação real**: os dados só atualizam enquanto a aba está aberta (o Modo TV atualiza sozinho a cada 5 min, inclusive na virada do dia). Se quiser que funcione mesmo com tudo desligado, precisa de:
   - Um backend simples que guarda o token em variável de ambiente e faz as chamadas à API.
   - Um job agendado (ex: GitHub Actions com cron, ou qualquer scheduler) que roda 1x por dia e grava o snapshot num banco de verdade (Postgres, Supabase, Firebase etc).
   - O front-end passa a ler desse banco/endpoint em vez de chamar a Meta diretamente.
+
+## Exportar pro Excel
+
+Botão de download no cabeçalho (só aparece quando já existe histórico): baixa um `.csv` com uma linha por dia — data, seguidores, alcance, publicações, interações e taxa de engajamento.
+
+O arquivo sai com separador `;` e vírgula decimal, que é o padrão brasileiro — abre direto no Excel com duplo clique, sem assistente de importação. No Google Sheets, use `Arquivo → Importar` e escolha ponto-e-vírgula como separador.
 
 ## Modo TV
 
