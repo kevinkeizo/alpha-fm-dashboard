@@ -294,6 +294,28 @@ async function getHistory(){
 async function saveHistory(arr){
   await storageApi.set('ig_history', JSON.stringify(arr));
 }
+// Lê o histórico gravado pelo GitHub Action (mesma origem do GitHub Pages).
+// Falha silenciosa em file:// local ou se o arquivo ainda não existir — o
+// dashboard continua funcionando só com o localStorage nesses casos.
+async function fetchRemoteHistory(){
+  try{
+    const res = await fetch('./history.json', { cache: 'no-store' });
+    if(!res.ok) return [];
+    const arr = await res.json();
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){ return []; }
+}
+// O Action roda 1x por dia e preenche os buracos de dias com o telão desligado;
+// o navegador atualiza ao vivo o dia de hoje. Por isso hoje vem do local (mais
+// fresco) e os dias passados vêm do remoto (existem mesmo sem o telão ligado).
+function mergeHistories(remote, local){
+  const byDate = new Map();
+  remote.forEach(h => byDate.set(h.date, h));
+  const key = todayKey();
+  local.forEach(h => { if(h.date === key || !byDate.has(h.date)) byDate.set(h.date, h); });
+  const merged = [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date));
+  return merged.length > HISTORY_LIMIT ? merged.slice(-HISTORY_LIMIT) : merged;
+}
 // Exporta em ponto-e-vírgula com vírgula decimal e BOM: é o que o Excel
 // em pt-BR abre direto, sem passar pelo assistente de importação.
 function exportHistoryCsv(history){
@@ -701,7 +723,10 @@ async function loadDashboard(forceLoading){
   if(!config){ renderSetup(); return; }
 
   try{
-    const data = await fetchAllData(config.token, config.igUserId);
+    const [data, remoteHistory] = await Promise.all([
+      fetchAllData(config.token, config.igUserId),
+      fetchRemoteHistory()
+    ]);
     let history = await getHistory();
     const key = todayKey();
     const entry = { date: key, followers: data.profile.followers_count, reach: data.reach, posts: data.postsToday, interactions: data.totalInteractions, engagementRate: data.engagementRate };
@@ -709,12 +734,12 @@ async function loadDashboard(forceLoading){
     if(idx >= 0) history[idx] = entry; else history.push(entry);
     if(history.length > HISTORY_LIMIT) history = history.slice(-HISTORY_LIMIT);
     await saveHistory(history);
-    renderDashboard(data, history);
+    renderDashboard(data, mergeHistories(remoteHistory, history));
     startAutoRefresh();
   }catch(e){
-    const history = await getHistory();
+    const [history, remoteHistory] = await Promise.all([getHistory(), fetchRemoteHistory()]);
     const fallback = { profile: { followers_count:null, media_count:null, username:'' }, reach:null, postsToday:null };
-    renderDashboard(fallback, history, 'Erro ao buscar dados: ' + e.message + '. Se o token expirou, troque as credenciais abaixo.');
+    renderDashboard(fallback, mergeHistories(remoteHistory, history), 'Erro ao buscar dados: ' + e.message + '. Se o token expirou, troque as credenciais abaixo.');
   }
 }
 
