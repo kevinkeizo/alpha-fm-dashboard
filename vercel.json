@@ -5,9 +5,5 @@
       "memory": 512,
       "maxDuration": 30
     }
-  },
-  "env": [
-    "IG_TOKEN",
-    "IG_USER_ID"
-  ]
+  }
 }
