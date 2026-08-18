@@ -49,3 +49,29 @@ O arquivo sai com separador `;` e vírgula decimal, que é o padrão brasileiro 
 ## Modo TV
 
 Botão de monitor no cabeçalho: entra em tela cheia, aumenta as fontes, esconde os controles desnecessários e liga a atualização automática a cada 5 minutos.
+
+## Segurança
+
+### ✅ Implementado
+
+- **Tokens em Secrets**: `IG_TOKEN` armazenado como GitHub Secret (não em arquivo)
+- **Sem dados sensíveis no repo**: Nenhum token, credencial ou chave privada commitada
+- **Backend serverless**: API roda em Vercel com env vars isoladas
+- **Histórico público**: `history.json` contém apenas dados públicos (não há tokens/senhas)
+- **Automação segura**: GitHub Action puxa token do Secrets em tempo de execução
+
+### ⚠️ Atenção
+
+- **Token de longa duração (~60 dias)**: Meta expira periodicamente. Renovar quando vencer.
+- **Rotação recomendada**: A cada 3 meses, gerar novo token e atualizar `IG_TOKEN` nos Secrets da Vercel
+- **Acesso ao repo**: Qualquer pessoa com push access consegue ler o `IG_TOKEN` nos Secrets — manter acesso restrito
+- **Rate limiting**: Meta limita ~200 requisições/dia por app. O dashboard tem cache 5 min pra evitar throttling
+
+### Como renovar o token
+
+1. Gera novo token em [developers.facebook.com](https://developers.facebook.com) → Explorador da Graph API
+2. No GitHub: **Settings → Secrets and variables → Actions**
+3. Edita `IG_TOKEN` com o novo valor
+4. Na Vercel: **Settings → Environment Variables**, atualiza `IG_TOKEN`
+
+Se o token expirar, o dashboard mostrará "Erro: Aplicação não atualizada" nos cards.

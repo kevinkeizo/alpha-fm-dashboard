@@ -1,0 +1,35 @@
+# Environment variables (NUNCA commitar)
+.env
+.env.local
+.env.*.local
+
+# Credentials e tokens
+credentials.json
+token.json
+secrets.json
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Logs
+logs/
+*.log
