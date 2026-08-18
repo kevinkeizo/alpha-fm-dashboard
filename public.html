@@ -155,6 +155,11 @@
     color: var(--danger); font-size:12.5px; padding:12px 14px; border-radius:10px;
     margin-bottom:20px; font-family: var(--font-mono); line-height:1.5;
   }
+  .warning-banner{
+    background: rgba(255,180,0,.06); border:1px solid rgba(255,180,0,.25);
+    color: #b8860b; font-size:12.5px; padding:12px 14px; border-radius:10px;
+    margin-bottom:20px; font-family: var(--font-mono); line-height:1.5; font-weight:600;
+  }
   .neutral-banner{
     background: var(--surface-2); border:1px solid var(--border);
     color: var(--text-2); font-size:12.5px; padding:12px 14px; border-radius:10px;
@@ -279,6 +284,7 @@ const claudeStorageAvailable = (typeof window.storage !== 'undefined' && window.
 let persistenceMode = 'memory';
 const memoryFallback = {};
 let storageApi;
+let tokenStatus = null;
 
 if(claudeStorageAvailable){
   persistenceMode = 'claude';
@@ -548,7 +554,8 @@ function renderSetup(errorMsg){
   `;
 }
 
-function renderDashboard(data, history, errorMsg){
+function renderDashboard(data, history, errorMsg, tknStatus){
+  tokenStatus = tknStatus;
   const { profile, reach, postsToday, accountsEngaged, totalInteractions, engagementRate, metricErrors } = data;
   const sortedHistory = [...history].sort((a,b) => a.date.localeCompare(b.date));
   const prevEntry = sortedHistory.filter(h => h.date !== todayKey()).slice(-1)[0];
@@ -591,6 +598,8 @@ function renderDashboard(data, history, errorMsg){
     </div>
 
     ${errorMsg ? `<div class="error-banner">${errorMsg}</div>` : ''}
+    ${tokenStatus && tokenStatus.isWarning ? `<div class="warning-banner">⚠️ Token do Instagram expira em ${tokenStatus.daysUntilExpiry} dias (${tokenStatus.expiryDate}). Renova em developers.facebook.com.</div>` : ''}
+    ${tokenStatus && tokenStatus.isExpired ? `<div class="error-banner">❌ Token do Instagram expirou! Renova urgente em developers.facebook.com → Explorador da Graph API.</div>` : ''}
     ${persistenceMode === 'memory' ? '<div class="neutral-banner">Este navegador bloqueou o armazenamento local, então o histórico não fica salvo entre aberturas.</div>' : ''}
     ${metricErrors && metricErrors.length ? '<div class="error-banner">Algumas métricas não carregaram: ' + metricErrors.join(' · ') + '</div>' : ''}
 
@@ -707,12 +716,12 @@ async function loadDashboard(forceLoading){
       fetchAllData(null, null), // modo público: ignora params
       fetchRemoteHistory()
     ]);
-    renderDashboard(data, remoteHistory);
+    renderDashboard(data, remoteHistory, null, data.tokenStatus);
     startAutoRefresh();
   }catch(e){
     const remoteHistory = await fetchRemoteHistory();
     const fallback = { profile: { followers_count:null, media_count:null, username:'' }, reach:null, postsToday:null };
-    renderDashboard(fallback, remoteHistory, 'Erro ao buscar dados ao vivo: ' + e.message + '.');
+    renderDashboard(fallback, remoteHistory, 'Erro ao buscar dados ao vivo: ' + e.message + '.', null);
   }
 }
 

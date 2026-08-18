@@ -113,6 +113,20 @@ module.exports = async (req, res) => {
 
   try {
     const data = await fetchAllData();
+
+    // Calcula dias até expiração (token dura ~60 dias)
+    // Renovado em 2026-08-18, expira em 2026-10-17
+    const expiryDate = new Date('2026-10-17');
+    const today = new Date();
+    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+
+    data.tokenStatus = {
+      expiryDate: expiryDate.toISOString().split('T')[0],
+      daysUntilExpiry: daysUntilExpiry,
+      isExpired: daysUntilExpiry <= 0,
+      isWarning: daysUntilExpiry > 0 && daysUntilExpiry <= 10
+    };
+
     res.status(200).json(data);
   } catch (e) {
     console.error('API error:', e.message);
