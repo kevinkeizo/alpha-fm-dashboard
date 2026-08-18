@@ -397,39 +397,30 @@ function exportHistoryCsv(history){
   const ws = XLSX.utils.aoa_to_sheet(data);
 
   ws['!cols'] = [
-    {wch: 12},
-    {wch: 15},
-    {wch: 12},
-    {wch: 12},
-    {wch: 12},
-    {wch: 14},
-    {wch: 14},
-    {wch: 14}
+    {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 14}, {wch: 14}, {wch: 14}
   ];
 
   const headerStyle = {
-    font: {bold: true, color: {rgb: 'FFFFFF'}, size: 12},
-    fill: {fgColor: {rgb: '3D5BFE'}},
+    font: {bold: true, color: {rgb: 'FFFFFF'}},
+    fill: {fgColor: {rgb: '3D5BFE'}, patternType: 'solid'},
     alignment: {horizontal: 'center', vertical: 'center'},
-    border: {top: {style: 'thin'}, bottom: {style: 'thin'}, left: {style: 'thin'}, right: {style: 'thin'}}
+    numFmt: 'General'
   };
 
   for(let i = 0; i < header.length; i++){
-    const cell = ws[XLSX.utils.encode_cell({r: 0, c: i})];
-    if(cell) cell.s = headerStyle;
+    const cellRef = XLSX.utils.encode_cell({r: 0, c: i});
+    if(ws[cellRef]) ws[cellRef].s = headerStyle;
   }
 
   for(let i = 1; i < data.length; i++){
     for(let j = 0; j < header.length; j++){
       const cellRef = XLSX.utils.encode_cell({r: i, c: j});
-      const cell = ws[cellRef];
-      if(cell){
-        cell.s = {
-          alignment: {horizontal: j === 0 ? 'left' : 'right', vertical: 'center'},
-          border: {top: {style: 'thin', color: {rgb: 'E0E3F0'}}, bottom: {style: 'thin', color: {rgb: 'E0E3F0'}}},
-          fill: i % 2 === 0 ? {fgColor: {rgb: 'F3F4FA'}} : {fgColor: {rgb: 'FFFFFF'}}
+      if(ws[cellRef]){
+        ws[cellRef].s = {
+          alignment: {horizontal: j === 0 ? 'left' : 'right'},
+          fill: {fgColor: {rgb: i % 2 === 0 ? 'F3F4FA' : 'FFFFFF'}, patternType: 'solid'},
+          numFmt: j > 1 ? '0.00' : 'General'
         };
-        if(j > 1) cell.t = 'n';
       }
     }
   }
