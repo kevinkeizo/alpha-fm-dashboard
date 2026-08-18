@@ -510,8 +510,8 @@ function animateStatValues(){
 }
 
 async function fetchGraph(path, params, token){
-  // Modo público: ignora path/params/token e chama a API proxy na mesma origem
-  const res = await fetch('/api/data');
+  const API_URL = 'https://alpha-fm-api-git-main-alpha-fm1.vercel.app/api/data';
+  const res = await fetch(API_URL);
   if(!res.ok) throw new Error('Erro ao conectar com a API (' + res.status + ')');
   const json = await res.json();
   if(json.error) throw new Error(json.error);
