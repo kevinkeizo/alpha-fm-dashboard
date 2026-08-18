@@ -8,18 +8,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: linear-gradient(135deg, #0F1117 0%, #1A1E2E 100%);
-    --surface: #1C2333;
-    --surface-2: #252D3D;
-    --border: #3D4556;
-    --text-1: #F0F4FF;
-    --text-2: #A8AFCC;
-    --text-3: #6B7281;
-    --blue: #00D4FF;
-    --blue-light: #6DD5ED;
-    --success: #00FF88;
-    --danger: #FF6B6B;
-    --accent: #FFB400;
+    --bg: #F8F9FB;
+    --surface: #FFFFFF;
+    --surface-2: #F3F4FA;
+    --border: #E0E3F0;
+    --text-1: #0F1419;
+    --text-2: #5C5F73;
+    --text-3: #8B8D9A;
+    --blue: #3D5BFE;
+    --blue-light: #5470FF;
+    --success: #22C55E;
+    --danger: #EF4444;
+    --accent: #FF6B35;
     --font-display: 'Plus Jakarta Sans', sans-serif;
     --font-mono: 'JetBrains Mono', monospace;
   }
@@ -35,12 +35,12 @@
   }
   body::before{
     content:''; position: fixed; top:-20%; right:-5%; width:800px; height:800px;
-    background: radial-gradient(circle, rgba(0,212,255,.15), rgba(0,212,255,0) 70%);
+    background: radial-gradient(circle, rgba(61,91,254,.08), rgba(61,91,254,0) 70%);
     pointer-events: none; z-index: 0;
   }
   body::after{
     content:''; position: fixed; bottom:-20%; left:-5%; width:600px; height:600px;
-    background: radial-gradient(circle, rgba(255,180,0,.1), rgba(255,180,0,0) 70%);
+    background: radial-gradient(circle, rgba(255,107,53,.05), rgba(255,107,53,0) 70%);
     pointer-events: none; z-index: 0;
   }
   .wrap{max-width: 880px; margin: 0 auto; position: relative; z-index: 1;}
@@ -128,12 +128,12 @@
 
   /* Error banner */
   .error-banner{
-    background: rgba(255,107,107,.08); border:1px solid rgba(255,107,107,.3);
+    background: rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.2);
     color: var(--danger); font-size:12.5px; padding:12px 14px; border-radius:10px;
     margin-bottom:20px; font-family: var(--font-mono); line-height:1.5;
   }
   .neutral-banner{
-    background: var(--surface-2); border:1px solid rgba(0,212,255,.2);
+    background: var(--surface-2); border:1px solid var(--border);
     color: var(--text-2); font-size:12.5px; padding:12px 14px; border-radius:10px;
     margin-bottom:20px; font-family: var(--font-mono); line-height:1.5;
   }
@@ -154,22 +154,22 @@
   /* Icon badges */
   .icon-badge{
     width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center;
-    background: rgba(0,212,255,.15); color: var(--blue); flex-shrink:0;
+    background: rgba(61,91,254,.1); color: var(--blue); flex-shrink:0;
   }
   .icon-badge svg{ width:16px; height:16px; }
   .stat-top{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
 
   /* Hero card (Seguidores) */
   .hero-card{
-    background: linear-gradient(135deg, rgba(0,212,255,.08) 0%, rgba(109,213,237,.04) 100%);
-    border:1px solid rgba(0,212,255,.3); border-radius:20px; padding:26px;
-    box-shadow: 0 25px 50px rgba(0,212,255,.08), 0 0 1px rgba(0,212,255,.2);
+    background: linear-gradient(135deg, rgba(61,91,254,.06) 0%, rgba(84,112,255,.03) 100%);
+    border:1px solid rgba(61,91,254,.15); border-radius:20px; padding:26px;
+    box-shadow: 0 2px 8px rgba(61,91,254,.08);
     margin-bottom:14px;
   }
   .hero-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap; }
   .hero-value{
     font-size:44px; font-weight:800; font-family: var(--font-mono);
-    background: linear-gradient(135deg, #00D4FF 0%, #6DD5ED 100%);
+    background: linear-gradient(135deg, #3D5BFE 0%, #5470FF 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -186,10 +186,8 @@
   @media (max-width:900px){ .secondary-grid{grid-template-columns: repeat(2, 1fr);} }
   @media (max-width:520px){ .secondary-grid{grid-template-columns: 1fr;} }
   .stat-card{
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(30, 41, 59, 0.5) 100%);
-    border:1px solid var(--border); border-radius:16px; padding:18px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.2), 0 0 1px rgba(0,212,255,.1);
-    backdrop-filter: blur(10px);
+    background: var(--surface); border:1px solid var(--border); border-radius:16px; padding:18px;
+    box-shadow: 0 1px 3px rgba(15,20,25,.08);
   }
   .stat-label{font-size:11.5px; color:var(--text-2); font-weight:600; text-transform:uppercase; letter-spacing:.5px;}
   .stat-value{
@@ -206,13 +204,20 @@
 
   /* Charts */
   .chart-card{
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(30, 41, 59, 0.5) 100%);
-    border:1px solid rgba(0,212,255,.2); border-radius:14px;
+    background: var(--surface); border:1px solid var(--border); border-radius:14px;
     padding:20px; margin-bottom:14px;
-    box-shadow: 0 8px 32px rgba(0,0,0,.2), 0 0 1px rgba(0,212,255,.1);
-    backdrop-filter: blur(10px);
+    box-shadow: 0 1px 3px rgba(15,20,25,.08);
   }
-  .chart-card h3{font-size:13px; color: var(--text-2); font-weight:700; margin-bottom:16px; text-transform:uppercase; letter-spacing:.4px;}
+  .chart-header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:16px; flex-wrap:wrap;}
+  .chart-card h3{font-size:13px; color: var(--text-2); font-weight:700; text-transform:uppercase; letter-spacing:.4px;}
+  .chart-filters{display:flex; gap:8px;}
+  .filter-btn{
+    padding:6px 12px; border-radius:8px; border:1px solid var(--border);
+    background: var(--surface-2); color: var(--text-2); font-size:12px; font-weight:600;
+    cursor:pointer; transition: all .15s ease;
+  }
+  .filter-btn:hover{border-color: var(--blue); color: var(--blue);}
+  .filter-btn.active{background: var(--blue); color: #fff; border-color: var(--blue);}
   .chart-holder{height:220px;}
   .empty-hint{font-size:12px; color: var(--text-3); font-family: var(--font-mono); text-align:center; padding:30px 0;}
 
@@ -629,7 +634,14 @@ function renderDashboard(data, history, errorMsg){
     </div>
 
     <div class="chart-card">
-      <h3>Evolução de seguidores</h3>
+      <div class="chart-header">
+        <h3>Evolução de seguidores</h3>
+        <div class="chart-filters">
+          <button class="filter-btn active" data-days="all">Todos</button>
+          <button class="filter-btn" data-days="30">30 dias</button>
+          <button class="filter-btn" data-days="7">7 dias</button>
+        </div>
+      </div>
       <div class="chart-holder">
         ${followersChartMarkup ? followersChartMarkup : '<div class="empty-hint">Abra o dashboard em outros dias pra começar a ver a evolução aqui.</div>'}
       </div>
