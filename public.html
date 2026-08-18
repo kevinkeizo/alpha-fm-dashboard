@@ -372,10 +372,22 @@ function mergeHistories(remote, local){
 function exportHistoryCsv(history){
   if(!history || !history.length) return;
   const cell = v => (v === null || v === undefined) ? '' : String(v).replace('.', ',');
-  const header = ['data','seguidores','alcance','publicacoes','interacoes','engajamento_pct'];
-  const rows = history.map(h => [
-    h.date, cell(h.followers), cell(h.reach), cell(h.posts), cell(h.interactions), cell(h.engagementRate)
-  ].join(';'));
+  const header = ['data','seguidores','ganho_seguidores','variacao_pct','alcance','publicacoes','interacoes','engajamento_pct'];
+  const rows = history.map((h, i) => {
+    const prev = i > 0 ? history[i-1] : null;
+    const ganho = (h.followers !== null && prev && prev.followers !== null) ? h.followers - prev.followers : null;
+    const variacaoPct = ganho !== null && prev && prev.followers ? (ganho / prev.followers * 100) : null;
+    return [
+      h.date,
+      cell(h.followers),
+      cell(ganho),
+      cell(variacaoPct),
+      cell(h.reach),
+      cell(h.posts),
+      cell(h.interactions),
+      cell(h.engagementRate)
+    ].join(';');
+  });
   const csv = '﻿' + header.join(';') + '\r\n' + rows.join('\r\n') + '\r\n';
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
   const a = document.createElement('a');
