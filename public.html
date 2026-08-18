@@ -33,17 +33,40 @@
     position: relative;
     overflow-x: hidden;
   }
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(50px, -50px); }
+    66% { transform: translate(-30px, 40px); }
+  }
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(-60px, 30px); }
+    66% { transform: translate(40px, -40px); }
+  }
+  @keyframes float3 {
+    0%, 100% { transform: translate(0, 0); }
+    33% { transform: translate(40px, 60px); }
+    66% { transform: translate(-50px, -30px); }
+  }
   body::before{
     content:''; position: fixed; top:-20%; right:-5%; width:800px; height:800px;
     background: radial-gradient(circle, rgba(61,91,254,.08), rgba(61,91,254,0) 70%);
     pointer-events: none; z-index: 0;
+    animation: float1 20s ease-in-out infinite;
   }
   body::after{
     content:''; position: fixed; bottom:-20%; left:-5%; width:600px; height:600px;
     background: radial-gradient(circle, rgba(255,107,53,.05), rgba(255,107,53,0) 70%);
     pointer-events: none; z-index: 0;
+    animation: float2 25s ease-in-out infinite;
   }
   .wrap{max-width: 880px; margin: 0 auto; position: relative; z-index: 1;}
+  .wrap::before{
+    content:''; position: fixed; top:50%; left:10%; width:500px; height:500px;
+    background: radial-gradient(circle, rgba(34,197,94,.04), rgba(34,197,94,0) 70%);
+    pointer-events: none; z-index: 0;
+    animation: float3 30s ease-in-out infinite;
+  }
 
   /* Header */
   .header{
