@@ -1,9 +1,0 @@
-{
-  "buildCommand": "",
-  "functions": {
-    "api/data.js": {
-      "memory": 512,
-      "maxDuration": 30
-    }
-  }
-}
