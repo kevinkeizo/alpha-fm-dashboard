@@ -1,5 +1,5 @@
 {
-  "outputDirectory": ".",
+  "buildCommand": "",
   "functions": {
     "api/data.js": {
       "memory": 512,
