@@ -1,5 +1,4 @@
 {
-  "buildCommand": "echo 'No build needed'",
   "functions": {
     "api/data.js": {
       "memory": 512,
