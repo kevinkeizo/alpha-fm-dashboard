@@ -405,27 +405,16 @@ function exportHistoryCsv(history){
       {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 14}, {wch: 14}, {wch: 14}
     ];
 
-    const headerStyle = {
-      font: {bold: true, color: {rgb: 'FFFFFF'}},
-      fill: {fgColor: {rgb: '3D5BFE'}, patternType: 'solid'},
-      alignment: {horizontal: 'center', vertical: 'center'}
-    };
+    ws['!rows'] = [{hpx: 25}];
 
     for(let i = 0; i < header.length; i++){
       const cellRef = XLSX.utils.encode_cell({r: 0, c: i});
-      if(ws[cellRef]) ws[cellRef].s = headerStyle;
-    }
-
-    for(let i = 1; i < data.length; i++){
-      for(let j = 0; j < header.length; j++){
-        const cellRef = XLSX.utils.encode_cell({r: i, c: j});
-        if(ws[cellRef]){
-          ws[cellRef].s = {
-            alignment: {horizontal: j === 0 ? 'left' : 'right'},
-            fill: {fgColor: {rgb: i % 2 === 0 ? 'F3F4FA' : 'FFFFFF'}, patternType: 'solid'}
-          };
-        }
-      }
+      if(!ws[cellRef]) ws[cellRef] = {};
+      ws[cellRef].s = {
+        font: {bold: true, color: {theme: 'FFFFFF'}},
+        fill: {fgColor: {rgb: 'FF3D5BFE'}, patternType: 'solid'},
+        alignment: {horizontal: 'center', vertical: 'center', wrapText: true}
+      };
     }
 
     XLSX.utils.book_append_sheet(wb, ws, 'Instagram');
