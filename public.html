@@ -405,16 +405,10 @@ function exportHistoryCsv(history){
       {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 14}, {wch: 14}, {wch: 14}
     ];
 
-    ws['!rows'] = [{hpx: 25}];
-
     for(let i = 0; i < header.length; i++){
       const cellRef = XLSX.utils.encode_cell({r: 0, c: i});
       if(!ws[cellRef]) ws[cellRef] = {};
-      ws[cellRef].s = {
-        font: {bold: true, color: {theme: 'FFFFFF'}},
-        fill: {fgColor: {rgb: 'FF3D5BFE'}, patternType: 'solid'},
-        alignment: {horizontal: 'center', vertical: 'center', wrapText: true}
-      };
+      ws[cellRef].s = {font: {bold: true}, alignment: {horizontal: 'center'}};
     }
 
     XLSX.utils.book_append_sheet(wb, ws, 'Instagram');
