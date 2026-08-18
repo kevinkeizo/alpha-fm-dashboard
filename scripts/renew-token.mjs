@@ -4,25 +4,38 @@ const CURRENT_TOKEN = process.env.IG_TOKEN;
 const IG_USER_ID = process.env.IG_USER_ID;
 
 if (!CLIENT_ID || !CLIENT_SECRET || !CURRENT_TOKEN || !IG_USER_ID) {
-  console.error('Faltam variáveis de ambiente: CLIENT_ID, CLIENT_SECRET, IG_TOKEN, IG_USER_ID');
+  console.error('❌ Faltam variáveis de ambiente: CLIENT_ID, CLIENT_SECRET, IG_TOKEN, IG_USER_ID');
   process.exit(1);
 }
 
 async function renewToken() {
   try {
     console.log('🔄 Iniciando renovação de token...');
+    console.log(`📧 Client ID: ${CLIENT_ID.substring(0, 5)}...`);
 
-    // Step 1: Troca token curto por token longo (se necessário)
-    // Esse endpoint renova um token já longo
-    const renewUrl = new URL('https://graph.instagram.com/refresh_access_token');
-    renewUrl.searchParams.set('grant_type', 'ig_refresh_token');
-    renewUrl.searchParams.set('access_token', CURRENT_TOKEN);
+    // Step 1: Renova o token usando o endpoint de refresh
+    const renewUrl = `https://graph.instagram.com/refresh_access_token?grant_type=ig_refresh_token&access_token=${CURRENT_TOKEN}`;
 
-    const renewRes = await fetch(renewUrl.toString());
-    const renewData = await renewRes.json();
+    console.log('📡 Chamando Instagram API...');
+    const renewRes = await fetch(renewUrl);
+    const renewText = await renewRes.text();
+
+    console.log(`Response status: ${renewRes.status}`);
+    console.log(`Response body: ${renewText.substring(0, 200)}`);
+
+    let renewData;
+    try {
+      renewData = JSON.parse(renewText);
+    } catch (e) {
+      throw new Error(`Resposta inválida da API: ${renewText.substring(0, 100)}`);
+    }
 
     if (renewData.error) {
-      throw new Error(`Erro ao renovar token: ${renewData.error.message}`);
+      throw new Error(`Erro do Instagram: ${JSON.stringify(renewData.error)}`);
+    }
+
+    if (!renewData.access_token) {
+      throw new Error(`Sem access_token na resposta: ${JSON.stringify(renewData)}`);
     }
 
     const newToken = renewData.access_token;
@@ -35,7 +48,7 @@ async function renewToken() {
     const validateData = await validateRes.json();
 
     if (validateData.error) {
-      throw new Error(`Erro ao validar token: ${validateData.error.message}`);
+      throw new Error(`Erro ao validar token: ${JSON.stringify(validateData.error)}`);
     }
 
     console.log(`✅ Token validado! IG User ID: ${validateData.id}`);
