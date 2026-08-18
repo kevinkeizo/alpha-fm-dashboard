@@ -6,6 +6,7 @@
 <title>Alpha FM · Instagram</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js"></script>
 <style>
   :root{
     --bg: #F8F9FB;
@@ -371,32 +372,70 @@ function mergeHistories(remote, local){
 // em pt-BR abre direto, sem passar pelo assistente de importação.
 function exportHistoryCsv(history){
   if(!history || !history.length) return;
-  const cell = v => (v === null || v === undefined) ? '' : String(v).replace('.', ',');
-  const header = ['data','seguidores','ganho_seguidores','variacao_pct','alcance','publicacoes','interacoes','engajamento_pct'];
-  const rows = history.map((h, i) => {
+
+  const header = ['Data', 'Seguidores', 'Ganho', 'Variação %', 'Alcance', 'Publicações', 'Interações', 'Engajamento %'];
+  const data = [header];
+
+  history.forEach((h, i) => {
     const prev = i > 0 ? history[i-1] : null;
     const ganho = (h.followers !== null && prev && prev.followers !== null) ? h.followers - prev.followers : null;
     const variacaoPct = ganho !== null && prev && prev.followers ? (ganho / prev.followers * 100) : null;
-    return [
+
+    data.push([
       h.date,
-      cell(h.followers),
-      cell(ganho),
-      cell(variacaoPct),
-      cell(h.reach),
-      cell(h.posts),
-      cell(h.interactions),
-      cell(h.engagementRate)
-    ].join(';');
+      h.followers || '',
+      ganho || '',
+      variacaoPct ? variacaoPct.toFixed(2) : '',
+      h.reach || '',
+      h.posts || '',
+      h.interactions || '',
+      h.engagementRate ? h.engagementRate.toFixed(2) : ''
+    ]);
   });
-  const csv = '﻿' + header.join(';') + '\r\n' + rows.join('\r\n') + '\r\n';
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'alpha-fm-instagram-' + todayKey() + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+
+  ws['!cols'] = [
+    {wch: 12},
+    {wch: 15},
+    {wch: 12},
+    {wch: 12},
+    {wch: 12},
+    {wch: 14},
+    {wch: 14},
+    {wch: 14}
+  ];
+
+  const headerStyle = {
+    font: {bold: true, color: {rgb: 'FFFFFF'}, size: 12},
+    fill: {fgColor: {rgb: '3D5BFE'}},
+    alignment: {horizontal: 'center', vertical: 'center'},
+    border: {top: {style: 'thin'}, bottom: {style: 'thin'}, left: {style: 'thin'}, right: {style: 'thin'}}
+  };
+
+  for(let i = 0; i < header.length; i++){
+    const cell = ws[XLSX.utils.encode_cell({r: 0, c: i})];
+    if(cell) cell.s = headerStyle;
+  }
+
+  for(let i = 1; i < data.length; i++){
+    for(let j = 0; j < header.length; j++){
+      const cellRef = XLSX.utils.encode_cell({r: i, c: j});
+      const cell = ws[cellRef];
+      if(cell){
+        cell.s = {
+          alignment: {horizontal: j === 0 ? 'left' : 'right', vertical: 'center'},
+          border: {top: {style: 'thin', color: {rgb: 'E0E3F0'}}, bottom: {style: 'thin', color: {rgb: 'E0E3F0'}}},
+          fill: i % 2 === 0 ? {fgColor: {rgb: 'F3F4FA'}} : {fgColor: {rgb: 'FFFFFF'}}
+        };
+        if(j > 1) cell.t = 'n';
+      }
+    }
+  }
+
+  XLSX.utils.book_append_sheet(wb, ws, 'Instagram');
+  XLSX.writeFile(wb, 'alpha-fm-instagram-' + todayKey() + '.xlsx');
 }
 
 function todayKey(){
