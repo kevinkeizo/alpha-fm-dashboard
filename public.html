@@ -373,60 +373,67 @@ function mergeHistories(remote, local){
 function exportHistoryCsv(history){
   if(!history || !history.length) return;
 
-  const header = ['Data', 'Seguidores', 'Ganho', 'Variação %', 'Alcance', 'Publicações', 'Interações', 'Engajamento %'];
-  const data = [header];
+  try{
+    if(typeof XLSX === 'undefined'){
+      throw new Error('XLSX não carregou');
+    }
 
-  history.forEach((h, i) => {
-    const prev = i > 0 ? history[i-1] : null;
-    const ganho = (h.followers !== null && prev && prev.followers !== null) ? h.followers - prev.followers : null;
-    const variacaoPct = ganho !== null && prev && prev.followers ? (ganho / prev.followers * 100) : null;
+    const header = ['Data', 'Seguidores', 'Ganho', 'Variação %', 'Alcance', 'Publicações', 'Interações', 'Engajamento %'];
+    const data = [header];
 
-    data.push([
-      h.date,
-      h.followers || '',
-      ganho || '',
-      variacaoPct ? variacaoPct.toFixed(2) : '',
-      h.reach || '',
-      h.posts || '',
-      h.interactions || '',
-      h.engagementRate ? h.engagementRate.toFixed(2) : ''
-    ]);
-  });
+    history.forEach((h, i) => {
+      const prev = i > 0 ? history[i-1] : null;
+      const ganho = (h.followers !== null && prev && prev.followers !== null) ? h.followers - prev.followers : null;
+      const variacaoPct = ganho !== null && prev && prev.followers ? (ganho / prev.followers * 100) : null;
 
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(data);
+      data.push([
+        h.date,
+        h.followers || '',
+        ganho || '',
+        variacaoPct ? variacaoPct.toFixed(2) : '',
+        h.reach || '',
+        h.posts || '',
+        h.interactions || '',
+        h.engagementRate ? h.engagementRate.toFixed(2) : ''
+      ]);
+    });
 
-  ws['!cols'] = [
-    {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 14}, {wch: 14}, {wch: 14}
-  ];
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(data);
 
-  const headerStyle = {
-    font: {bold: true, color: {rgb: 'FFFFFF'}},
-    fill: {fgColor: {rgb: '3D5BFE'}, patternType: 'solid'},
-    alignment: {horizontal: 'center', vertical: 'center'},
-    numFmt: 'General'
-  };
+    ws['!cols'] = [
+      {wch: 12}, {wch: 15}, {wch: 12}, {wch: 12}, {wch: 12}, {wch: 14}, {wch: 14}, {wch: 14}
+    ];
 
-  for(let i = 0; i < header.length; i++){
-    const cellRef = XLSX.utils.encode_cell({r: 0, c: i});
-    if(ws[cellRef]) ws[cellRef].s = headerStyle;
-  }
+    const headerStyle = {
+      font: {bold: true, color: {rgb: 'FFFFFF'}},
+      fill: {fgColor: {rgb: '3D5BFE'}, patternType: 'solid'},
+      alignment: {horizontal: 'center', vertical: 'center'}
+    };
 
-  for(let i = 1; i < data.length; i++){
-    for(let j = 0; j < header.length; j++){
-      const cellRef = XLSX.utils.encode_cell({r: i, c: j});
-      if(ws[cellRef]){
-        ws[cellRef].s = {
-          alignment: {horizontal: j === 0 ? 'left' : 'right'},
-          fill: {fgColor: {rgb: i % 2 === 0 ? 'F3F4FA' : 'FFFFFF'}, patternType: 'solid'},
-          numFmt: j > 1 ? '0.00' : 'General'
-        };
+    for(let i = 0; i < header.length; i++){
+      const cellRef = XLSX.utils.encode_cell({r: 0, c: i});
+      if(ws[cellRef]) ws[cellRef].s = headerStyle;
+    }
+
+    for(let i = 1; i < data.length; i++){
+      for(let j = 0; j < header.length; j++){
+        const cellRef = XLSX.utils.encode_cell({r: i, c: j});
+        if(ws[cellRef]){
+          ws[cellRef].s = {
+            alignment: {horizontal: j === 0 ? 'left' : 'right'},
+            fill: {fgColor: {rgb: i % 2 === 0 ? 'F3F4FA' : 'FFFFFF'}, patternType: 'solid'}
+          };
+        }
       }
     }
-  }
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Instagram');
-  XLSX.writeFile(wb, 'alpha-fm-instagram-' + todayKey() + '.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, 'Instagram');
+    XLSX.writeFile(wb, 'alpha-fm-instagram-' + todayKey() + '.xlsx');
+  }catch(e){
+    console.error('Erro ao exportar:', e);
+    alert('❌ Erro ao exportar: ' + e.message);
+  }
 }
 
 function todayKey(){
@@ -601,7 +608,7 @@ function renderDashboard(data, history, errorMsg, tknStatus){
   const { profile, reach, postsToday, accountsEngaged, totalInteractions, engagementRate, metricErrors } = data;
   const sortedHistory = [...history].sort((a,b) => a.date.localeCompare(b.date));
   const prevEntry = sortedHistory.filter(h => h.date !== todayKey()).slice(-1)[0];
-  const exportBtnMarkup = sortedHistory.length ? '<div class="icon-btn" id="btn-export" title="Exportar histórico (CSV)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg></div>' : '';
+  const exportBtnMarkup = sortedHistory.length ? '<div class="icon-btn" id="btn-export" title="Exportar histórico (XLSX)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg></div>' : '';
 
   const followerDates = sortedHistory.map(h => h.date);
   const followerValues = sortedHistory.map(h => h.followers).filter(v => v !== null && v !== undefined);
