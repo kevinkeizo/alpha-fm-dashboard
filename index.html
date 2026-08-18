@@ -598,6 +598,7 @@ function renderDashboard(data, history, errorMsg){
   const monthAgoEntry = findEntryDaysAgo(sortedHistory, 30);
   const weeklyPct = weekAgoEntry ? pctChange(profile.followers_count, weekAgoEntry.followers) : null;
   const monthlyPct = monthAgoEntry ? pctChange(profile.followers_count, monthAgoEntry.followers) : null;
+  const dailyGain = prevEntry && prevEntry.followers !== null && profile.followers_count !== null ? profile.followers_count - prevEntry.followers : null;
   const sparkValues = sortedHistory.slice(-14).map(h => h.followers).filter(v => v !== null && v !== undefined);
   if(profile.followers_count !== null && profile.followers_count !== undefined) sparkValues.push(profile.followers_count);
 
@@ -654,6 +655,14 @@ function renderDashboard(data, history, errorMsg){
         </div>
         <div class="stat-value js-count" data-value="${reach ?? ''}">${reach !== null ? fmtNum(reach) : '—'}</div>
         ${deltaHtml(reach, prevEntry ? prevEntry.reach : null)}
+      </div>
+      <div class="stat-card">
+        <div class="stat-top">
+          <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/></svg></div>
+          <div class="stat-label">Seguidores (ganho hoje)</div>
+        </div>
+        <div class="stat-value js-count" data-value="${dailyGain ?? ''}">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + fmtNum(dailyGain) : '—'}</div>
+        <span class="stat-delta ${dailyGain === null ? 'delta-flat' : (dailyGain > 0 ? 'delta-up' : dailyGain < 0 ? 'delta-down' : 'delta-flat')}">${dailyGain === null ? 'sem dado' : (dailyGain > 0 ? '↑' : dailyGain < 0 ? '↓' : '=')}</span>
       </div>
       <div class="stat-card">
         <div class="stat-top">
