@@ -69,21 +69,40 @@ async function main(){
 
   const engagementRate = (totalInteractions !== null && reach) ? (totalInteractions / reach * 100) : null;
 
+  console.log('=== DEBUG ===');
+  console.log('Followers:', profile.followers_count);
+  console.log('Reach:', reach);
+  console.log('Posts today:', postsToday);
+  console.log('Total interactions:', totalInteractions);
+  console.log('Engagement rate:', engagementRate);
+
   const entry = {
     date: todayKey,
     followers: profile.followers_count ?? null,
-    reach,
+    reach: reach ?? null,
     posts: postsToday,
     interactions: totalInteractions,
-    engagementRate
+    engagementRate: engagementRate
   };
 
   const fs = await import('node:fs/promises');
   const path = new URL('../history.json', import.meta.url);
   let history = [];
   try{ history = JSON.parse(await fs.readFile(path, 'utf8')); }catch(e){ history = []; }
+
+  // Valida: se algum dado crítico falha, mantém o anterior
   const idx = history.findIndex(h => h.date === entry.date);
-  if(idx >= 0) history[idx] = entry; else history.push(entry);
+  if(idx >= 0){
+    const prev = history[idx];
+    // Se followers_count veio null, usa o anterior
+    if(entry.followers === null && prev.followers !== null){
+      entry.followers = prev.followers;
+    }
+    history[idx] = entry;
+  }else{
+    history.push(entry);
+  }
+
   history.sort((a, b) => a.date.localeCompare(b.date));
   if(history.length > HISTORY_LIMIT) history = history.slice(-HISTORY_LIMIT);
   await fs.writeFile(path, JSON.stringify(history, null, 2) + '\n');
