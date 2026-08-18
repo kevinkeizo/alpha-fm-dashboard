@@ -6,5 +6,53 @@
     "posts": 28,
     "interactions": 52754,
     "engagementRate": 15.338720135377566
+  },
+  {
+    "date": "2026-08-13",
+    "followers": 963929,
+    "reach": 651706,
+    "posts": 0,
+    "interactions": null,
+    "engagementRate": null
+  },
+  {
+    "date": "2026-08-14",
+    "followers": 964893,
+    "reach": 667243,
+    "posts": 0,
+    "interactions": null,
+    "engagementRate": null
+  },
+  {
+    "date": "2026-08-15",
+    "followers": 965494,
+    "reach": 442807,
+    "posts": 0,
+    "interactions": null,
+    "engagementRate": null
+  },
+  {
+    "date": "2026-08-16",
+    "followers": 966184,
+    "reach": 579807,
+    "posts": 0,
+    "interactions": null,
+    "engagementRate": null
+  },
+  {
+    "date": "2026-08-17",
+    "followers": 966706,
+    "reach": 681012,
+    "posts": 3,
+    "interactions": null,
+    "engagementRate": null
+  },
+  {
+    "date": "2026-08-18",
+    "followers": 967369,
+    "reach": 852029,
+    "posts": 0,
+    "interactions": null,
+    "engagementRate": null
   }
 ]
