@@ -556,7 +556,7 @@ body.tv-mode .header-actions .icon-btn:not(#btn-tv) {
 <div class="wrap">
   <div class="header">
     <div class="brand">
-      <div class="brand-logo">α</div>
+      <div class="brand-logo">📻</div>
       <div class="brand-text">
         <h1>Alpha FM · Instagram</h1>
         <p id="brand-subtitle">@radiosalphafm · atualizado agora</p>
@@ -637,6 +637,16 @@ async function fetchAllData(){
   const res = await fetch(API_URL);
   if(!res.ok) throw new Error('API error: ' + res.status);
   return res.json();
+}
+
+async function fetchHistory(){
+  try {
+    const res = await fetch('https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/history.json');
+    if(!res.ok) return [];
+    return res.json();
+  } catch(e) {
+    return [];
+  }
 }
 
 function formatNum(n) {
@@ -741,7 +751,17 @@ function renderDashboard(data) {
 // Load
 async function load(){
   try{
-    const data = await fetchAllData();
+    const [data, history] = await Promise.all([fetchAllData(), fetchHistory()]);
+
+    // Calcula dailyGain comparando com dia anterior
+    if(history.length > 0) {
+      const sorted = [...history].sort((a,b) => a.date.localeCompare(b.date));
+      const yesterday = sorted[sorted.length - 1];
+      if(yesterday && yesterday.followers) {
+        data.dailyGain = (data.profile.followers_count - yesterday.followers);
+      }
+    }
+
     renderDashboard(data);
   }catch(e){
     document.getElementById('app').innerHTML = `<div class="loading" style="color:red;">Erro: ${e.message}</div>`;
