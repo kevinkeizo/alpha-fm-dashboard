@@ -592,6 +592,9 @@ body.tv-mode .header-actions .icon-btn:not(#btn-tv) {
     </div>
     <div class="header-actions">
       <span class="status-chip"><span class="live-dot"></span>ao vivo</span>
+      <div class="icon-btn" id="btn-export" title="Exportar XLSX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+      </div>
       <div class="icon-btn" id="btn-tv" title="Modo TV">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
       </div>
@@ -678,15 +681,8 @@ async function fetchHistory(){
 }
 
 async function fetchPosts(){
-  try {
-    const res = await fetch('https://graph.instagram.com/v22.0/radiosalphafm/media?fields=id,caption,media_type,media_url,permalink,like_count,comments_count&limit=9&access_token=IGQVJUVTlFQW1iNEJGZAub2lmRk9jbTRfVjFJZAVRCdUQxSWdqUkRFQzBSMWpXbEpYcGlVdTh5QWR6cThXVGJjdmVFZAxreG9ybm1KWVpkNWo2QjNieVljbmhBZAzJEVF9RNjhNVm5RX2YxMEphQQ==');
-    if(!res.ok) throw new Error('Failed to fetch posts');
-    const data = await res.json();
-    return data.data || [];
-  } catch(e) {
-    console.warn('Posts fetch failed:', e);
-    return [];
-  }
+  // Placeholder - implementar com token real depois
+  return [];
 }
 
 function formatNum(n) {
@@ -795,6 +791,46 @@ function renderDashboard(data) {
   document.getElementById('btn-refresh').addEventListener('click', () => {
     location.reload();
   });
+
+  document.getElementById('btn-export').addEventListener('click', async () => {
+    try {
+      const history = await fetchHistory();
+      if(!history.length) {
+        alert('Sem histórico pra exportar');
+        return;
+      }
+
+      const ws = XLSX.utils.json_to_sheet(history.map(h => ({
+        'Data': h.date,
+        'Seguidores': h.followers,
+        'Alcance': h.reach,
+        'Publicações': h.posts,
+        'Interações': h.interactions,
+        'Taxa Engajamento': h.engagementRate ? h.engagementRate.toFixed(2) + '%' : '-'
+      })));
+
+      ws['!cols'] = [
+        {wch: 12},
+        {wch: 12},
+        {wch: 12},
+        {wch: 12},
+        {wch: 12},
+        {wch: 18}
+      ];
+
+      Object.keys(ws).filter(k => k.startsWith('A')).forEach(k => {
+        ws[k].font = {bold: true};
+        ws[k].fill = {fgColor: {rgb: 'FF3D5BFE'}};
+        ws[k].font.color = {rgb: 'FFFFFFFF'};
+      });
+
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Analytics');
+      XLSX.writeFile(wb, `alpha-fm-analytics-${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch(e) {
+      alert('Erro ao exportar: ' + e.message);
+    }
+  });
 }
 
 // Load
@@ -823,7 +859,14 @@ function renderPosts(posts){
   if(!container) return;
 
   if(posts.length === 0) {
-    container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-3); padding: 40px 0; font-family: var(--font-mono); font-size: 12px;">Nenhuma publicação encontrada</div>';
+    container.innerHTML = `
+      <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+        <div style="color: var(--text-3); font-family: var(--font-mono); font-size: 13px; margin-bottom: 12px;">📸 Conectando com Instagram...</div>
+        <div style="color: var(--text-2); font-size: 12px; line-height: 1.6;">
+          As publicações virão em breve<br>com token de autenticação real
+        </div>
+      </div>
+    `;
     return;
   }
 
