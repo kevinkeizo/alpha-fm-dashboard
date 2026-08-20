@@ -13,12 +13,12 @@
   --primary: #3D5BFE;
   --primary-dark: #2D3F9E;
   --primary-light: #5470FF;
-  --bg: #0A0E27;
-  --surface: #141829;
-  --surface-light: #1F2845;
-  --text-1: #F0F0F5;
-  --text-2: #A0A5B8;
-  --text-3: #6B7280;
+  --bg: #F8F9FC;
+  --surface: #FFFFFF;
+  --surface-light: #F3F4FA;
+  --text-1: #0F1419;
+  --text-2: #5C5F73;
+  --text-3: #8B8D9A;
   --success: #10B981;
   --danger: #EF4444;
   --accent: #FF6B35;
@@ -35,10 +35,20 @@ html, body {
 }
 
 body {
-  background: linear-gradient(135deg, var(--bg) 0%, #0F1533 100%);
+  background: linear-gradient(135deg, var(--bg) 0%, #EFF0F7 100%);
   color: var(--text-1);
   font-family: var(--font-display);
   position: relative;
+  animation: gradientShift 15s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background: linear-gradient(135deg, var(--bg) 0%, #EFF0F7 100%);
+  }
+  50% {
+    background: linear-gradient(135deg, #F0F2FA 0%, #E8EAFC 100%);
+  }
 }
 
 #canvas-bg {
@@ -48,7 +58,13 @@ body {
   width: 100%;
   height: 100%;
   z-index: 0;
-  opacity: 0.6;
+  opacity: 0.15;
+  animation: floatBg 20s ease-in-out infinite;
+}
+
+@keyframes floatBg {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(20px); }
 }
 
 .wrap {
@@ -69,7 +85,7 @@ body {
   gap: 16px;
   border-bottom: 1px solid rgba(61, 91, 254, 0.1);
   backdrop-filter: blur(10px);
-  background: rgba(20, 24, 41, 0.5);
+  background: rgba(255, 255, 255, 0.8);
   position: sticky;
   top: 0;
 }
@@ -603,11 +619,11 @@ for (let i = 0; i < particleCount * 3; i += 3) {
 particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
 const particlesMaterial = new THREE.PointsMaterial({
-  color: 0x3D5BFE,
-  size: 0.05,
+  color: 0x5470FF,
+  size: 0.08,
   sizeAttenuation: true,
   transparent: true,
-  opacity: 0.6,
+  opacity: 0.4,
 });
 
 const particles = new THREE.Points(particlesGeometry, particlesMaterial);
