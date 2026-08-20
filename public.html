@@ -97,16 +97,15 @@ body {
 }
 
 .brand-logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 900;
-  font-size: 18px;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 12px rgba(61, 91, 254, 0.2));
+  transition: transform 0.3s ease;
+}
+
+.brand-logo:hover {
+  transform: scale(1.05);
 }
 
 .brand-text h1 {
@@ -572,7 +571,16 @@ body.tv-mode .header-actions .icon-btn:not(#btn-tv) {
 <div class="wrap">
   <div class="header">
     <div class="brand">
-      <div class="brand-logo">📻</div>
+      <svg class="brand-logo" viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#5470FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#3D5BFE;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <rect width="80" height="80" rx="16" fill="url(#logoGrad)"/>
+        <text x="40" y="55" font-family="Inter, sans-serif" font-size="48" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-2">α</text>
+      </svg>
       <div class="brand-text">
         <h1>Alpha FM · Instagram</h1>
         <p id="brand-subtitle">@radiosalphafm · atualizado agora</p>
