@@ -655,6 +655,11 @@ function renderDashboard(data) {
   const username = profile.username;
   const dailyGain = data.dailyGain || null;
 
+  let dailyGainPct = null;
+  if(dailyGain !== null && followers_count) {
+    dailyGainPct = ((dailyGain / followers_count) * 100).toFixed(2);
+  }
+
   document.getElementById('brand-subtitle').textContent = `@${username} · atualizado ${fmtTime()}`;
 
   document.getElementById('app').innerHTML = `
@@ -667,7 +672,7 @@ function renderDashboard(data) {
         <div>
           <div class="hero-label">Crescimento (hoje)</div>
           <div class="hero-value">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + formatNum(dailyGain) : '—'}</div>
-          <div class="stat-delta delta-up">↑ crescimento em tempo real</div>
+          <div class="stat-delta delta-up">${dailyGainPct !== null ? '+' + dailyGainPct + '%' : 'sem dado'}</div>
         </div>
       </div>
       <div class="hero-chips">
