@@ -83,9 +83,9 @@ body {
   justify-content: space-between;
   padding: 24px 40px;
   gap: 16px;
-  border-bottom: 1px solid rgba(61, 91, 254, 0.1);
-  backdrop-filter: blur(10px);
-  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(61, 91, 254, 0.08);
+  backdrop-filter: blur(20px);
+  background: rgba(248, 249, 252, 0.6);
   position: sticky;
   top: 0;
 }
@@ -760,6 +760,15 @@ function renderDashboard(data) {
       </div>
       <div class="chart-holder">
         <p style="color: var(--text-3); text-align: center; padding: 40px 0; font-family: var(--font-mono);">Gráfico virá em breve com dados históricos</p>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">
+        <span>Últimas Publicações</span>
+      </div>
+      <div id="posts-preview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 20px 0;">
+        <div style="aspect-ratio: 1; background: linear-gradient(135deg, rgba(61, 91, 254, 0.1) 0%, rgba(84, 112, 255, 0.05) 100%); border: 1px solid rgba(61, 91, 254, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-3); font-family: var(--font-mono); font-size: 11px; text-align: center;">Carregando...</div>
       </div>
     </div>
   `;
