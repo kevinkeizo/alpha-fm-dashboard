@@ -571,16 +571,16 @@ body.tv-mode .header-actions .icon-btn:not(#btn-tv) {
 <div class="wrap">
   <div class="header">
     <div class="brand">
-      <svg class="brand-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <svg class="brand-logo" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:#3D5BFE;stop-opacity:1" />
-            <stop offset="100%" style="stop-color:#5470FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#2D3F9E;stop-opacity:1" />
           </linearGradient>
         </defs>
-        <rect width="200" height="200" rx="36" fill="url(#logoGrad)"/>
-        <text x="100" y="105" font-family="Inter, sans-serif" font-size="80" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-2" dominant-baseline="middle">alpha</text>
-        <text x="100" y="155" font-family="Inter, sans-serif" font-size="24" font-weight="700" fill="white" text-anchor="middle" letter-spacing="1">FM 101.7</text>
+        <rect width="240" height="240" rx="40" fill="url(#logoGrad)"/>
+        <text x="120" y="110" font-family="'Inter', -apple-system, sans-serif" font-size="100" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-3" dominant-baseline="middle">alpha</text>
+        <text x="120" y="165" font-family="'Inter', -apple-system, sans-serif" font-size="28" font-weight="700" fill="white" text-anchor="middle" letter-spacing="2">FM 101.7</text>
       </svg>
       <div class="brand-text">
         <h1>Alpha FM · Instagram</h1>
@@ -670,6 +670,18 @@ async function fetchHistory(){
     if(!res.ok) return [];
     return res.json();
   } catch(e) {
+    return [];
+  }
+}
+
+async function fetchPosts(){
+  try {
+    const res = await fetch('https://graph.instagram.com/v22.0/radiosalphafm/media?fields=id,caption,media_type,media_url,permalink,like_count,comments_count&limit=9&access_token=IGQVJUVTlFQW1iNEJGZAub2lmRk9jbTRfVjFJZAVRCdUQxSWdqUkRFQzBSMWpXbEpYcGlVdTh5QWR6cThXVGJjdmVFZAxreG9ybm1KWVpkNWo2QjNieVljbmhBZAzJEVF9RNjhNVm5RX2YxMEphQQ==');
+    if(!res.ok) throw new Error('Failed to fetch posts');
+    const data = await res.json();
+    return data.data || [];
+  } catch(e) {
+    console.warn('Posts fetch failed:', e);
     return [];
   }
 }
@@ -785,7 +797,7 @@ function renderDashboard(data) {
 // Load
 async function load(){
   try{
-    const [data, history] = await Promise.all([fetchAllData(), fetchHistory()]);
+    const [data, history, posts] = await Promise.all([fetchAllData(), fetchHistory(), fetchPosts()]);
 
     // Calcula dailyGain comparando com dia anterior
     if(history.length > 0) {
@@ -797,10 +809,34 @@ async function load(){
     }
 
     renderDashboard(data);
+    renderPosts(posts);
   }catch(e){
     document.getElementById('app').innerHTML = `<div class="loading" style="color:red;">Erro: ${e.message}</div>`;
   }
 }
+
+function renderPosts(posts){
+  const container = document.getElementById('posts-preview');
+  if(!container) return;
+
+  if(posts.length === 0) {
+    container.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text-3); padding: 40px 0; font-family: var(--font-mono); font-size: 12px;">Nenhuma publicação encontrada</div>';
+    return;
+  }
+
+  container.innerHTML = posts.slice(0, 9).map(post => `
+    <a href="${post.permalink}" target="_blank" style="text-decoration: none; display: block;">
+      <div style="aspect-ratio: 1; background: linear-gradient(135deg, rgba(61, 91, 254, 0.1) 0%, rgba(84, 112, 255, 0.05) 100%); border: 1px solid rgba(61, 91, 254, 0.2); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: all 0.3s ease; cursor: pointer;">
+        ${post.media_url ? `<img src="${post.media_url}" style="width: 100%; height: 70%; object-fit: cover; background: rgba(61, 91, 254, 0.1);">` : '<div style="width: 100%; height: 70%; background: rgba(61, 91, 254, 0.1); display: flex; align-items: center; justify-content: center;"><span style="color: var(--text-3); font-size: 11px;">Vídeo/Reels</span></div>'}
+        <div style="padding: 8px; display: flex; gap: 8px; justify-content: center; font-size: 11px; color: var(--text-2); border-top: 1px solid rgba(61, 91, 254, 0.1);">
+          <span>❤️ ${post.like_count}</span>
+          <span>💬 ${post.comments_count}</span>
+        </div>
+      </div>
+    </a>
+  `).join('');
+}
+
 load();
 </script>
 </body>
