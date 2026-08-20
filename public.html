@@ -100,29 +100,35 @@
   }
   @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.25;} }
 
-  /* Modo TV: telas grandes, sem interacao, tudo ampliado */
-  body.tv-mode{ padding: 50px 70px; }
-  body.tv-mode .wrap{ max-width: 1600px; }
-  body.tv-mode .brand-logo{ width:72px; height:72px; border-radius:16px; }
-  body.tv-mode .brand-text h1{ font-size: 36px; letter-spacing: -0.02em; }
-  body.tv-mode .brand-text p{ font-size: 18px; }
-  body.tv-mode .status-chip{ font-size:16px; padding:10px 18px; }
-  body.tv-mode .hero-card{ padding:50px; margin-bottom:32px; }
-  body.tv-mode .hero-value{ font-size:96px; }
-  body.tv-mode .hero-body { grid-template-columns: 1fr 1fr; gap: 40px; }
-  body.tv-mode .hero-body > div:last-child { padding: 24px; font-size: 20px; }
-  body.tv-mode .hero-body > div:last-child .stat-value { font-size: 48px; }
-  body.tv-mode .hero-body > div:last-child .stat-label { font-size: 14px; }
-  body.tv-mode .icon-badge{ width:48px; height:48px; border-radius:14px; }
-  body.tv-mode .icon-badge svg{ width:24px; height:24px; }
-  body.tv-mode .secondary-grid{ gap:28px; margin-bottom:36px; grid-template-columns: repeat(2, 1fr); }
-  body.tv-mode .stat-card{ padding:36px; border-radius: 16px; }
-  body.tv-mode .stat-label{ font-size:16px; }
-  body.tv-mode .stat-value{ font-size:56px; }
-  body.tv-mode .stat-delta{ font-size:16px; margin-top:14px; padding: 6px 14px; }
-  body.tv-mode .chart-card{ padding:40px; }
-  body.tv-mode .chart-card h3{ font-size:18px; }
-  body.tv-mode .chart-holder{ height:400px; }
+  /* Modo TV: telas grandes, sem scroll, tudo compacto na tela */
+  body.tv-mode{ padding: 32px 48px; }
+  body.tv-mode .wrap{ max-width: 1800px; }
+  body.tv-mode .header{ margin-bottom: 20px; }
+  body.tv-mode .brand-logo{ width:60px; height:60px; border-radius:14px; }
+  body.tv-mode .brand-text h1{ font-size: 28px; letter-spacing: -0.02em; }
+  body.tv-mode .brand-text p{ font-size: 14px; }
+  body.tv-mode .status-chip{ font-size:13px; padding:8px 14px; }
+
+  body.tv-mode .hero-card{ padding:32px 40px; margin-bottom:20px; }
+  body.tv-mode .hero-top { gap: 32px; }
+  body.tv-mode .hero-value{ font-size:64px; }
+  body.tv-mode .hero-top > div:first-child { gap: 8px; }
+  body.tv-mode .hero-top > div:last-child { padding: 20px; border-radius: 14px; }
+  body.tv-mode .hero-top > div:last-child .stat-value { font-size: 40px; }
+  body.tv-mode .hero-top > div:last-child .stat-label { font-size: 11px; }
+  body.tv-mode .hero-top .stat-label { font-size: 11px; }
+  body.tv-mode .hero-chips { gap: 12px; }
+  body.tv-mode .hero-body { display: none; }
+
+  body.tv-mode .icon-badge{ width:40px; height:40px; border-radius:12px; }
+  body.tv-mode .icon-badge svg{ width:20px; height:20px; }
+  body.tv-mode .secondary-grid{ gap:16px; margin-bottom:0; grid-template-columns: repeat(4, 1fr); }
+  body.tv-mode .stat-card{ padding:24px; border-radius: 12px; }
+  body.tv-mode .stat-label{ font-size:11px; }
+  body.tv-mode .stat-value{ font-size:40px; }
+  body.tv-mode .stat-delta{ font-size:12px; margin-top:8px; padding: 4px 10px; }
+
+  body.tv-mode .chart-card{ display: none; }
   body.tv-mode .footer-note{ display:none; }
   body.tv-mode .header-actions .icon-btn:not(#btn-tv){ display:none; }
 
