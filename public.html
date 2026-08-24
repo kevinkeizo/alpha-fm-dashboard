@@ -694,6 +694,52 @@ function fmtTime() {
   return new Date().toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
+function lineChartSvg(dates, values) {
+  if(!values.length) return '';
+  const h = 200, w = 600, padding = 40;
+  const minVal = Math.min(...values);
+  const maxVal = Math.max(...values);
+  const range = maxVal - minVal || 1;
+
+  const points = values.map((v, i) => {
+    const x = padding + (i / (values.length - 1)) * (w - padding * 2);
+    const y = h - padding - ((v - minVal) / range) * (h - padding * 2);
+    return {x, y, v};
+  });
+
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
+    <defs>
+      <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#5470FF;stop-opacity:0.3"/>
+        <stop offset="100%" style="stop-color:#5470FF;stop-opacity:0"/>
+      </linearGradient>
+    </defs>
+    <path d="${pathD} L ${points[points.length-1].x} ${h-padding} L ${points[0].x} ${h-padding}" fill="url(#areaGrad)"/>
+    <path d="${pathD}" stroke="#3D5BFE" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+
+function barChartSvg(dates, values) {
+  if(!values.length) return '';
+  const h = 200, w = 600, padding = 40;
+  const maxVal = Math.max(...values, 1);
+  const barWidth = (w - padding * 2) / values.length * 0.7;
+  const barGap = (w - padding * 2) / values.length;
+
+  const bars = values.map((v, i) => {
+    const x = padding + i * barGap + (barGap - barWidth) / 2;
+    const barH = (v / maxVal) * (h - padding * 2);
+    const y = h - padding - barH;
+    return `<rect x="${x}" y="${y}" width="${barWidth}" height="${barH}" fill="#3D5BFE" rx="3"/>`;
+  }).join('');
+
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
+    ${bars}
+  </svg>`;
+}
+
 function renderDashboard(data) {
   const { profile, reach, postsToday, engagementRate, totalInteractions } = data;
   const followers_count = profile.followers_count;
@@ -769,8 +815,8 @@ function renderDashboard(data) {
           <button class="filter-btn" data-days="7">7 dias</button>
         </div>
       </div>
-      <div class="chart-holder">
-        <p style="color: var(--text-3); text-align: center; padding: 40px 0; font-family: var(--font-mono);">Gráfico virá em breve com dados históricos</p>
+      <div class="chart-holder" id="chart-followers" style="min-height: 240px;">
+        <p style="color: var(--text-3); text-align: center; padding: 40px 0; font-family: var(--font-mono);">Carregando gráfico...</p>
       </div>
     </div>
 
@@ -831,6 +877,20 @@ function renderDashboard(data) {
       alert('Erro ao exportar: ' + e.message);
     }
   });
+
+  // Renderiza gráfico de seguidores
+  (async () => {
+    const history = await fetchHistory();
+    if(history.length > 0) {
+      const sorted = [...history].sort((a,b) => a.date.localeCompare(b.date));
+      const dates = sorted.map(h => h.date);
+      const values = sorted.map(h => h.followers).filter(v => v !== null);
+      const chartEl = document.getElementById('chart-followers');
+      if(chartEl) {
+        chartEl.innerHTML = lineChartSvg(dates, values);
+      }
+    }
+  })();
 }
 
 // Load
