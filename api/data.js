@@ -63,6 +63,26 @@ async function fetchAllData() {
     });
   } catch (e) { console.error('Engajamento falhou:', e.message); }
 
+  let impressions = null;
+  try {
+    const now = new Date();
+    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const since = Math.floor(dayStart.getTime() / 1000);
+    const until = Math.floor(now.getTime() / 1000);
+    const insightsImpressions = await fetchGraph('/' + IG_USER_ID + '/insights', {
+      metric: 'impressions',
+      metric_type: 'total_value',
+      period: 'day',
+      since: String(since),
+      until: String(until)
+    });
+    (insightsImpressions.data || []).forEach(m => {
+      if (m.name === 'impressions' && m.total_value) {
+        impressions = m.total_value.value;
+      }
+    });
+  } catch (e) { console.error('Impressões falhou:', e.message); }
+
   let engagementRate = null;
   if (totalInteractions !== null && reach) {
     engagementRate = (totalInteractions / reach) * 100;
@@ -84,6 +104,7 @@ async function fetchAllData() {
       username: profile.username
     },
     reach,
+    impressions,
     postsToday,
     totalInteractions,
     engagementRate,
