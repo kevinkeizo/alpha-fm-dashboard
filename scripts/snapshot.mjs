@@ -61,10 +61,49 @@ async function main(){
     });
   }catch(e){ console.warn('Engajamento falhou:', e.message); }
 
-  let postsToday = 0;
+  let views = null;
   try{
-    const media = await fetchGraph('/' + IG_USER_ID + '/media', { fields: 'id,timestamp', limit: '50' });
-    postsToday = (media.data || []).filter(m => brazilDateKey(new Date(m.timestamp)) === todayKey).length;
+    const since = Math.floor(dayStart.getTime() / 1000);
+    const until = Math.floor(now.getTime() / 1000);
+    const insights3 = await fetchGraph('/' + IG_USER_ID + '/insights', {
+      metric: 'views', metric_type: 'total_value', period: 'day',
+      since: String(since), until: String(until)
+    });
+    (insights3.data || []).forEach(m => {
+      if(m.name === 'views' && m.total_value && typeof m.total_value.value === 'number'){
+        views = m.total_value.value;
+      }
+    });
+  }catch(e){ console.warn('Visualizações falhou:', e.message); }
+
+  let postsToday = 0;
+  let reelsToday = 0;
+  let reelViews = null;
+  try{
+    const media = await fetchGraph('/' + IG_USER_ID + '/media', {
+      fields: 'id,timestamp,media_type,media_product_type', limit: '50'
+    });
+    const todayMedia = (media.data || []).filter(m => brazilDateKey(new Date(m.timestamp)) === todayKey);
+    postsToday = todayMedia.length;
+
+    const videos = todayMedia.filter(m => m.media_product_type === 'REELS' || m.media_type === 'VIDEO');
+    reelsToday = videos.length;
+
+    if(videos.length){
+      const results = await Promise.all(videos.map(async v => {
+        for(const metric of ['views', 'plays', 'video_views']){
+          try{
+            const ins = await fetchGraph('/' + v.id + '/insights', { metric });
+            const row = (ins.data || []).find(d => d.name === metric);
+            const val = row && row.values && row.values[0] && row.values[0].value;
+            if(typeof val === 'number') return val;
+          }catch(e){ /* tenta a próxima métrica */ }
+        }
+        return null;
+      }));
+      const valid = results.filter(v => typeof v === 'number');
+      if(valid.length) reelViews = valid.reduce((a, b) => a + b, 0);
+    }
   }catch(e){ console.warn('Publicações falhou:', e.message); }
 
   const engagementRate = (totalInteractions !== null && reach) ? (totalInteractions / reach * 100) : null;
@@ -72,6 +111,8 @@ async function main(){
   console.log('=== DEBUG ===');
   console.log('Followers:', profile.followers_count);
   console.log('Reach:', reach);
+  console.log('Views (conta):', views);
+  console.log('Reel views (hoje):', reelViews, '/', reelsToday, 'reels');
   console.log('Posts today:', postsToday);
   console.log('Total interactions:', totalInteractions);
   console.log('Engagement rate:', engagementRate);
@@ -80,6 +121,9 @@ async function main(){
     date: todayKey,
     followers: profile.followers_count ?? null,
     reach: reach ?? null,
+    views: views ?? null,
+    reelViews: reelViews ?? null,
+    reels: reelsToday,
     posts: postsToday,
     interactions: totalInteractions,
     engagementRate: engagementRate
@@ -97,6 +141,10 @@ async function main(){
     // Se followers_count veio null, usa o anterior
     if(entry.followers === null && prev.followers !== null){
       entry.followers = prev.followers;
+    }
+    // Idem pras visualizações: não sobrescreve valor bom com null
+    if(entry.views === null && prev.views != null){
+      entry.views = prev.views;
     }
     history[idx] = entry;
   }else{

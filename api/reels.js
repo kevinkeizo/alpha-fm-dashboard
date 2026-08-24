@@ -1,6 +1,14 @@
 const TOKEN = process.env.IG_TOKEN;
 const IG_USER_ID = process.env.IG_USER_ID;
 const API_VERSION = 'v22.0';
+const TZ = 'America/Sao_Paulo';
+
+// "2026-08-24" no fuso de Brasilia (a Vercel roda em UTC)
+function brtDateStr(d) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(d);
+}
 
 async function fetchGraph(path, params) {
   const url = new URL('https://graph.facebook.com/' + API_VERSION + path);
@@ -45,6 +53,10 @@ module.exports = async (req, res) => {
       }
       return {
         timestamp: r.timestamp,
+        dataBRT: brtDateStr(new Date(r.timestamp)),
+        horaBRT: new Intl.DateTimeFormat('pt-BR', {
+          timeZone: TZ, hour: '2-digit', minute: '2-digit'
+        }).format(new Date(r.timestamp)),
         permalink: r.permalink,
         caption: (r.caption || '').slice(0, 60),
         views: value,
@@ -52,8 +64,8 @@ module.exports = async (req, res) => {
       };
     }));
 
-    const todayStr = new Date().toDateString();
-    const today = rows.filter(r => new Date(r.timestamp).toDateString() === todayStr);
+    const todayStr = brtDateStr(new Date());
+    const today = rows.filter(r => r.dataBRT === todayStr);
     const sum = arr => arr.reduce((a, b) => a + (b.views || 0), 0);
 
     res.status(200).json({

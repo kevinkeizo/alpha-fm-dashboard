@@ -10,6 +10,33 @@ if (!TOKEN || !IG_USER_ID) {
 const cache = { data: null, time: 0 };
 const CACHE_TTL = 5 * 60 * 1000; // 5 min
 
+// A Vercel roda em UTC. Sem isso o "dia" comecaria as 21h BRT do dia anterior.
+function tzOffsetMs(d) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: TZ, hour12: false,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit'
+  }).formatToParts(d).reduce((a, p) => (a[p.type] = p.value, a), {});
+  const asIfUTC = Date.UTC(
+    +parts.year, +parts.month - 1, +parts.day,
+    parts.hour === '24' ? 0 : +parts.hour, +parts.minute, +parts.second
+  );
+  return d.getTime() - asIfUTC;
+}
+
+// "2026-08-24" no fuso de Brasilia
+function brtDateStr(d) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(d);
+}
+
+// Epoch (segundos) da meia-noite de Brasilia do dia de `d`
+function brtDayStartSec(d) {
+  const midnightUTC = Date.parse(brtDateStr(d) + 'T00:00:00Z');
+  return Math.floor((midnightUTC + tzOffsetMs(d)) / 1000);
+}
+
 async function fetchGraph(path, params) {
   const url = new URL('https://graph.facebook.com/' + API_VERSION + path);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
@@ -46,8 +73,7 @@ async function fetchAllData() {
   let totalInteractions = null;
   try {
     const now = new Date();
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const since = Math.floor(dayStart.getTime() / 1000);
+    const since = brtDayStartSec(now);
     const until = Math.floor(now.getTime() / 1000);
     const insights2 = await fetchGraph('/' + IG_USER_ID + '/insights', {
       metric: 'total_interactions',
@@ -67,8 +93,7 @@ async function fetchAllData() {
   let views = null;
   try {
     const now = new Date();
-    const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const since = Math.floor(dayStart.getTime() / 1000);
+    const since = brtDayStartSec(now);
     const until = Math.floor(now.getTime() / 1000);
     const insightsViews = await fetchGraph('/' + IG_USER_ID + '/insights', {
       metric: 'views',
@@ -96,8 +121,8 @@ async function fetchAllData() {
     const media = await fetchGraph('/' + IG_USER_ID + '/media', {
       fields: 'id,timestamp,media_type,media_product_type', limit: '50'
     });
-    const todayStr = new Date().toDateString();
-    const todayMedia = (media.data || []).filter(m => new Date(m.timestamp).toDateString() === todayStr);
+    const todayStr = brtDateStr(new Date());
+    const todayMedia = (media.data || []).filter(m => brtDateStr(new Date(m.timestamp)) === todayStr);
     postsToday = todayMedia.length;
 
     // Soma visualizações dos reels/vídeos publicados hoje

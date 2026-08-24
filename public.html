@@ -862,29 +862,62 @@ function renderDashboard(data) {
         return;
       }
 
-      const ws = XLSX.utils.json_to_sheet(history.map(h => ({
-        'Data': h.date,
-        'Seguidores': h.followers,
-        'Alcance': h.reach,
-        'Publicações': h.posts,
-        'Interações': h.interactions,
-        'Taxa Engajamento': h.engagementRate ? h.engagementRate.toFixed(2) + '%' : '-'
-      })));
+      const sorted = [...history].sort((a,b) => a.date.localeCompare(b.date));
+
+      const ws = XLSX.utils.json_to_sheet(sorted.map((h, i) => {
+        const prev = i > 0 ? sorted[i-1] : null;
+        let gain = null, variation = null;
+        if(prev && h.followers != null && prev.followers != null){
+          gain = h.followers - prev.followers;
+          if(prev.followers) variation = (gain / prev.followers) * 100;
+        }
+        return {
+          'Data': h.date,
+          'Seguidores': h.followers,
+          'Ganho no dia': gain,
+          'Variação %': variation !== null ? +variation.toFixed(3) : null,
+          'Alcance': h.reach,
+          'Visualizações': h.views ?? null,
+          'Views dos reels': h.reelViews ?? null,
+          'Reels': h.reels ?? null,
+          'Publicações': h.posts,
+          'Interações': h.interactions,
+          'Taxa Engajamento': h.engagementRate != null ? +h.engagementRate.toFixed(2) : null
+        };
+      }));
 
       ws['!cols'] = [
-        {wch: 12},
-        {wch: 12},
-        {wch: 12},
-        {wch: 12},
-        {wch: 12},
-        {wch: 18}
+        {wch: 12}, {wch: 12}, {wch: 13}, {wch: 11}, {wch: 12},
+        {wch: 14}, {wch: 15}, {wch: 8}, {wch: 13}, {wch: 12}, {wch: 18}
       ];
+      ws['!freeze'] = {xSplit: 0, ySplit: 1};
 
-      Object.keys(ws).filter(k => k.startsWith('A')).forEach(k => {
-        ws[k].font = {bold: true};
-        ws[k].fill = {fgColor: {rgb: 'FF3D5BFE'}};
-        ws[k].font.color = {rgb: 'FFFFFFFF'};
-      });
+      // Formatos numéricos (linha 1 é cabeçalho, dados começam na 2)
+      const range = XLSX.utils.decode_range(ws['!ref']);
+      for(let r = 1; r <= range.e.r; r++){
+        const fmt = (col, z) => {
+          const cell = ws[XLSX.utils.encode_cell({c: col, r})];
+          if(cell && cell.t === 'n') cell.z = z;
+        };
+        fmt(1, '#,##0');      // Seguidores
+        fmt(2, '+#,##0;-#,##0'); // Ganho no dia
+        fmt(3, '0.000"%"');   // Variação %
+        fmt(4, '#,##0');      // Alcance
+        fmt(5, '#,##0');      // Visualizações
+        fmt(6, '#,##0');      // Views dos reels
+        fmt(9, '#,##0');      // Interações
+        fmt(10, '0.00"%"');   // Taxa Engajamento
+      }
+
+      // Cabeçalho em negrito (linha 1, todas as colunas)
+      for(let c = range.s.c; c <= range.e.c; c++){
+        const cell = ws[XLSX.utils.encode_cell({c, r: 0})];
+        if(cell) cell.s = {
+          font: {bold: true, color: {rgb: 'FFFFFF'}},
+          fill: {fgColor: {rgb: '3D5BFE'}},
+          alignment: {horizontal: 'center'}
+        };
+      }
 
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Analytics');
