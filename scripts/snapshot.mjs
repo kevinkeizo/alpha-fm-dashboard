@@ -53,6 +53,29 @@ async function totalValue(metric, since, until){
   }
 }
 
+// A conta publica ~40 vezes por dia, então uma página de 50 não cobre nem um
+// dia inteiro. Pagina até passar do início do dia alvo.
+async function fetchMediaDoDia(dayStartSec){
+  const todas = [];
+  let params = {
+    fields: 'id,timestamp,media_type,media_product_type',
+    limit: '100'
+  };
+  for(let pagina = 0; pagina < 10; pagina++){
+    const r = await fetchGraph('/' + IG_USER_ID + '/media', params);
+    const data = r.data || [];
+    todas.push(...data);
+    const maisAntigo = data[data.length - 1];
+    if(!maisAntigo) break;
+    // Já ultrapassou o dia alvo, não precisa de mais páginas
+    if(Math.floor(new Date(maisAntigo.timestamp).getTime() / 1000) < dayStartSec) break;
+    const after = r.paging && r.paging.cursors && r.paging.cursors.after;
+    if(!after) break;
+    params = { ...params, after };
+  }
+  return todas;
+}
+
 async function main(){
   const now = new Date();
 
@@ -80,10 +103,8 @@ async function main(){
   let reelsToday = 0;
   let reelViews = null;
   try{
-    const media = await fetchGraph('/' + IG_USER_ID + '/media', {
-      fields: 'id,timestamp,media_type,media_product_type', limit: '50'
-    });
-    const todayMedia = (media.data || []).filter(m => brazilDateKey(new Date(m.timestamp)) === todayKey);
+    const media = await fetchMediaDoDia(since);
+    const todayMedia = media.filter(m => brazilDateKey(new Date(m.timestamp)) === todayKey);
     postsToday = todayMedia.length;
 
     const videos = todayMedia.filter(m => m.media_product_type === 'REELS' || m.media_type === 'VIDEO');

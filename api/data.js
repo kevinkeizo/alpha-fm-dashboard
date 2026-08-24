@@ -119,7 +119,8 @@ async function fetchAllData() {
   let reelViews = null;
   try {
     const media = await fetchGraph('/' + IG_USER_ID + '/media', {
-      fields: 'id,timestamp,media_type,media_product_type', limit: '50'
+      // A conta publica ~40x por dia; 50 nao cobre um dia inteiro
+      fields: 'id,timestamp,media_type,media_product_type', limit: '100'
     });
     const todayStr = brtDateStr(new Date());
     const todayMedia = (media.data || []).filter(m => brtDateStr(new Date(m.timestamp)) === todayStr);
