@@ -138,9 +138,19 @@ async function main(){
   console.log('Total interactions:', totalInteractions);
   console.log('Engagement rate:', engagementRate);
 
+  // followers_count é instantâneo, não uma janela: só vale como fechamento do
+  // dia alvo se a execução for logo depois da meia-noite. Num disparo manual
+  // às 14h ele seria a contagem de hoje gravada sob a data de ontem.
+  const horasDepoisDoDia = (now.getTime() / 1000 - until) / 3600;
+  const followersConfiavel = horasDepoisDoDia <= 6;
+  if(!followersConfiavel){
+    console.warn('Execução ' + horasDepoisDoDia.toFixed(1) + 'h depois do fim do dia ' +
+      todayKey + '; preservando o valor de seguidores já gravado.');
+  }
+
   const entry = {
     date: todayKey,
-    followers: profile.followers_count ?? null,
+    followers: followersConfiavel ? (profile.followers_count ?? null) : null,
     reach: reach ?? null,
     views: views ?? null,
     reelViews: reelViews ?? null,
