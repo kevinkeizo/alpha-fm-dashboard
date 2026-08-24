@@ -752,7 +752,7 @@ function barChartSvg(dates, values) {
 }
 
 function renderDashboard(data) {
-  const { profile, reach, impressions, postsToday, engagementRate, totalInteractions } = data;
+  const { profile, reach, views, reelsToday, postsToday, engagementRate, totalInteractions } = data;
   const followers_count = profile.followers_count;
   const media_count = profile.media_count;
   const username = profile.username;
@@ -816,9 +816,9 @@ function renderDashboard(data) {
         <div class="stat-card-delta delta-flat">sem comparativo ainda</div>
       </div>
       <div class="stat-card">
-        <div class="stat-card-label">Impressões (hoje)</div>
-        <div class="stat-card-value">${formatNum(impressions)}</div>
-        <div class="stat-card-delta delta-flat">sem comparativo ainda</div>
+        <div class="stat-card-label">Visualizações (hoje)</div>
+        <div class="stat-card-value">${views !== null && views !== undefined ? formatNum(views) : '—'}</div>
+        <div class="stat-card-delta delta-flat">${reelsToday ? reelsToday + ' reels hoje' : 'reels e vídeos'}</div>
       </div>
     </div>
 

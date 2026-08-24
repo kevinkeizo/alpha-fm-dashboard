@@ -63,25 +63,26 @@ async function fetchAllData() {
     });
   } catch (e) { console.error('Engajamento falhou:', e.message); }
 
-  let impressions = null;
+  // Visualizações da conta (views) - métrica nova da v22, é o que o app mostra
+  let views = null;
   try {
     const now = new Date();
     const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const since = Math.floor(dayStart.getTime() / 1000);
     const until = Math.floor(now.getTime() / 1000);
-    const insightsImpressions = await fetchGraph('/' + IG_USER_ID + '/insights', {
-      metric: 'impressions',
+    const insightsViews = await fetchGraph('/' + IG_USER_ID + '/insights', {
+      metric: 'views',
       metric_type: 'total_value',
       period: 'day',
       since: String(since),
       until: String(until)
     });
-    (insightsImpressions.data || []).forEach(m => {
-      if (m.name === 'impressions' && m.total_value) {
-        impressions = m.total_value.value;
+    (insightsViews.data || []).forEach(m => {
+      if (m.name === 'views' && m.total_value) {
+        views = m.total_value.value;
       }
     });
-  } catch (e) { console.error('Impressões falhou:', e.message); }
+  } catch (e) { console.error('Visualizações (conta) falhou:', e.message); }
 
   let engagementRate = null;
   if (totalInteractions !== null && reach) {
@@ -89,13 +90,41 @@ async function fetchAllData() {
   }
 
   let postsToday = 0;
+  let reelsToday = 0;
+  let reelViews = null;
   try {
     const media = await fetchGraph('/' + IG_USER_ID + '/media', {
-      fields: 'id,timestamp', limit: '50'
+      fields: 'id,timestamp,media_type,media_product_type', limit: '50'
     });
     const todayStr = new Date().toDateString();
-    postsToday = (media.data || []).filter(m => new Date(m.timestamp).toDateString() === todayStr).length;
+    const todayMedia = (media.data || []).filter(m => new Date(m.timestamp).toDateString() === todayStr);
+    postsToday = todayMedia.length;
+
+    // Soma visualizações dos reels/vídeos publicados hoje
+    const videos = todayMedia.filter(m =>
+      m.media_product_type === 'REELS' || m.media_type === 'VIDEO'
+    );
+    reelsToday = videos.length;
+
+    if (videos.length) {
+      const results = await Promise.all(videos.map(async v => {
+        for (const metric of ['views', 'plays', 'video_views']) {
+          try {
+            const ins = await fetchGraph('/' + v.id + '/insights', { metric });
+            const row = (ins.data || []).find(d => d.name === metric);
+            const val = row && row.values && row.values[0] && row.values[0].value;
+            if (typeof val === 'number') return val;
+          } catch (e) { /* tenta a próxima métrica */ }
+        }
+        return null;
+      }));
+      const valid = results.filter(v => typeof v === 'number');
+      if (valid.length) reelViews = valid.reduce((a, b) => a + b, 0);
+    }
   } catch (e) { console.error('Publicações falhou:', e.message); }
+
+  // Se a métrica de conta não veio, usa a soma dos reels
+  if (views === null && reelViews !== null) views = reelViews;
 
   const data = {
     profile: {
@@ -104,7 +133,9 @@ async function fetchAllData() {
       username: profile.username
     },
     reach,
-    impressions,
+    views,
+    reelViews,
+    reelsToday,
     postsToday,
     totalInteractions,
     engagementRate,
