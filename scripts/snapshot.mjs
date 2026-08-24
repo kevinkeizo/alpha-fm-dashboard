@@ -3,6 +3,9 @@ const IG_USER_ID = process.env.IG_USER_ID;
 const API_VERSION = 'v22.0';
 const TZ = 'America/Sao_Paulo';
 const HISTORY_LIMIT = 800;
+// Quantos dias recentes reconferir a cada execução. A Meta guarda insights
+// por ~2 anos, mas 30 dias cobre o estrago sem estourar o limite de chamadas.
+const BACKFILL_DAYS = 30;
 
 if(!TOKEN || !IG_USER_ID){
   console.error('Faltam as variáveis de ambiente IG_TOKEN e/ou IG_USER_ID.');
@@ -32,49 +35,46 @@ async function fetchGraph(path, params){
   return json;
 }
 
+// Busca uma métrica total_value numa janela explícita.
+// Cada métrica vai numa chamada separada de propósito: pedir duas juntas
+// faz a Meta rejeitar a requisição inteira e perder as duas.
+async function totalValue(metric, since, until){
+  try{
+    const r = await fetchGraph('/' + IG_USER_ID + '/insights', {
+      metric, metric_type: 'total_value', period: 'day',
+      since: String(since), until: String(until)
+    });
+    const row = (r.data || []).find(m => m.name === metric);
+    const v = row && row.total_value ? row.total_value.value : null;
+    return typeof v === 'number' ? v : null;
+  }catch(e){
+    console.warn(metric + ' falhou:', e.message);
+    return null;
+  }
+}
+
 async function main(){
   const now = new Date();
-  const todayKey = brazilDateKey(now);
-  const dayStart = brazilDayStart(now);
+
+  // Grava sempre o dia anterior, já fechado. O agendamento do GitHub Actions
+  // atrasa com frequência; mirar no dia de hoje fazia a captura cair no dia
+  // errado quando o atraso passava da meia-noite.
+  const ontem = new Date(brazilDayStart(now).getTime() - 1000);
+  const todayKey = brazilDateKey(ontem);
+  const dayStart = brazilDayStart(ontem);
+  const since = Math.floor(dayStart.getTime() / 1000);
+  const until = since + 86400;
+
+  console.log('Capturando o dia', todayKey, '(janela', new Date(since*1000).toISOString(), '->', new Date(until*1000).toISOString() + ')');
 
   const profile = await fetchGraph('/' + IG_USER_ID, { fields: 'followers_count,media_count,username' });
 
-  let reach = null;
-  try{
-    const insights = await fetchGraph('/' + IG_USER_ID + '/insights', { metric: 'reach', period: 'day' });
-    const vals = insights.data && insights.data[0] && insights.data[0].values;
-    if(vals && vals.length) reach = vals[vals.length - 1].value;
-  }catch(e){ console.warn('Alcance falhou:', e.message); }
+  // Janela explícita: sem since/until a Meta devolve o último dia disponível,
+  // que caía sob a data errada no histórico.
+  const reach = await totalValue('reach', since, until);
+  const totalInteractions = await totalValue('total_interactions', since, until);
 
-  let totalInteractions = null;
-  try{
-    const since = Math.floor(dayStart.getTime() / 1000);
-    const until = Math.floor(now.getTime() / 1000);
-    const insights2 = await fetchGraph('/' + IG_USER_ID + '/insights', {
-      metric: 'accounts_engaged,total_interactions',
-      metric_type: 'total_value', period: 'day', since: String(since), until: String(until)
-    });
-    (insights2.data || []).forEach(m => {
-      if(m.name === 'total_interactions' && m.total_value && typeof m.total_value.value === 'number'){
-        totalInteractions = m.total_value.value;
-      }
-    });
-  }catch(e){ console.warn('Engajamento falhou:', e.message); }
-
-  let views = null;
-  try{
-    const since = Math.floor(dayStart.getTime() / 1000);
-    const until = Math.floor(now.getTime() / 1000);
-    const insights3 = await fetchGraph('/' + IG_USER_ID + '/insights', {
-      metric: 'views', metric_type: 'total_value', period: 'day',
-      since: String(since), until: String(until)
-    });
-    (insights3.data || []).forEach(m => {
-      if(m.name === 'views' && m.total_value && typeof m.total_value.value === 'number'){
-        views = m.total_value.value;
-      }
-    });
-  }catch(e){ console.warn('Visualizações falhou:', e.message); }
+  const views = await totalValue('views', since, until);
 
   let postsToday = 0;
   let reelsToday = 0;
@@ -152,6 +152,35 @@ async function main(){
   }
 
   history.sort((a, b) => a.date.localeCompare(b.date));
+
+  // Recupera dias antigos: as métricas de janela (alcance, visualizações,
+  // interações) eram buscadas sem since/until e caíam sob a data errada, e
+  // pedir duas métricas juntas fazia a chamada inteira falhar. Aqui elas são
+  // refeitas com a janela explícita de cada dia, que é a fonte autoritativa.
+  // Seguidores não dá pra recuperar: é um valor instantâneo, não uma janela.
+  const alvos = history.slice(-BACKFILL_DAYS).filter(h => h.date !== todayKey);
+  let corrigidos = 0;
+  for(const h of alvos){
+    const s = Math.floor(new Date(h.date + 'T00:00:00-03:00').getTime() / 1000);
+    const u = s + 86400;
+    const [r, v, i] = [
+      await totalValue('reach', s, u),
+      await totalValue('views', s, u),
+      await totalValue('total_interactions', s, u)
+    ];
+    // Só sobrescreve com valor bom; um null da API não apaga o que já existe.
+    let mudou = false;
+    if(r !== null && r !== h.reach){ h.reach = r; mudou = true; }
+    if(v !== null && v !== h.views){ h.views = v; mudou = true; }
+    if(i !== null && i !== h.interactions){ h.interactions = i; mudou = true; }
+    if(mudou){
+      h.engagementRate = (h.interactions != null && h.reach) ? (h.interactions / h.reach * 100) : h.engagementRate ?? null;
+      corrigidos++;
+      console.log('  corrigido', h.date, '-> alcance', h.reach, '| views', h.views, '| interacoes', h.interactions);
+    }
+  }
+  if(corrigidos) console.log('Backfill ajustou', corrigidos, 'dia(s).');
+
   if(history.length > HISTORY_LIMIT) history = history.slice(-HISTORY_LIMIT);
   await fs.writeFile(path, JSON.stringify(history, null, 2) + '\n');
   console.log('Snapshot salvo:', JSON.stringify(entry));
