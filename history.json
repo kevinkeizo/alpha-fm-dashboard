@@ -100,22 +100,22 @@
   },
   {
     "date": "2026-08-23",
-    "followers": 971454,
+    "followers": 971455,
     "reach": 1396754,
-    "views": 2766912,
-    "reelViews": 1795125,
+    "views": 2766916,
+    "reelViews": 1797296,
     "reels": 35,
-    "posts": 40,
+    "posts": 41,
     "interactions": 142926,
     "engagementRate": 10.232725304527497
   },
   {
     "date": "2026-08-24",
     "followers": 970925,
-    "reach": 608953,
+    "reach": 625681,
     "posts": 1,
     "interactions": 50250,
-    "engagementRate": 8.251868370793805,
-    "views": 1052489
+    "engagementRate": 8.031249150925152,
+    "views": 1076439
   }
 ]
