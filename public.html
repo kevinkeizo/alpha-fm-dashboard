@@ -330,7 +330,7 @@ body {
 /* Stat Cards */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 18px;
   margin-bottom: 40px;
 }
@@ -683,18 +683,32 @@ async function fetchHistory(){
 async function fetchPosts(){
   try{
     const res = await fetch(API_URL.replace('/api/data', '/api/posts'));
-    if(!res.ok) return [];
+    if(!res.ok) return { posts: [], resumo: null };
     const json = await res.json();
-    return json.posts || [];
+    return { posts: json.posts || [], resumo: json.resumo || null };
   }catch(e){
     console.error('Posts falhou:', e.message);
-    return [];
+    return { posts: [], resumo: null };
   }
 }
 
 function formatNum(n) {
   if (n === null || n === undefined) return '—';
   return n.toLocaleString('pt-BR');
+}
+
+// Comparativo com ontem. O dia de hoje ainda está correndo, então uma seta
+// vermelha ficaria acesa a maior parte do tempo só porque o dia não acabou.
+// Mostra o valor de ontem como referência e só comemora quando já superou.
+function delta(hoje, ontem) {
+  if (hoje == null || ontem == null) {
+    return '<div class="stat-card-delta delta-flat">sem comparativo ainda</div>';
+  }
+  if (hoje >= ontem) {
+    return `<div class="stat-card-delta delta-up">↑ já passou ontem (${formatNum(ontem)})</div>`;
+  }
+  const pct = Math.round((hoje / ontem) * 100);
+  return `<div class="stat-card-delta delta-flat">ontem fechou em ${formatNum(ontem)} · ${pct}%</div>`;
 }
 
 function fmtTime() {
@@ -764,6 +778,7 @@ function renderDashboard(data) {
   const media_count = profile.media_count;
   const username = profile.username;
   const dailyGain = data.dailyGain || null;
+  const ontem = data.ontem || null;
 
   let dailyGainPct = null;
   if(dailyGain !== null && followers_count) {
@@ -803,9 +818,24 @@ function renderDashboard(data) {
 
     <div class="stats-grid">
       <div class="stat-card">
+        <div class="stat-card-label">Visualizações (conta, hoje)</div>
+        <div class="stat-card-value">${formatNum(views)}</div>
+        ${delta(views, ontem && ontem.views)}
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Views dos reels de hoje</div>
+        <div class="stat-card-value">${formatNum(reelViews)}</div>
+        <div class="stat-card-delta delta-flat">${reelsToday ? 'em ' + reelsToday + (reelsToday > 1 ? ' reels publicados hoje' : ' reel publicado hoje') : 'nenhum reel ainda'}</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-card-label">Alcance (hoje)</div>
         <div class="stat-card-value">${formatNum(reach)}</div>
-        <div class="stat-card-delta delta-down">↓ 621.197 vs ontem</div>
+        ${delta(reach, ontem && ontem.reach)}
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-label">Interações (hoje)</div>
+        <div class="stat-card-value">${formatNum(totalInteractions)}</div>
+        ${delta(totalInteractions, ontem && ontem.interactions)}
       </div>
       <div class="stat-card">
         <div class="stat-card-label">Publicações (hoje)</div>
@@ -815,17 +845,9 @@ function renderDashboard(data) {
       <div class="stat-card">
         <div class="stat-card-label">Taxa de Engajamento</div>
         <div class="stat-card-value">${engagementRate !== null ? engagementRate.toFixed(1) : '—'}%</div>
-        <div class="stat-card-delta delta-flat">sem comparativo</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Interações (hoje)</div>
-        <div class="stat-card-value">${formatNum(totalInteractions)}</div>
-        <div class="stat-card-delta delta-flat">sem comparativo ainda</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Visualizações (conta, hoje)</div>
-        <div class="stat-card-value">${formatNum(views)}</div>
-        <div class="stat-card-delta delta-flat">${reelViews != null ? formatNum(reelViews) + ' nos ' + reelsToday + ' reels de hoje' : 'todo o acervo'}</div>
+        ${engagementRate !== null && ontem && ontem.engagementRate != null
+          ? `<div class="stat-card-delta ${engagementRate >= ontem.engagementRate ? 'delta-up' : 'delta-down'}">${engagementRate >= ontem.engagementRate ? '↑' : '↓'} ${Math.abs(engagementRate - ontem.engagementRate).toFixed(1)} p.p. vs ontem</div>`
+          : '<div class="stat-card-delta delta-flat">sem comparativo</div>'}
       </div>
     </div>
 
@@ -846,6 +868,7 @@ function renderDashboard(data) {
     <div class="chart-section">
       <div class="chart-title">
         <span>Últimas Publicações</span>
+        <span id="posts-resumo" style="font-size: 12px; font-weight: 500; color: var(--text-2); font-family: var(--font-mono);"></span>
       </div>
       <div id="posts-preview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 20px 0;">
         <div style="aspect-ratio: 1; background: linear-gradient(135deg, rgba(61, 91, 254, 0.1) 0%, rgba(84, 112, 255, 0.05) 100%); border: 1px solid rgba(61, 91, 254, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-3); font-family: var(--font-mono); font-size: 11px; text-align: center;">Carregando...</div>
@@ -982,18 +1005,27 @@ async function load(){
       if(yesterday && yesterday.followers) {
         data.dailyGain = (data.profile.followers_count - yesterday.followers);
       }
+      // Último dia fechado, usado como referência nos cards
+      data.ontem = yesterday || null;
     }
 
     renderDashboard(data);
-    renderPosts(posts);
+    renderPosts(posts.posts, posts.resumo);
   }catch(e){
     document.getElementById('app').innerHTML = `<div class="loading" style="color:red;">Erro: ${e.message}</div>`;
   }
 }
 
-function renderPosts(posts){
+function renderPosts(posts, resumo){
   const container = document.getElementById('posts-preview');
   if(!container) return;
+
+  const cabecalho = document.getElementById('posts-resumo');
+  if(cabecalho && resumo){
+    cabecalho.textContent = resumo.reelsHoje
+      ? `${resumo.postsHoje} hoje · ${resumo.reelsHoje} reels · ${formatNum(resumo.viewsHoje)} views`
+      : `${resumo.postsHoje} publicações hoje`;
+  }
 
   if(posts.length === 0) {
     container.innerHTML = `
@@ -1015,6 +1047,8 @@ function renderPosts(posts){
             ? `<img src="${post.media_url}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; background: rgba(61, 91, 254, 0.1);">`
             : '<div style="width: 100%; height: 100%; background: rgba(61, 91, 254, 0.1); display: flex; align-items: center; justify-content: center;"><span style="color: var(--text-3); font-size: 11px;">Sem prévia</span></div>'}
           ${post.isReel ? '<span style="position: absolute; top: 8px; right: 8px; background: rgba(15,20,25,0.75); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 7px; border-radius: 6px;">REEL</span>' : ''}
+          ${post.isHoje ? `<span style="position: absolute; top: 8px; left: 8px; background: rgba(61,91,254,0.9); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 7px; border-radius: 6px;">${post.hora}</span>` : ''}
+          ${post.views != null ? `<span style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(15,20,25,0.8)); color: #fff; font-size: 13px; font-weight: 700; padding: 16px 8px 6px; text-align: center;">▶ ${formatNum(post.views)}</span>` : ''}
         </div>
         <div style="padding: 8px; display: flex; gap: 8px; justify-content: center; font-size: 11px; color: var(--text-2); border-top: 1px solid rgba(61, 91, 254, 0.1);">
           <span>❤️ ${formatNum(post.like_count)}</span>
