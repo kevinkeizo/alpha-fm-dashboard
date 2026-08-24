@@ -681,8 +681,15 @@ async function fetchHistory(){
 }
 
 async function fetchPosts(){
-  // Placeholder - implementar com token real depois
-  return [];
+  try{
+    const res = await fetch(API_URL.replace('/api/data', '/api/posts'));
+    if(!res.ok) return [];
+    const json = await res.json();
+    return json.posts || [];
+  }catch(e){
+    console.error('Posts falhou:', e.message);
+    return [];
+  }
 }
 
 function formatNum(n) {
@@ -752,7 +759,7 @@ function barChartSvg(dates, values) {
 }
 
 function renderDashboard(data) {
-  const { profile, reach, views, reelsToday, postsToday, engagementRate, totalInteractions } = data;
+  const { profile, reach, views, reelViews, reelsToday, postsToday, engagementRate, totalInteractions } = data;
   const followers_count = profile.followers_count;
   const media_count = profile.media_count;
   const username = profile.username;
@@ -816,9 +823,9 @@ function renderDashboard(data) {
         <div class="stat-card-delta delta-flat">sem comparativo ainda</div>
       </div>
       <div class="stat-card">
-        <div class="stat-card-label">Visualizações (hoje)</div>
-        <div class="stat-card-value">${views !== null && views !== undefined ? formatNum(views) : '—'}</div>
-        <div class="stat-card-delta delta-flat">${reelsToday ? reelsToday + ' reels hoje' : 'reels e vídeos'}</div>
+        <div class="stat-card-label">Visualizações (conta, hoje)</div>
+        <div class="stat-card-value">${formatNum(views)}</div>
+        <div class="stat-card-delta delta-flat">${reelViews != null ? formatNum(reelViews) + ' nos ' + reelsToday + ' reels de hoje' : 'todo o acervo'}</div>
       </div>
     </div>
 
@@ -927,18 +934,39 @@ function renderDashboard(data) {
     }
   });
 
-  // Renderiza gráfico de seguidores
+  // Renderiza gráfico de seguidores, com filtro de período
   (async () => {
     const history = await fetchHistory();
-    if(history.length > 0) {
-      const sorted = [...history].sort((a,b) => a.date.localeCompare(b.date));
-      const dates = sorted.map(h => h.date);
-      const values = sorted.map(h => h.followers).filter(v => v !== null);
-      const chartEl = document.getElementById('chart-followers');
-      if(chartEl) {
-        chartEl.innerHTML = lineChartSvg(dates, values);
+    const chartEl = document.getElementById('chart-followers');
+    if(!chartEl) return;
+
+    // Descarta dias sem seguidores mantendo data e valor pareados
+    const pontos = [...history]
+      .sort((a,b) => a.date.localeCompare(b.date))
+      .filter(h => h.followers != null);
+
+    function desenhar(days){
+      const recorte = days === 'all' ? pontos : pontos.slice(-Number(days));
+      if(recorte.length === 0){
+        chartEl.innerHTML = '<p style="color: var(--text-3); text-align: center; padding: 40px 0; font-family: var(--font-mono);">Sem dados nesse período</p>';
+        return;
       }
+      if(recorte.length === 1){
+        chartEl.innerHTML = `<p style="color: var(--text-3); text-align: center; padding: 40px 0; font-family: var(--font-mono);">Só 1 dia registrado (${recorte[0].date}) — o gráfico aparece a partir de 2 dias</p>`;
+        return;
+      }
+      chartEl.innerHTML = lineChartSvg(recorte.map(h => h.date), recorte.map(h => h.followers));
     }
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        desenhar(btn.dataset.days);
+      });
+    });
+
+    desenhar('all');
   })();
 }
 
@@ -982,10 +1010,15 @@ function renderPosts(posts){
   container.innerHTML = posts.slice(0, 9).map(post => `
     <a href="${post.permalink}" target="_blank" style="text-decoration: none; display: block;">
       <div style="aspect-ratio: 1; background: linear-gradient(135deg, rgba(61, 91, 254, 0.1) 0%, rgba(84, 112, 255, 0.05) 100%); border: 1px solid rgba(61, 91, 254, 0.2); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: all 0.3s ease; cursor: pointer;">
-        ${post.media_url ? `<img src="${post.media_url}" style="width: 100%; height: 70%; object-fit: cover; background: rgba(61, 91, 254, 0.1);">` : '<div style="width: 100%; height: 70%; background: rgba(61, 91, 254, 0.1); display: flex; align-items: center; justify-content: center;"><span style="color: var(--text-3); font-size: 11px;">Vídeo/Reels</span></div>'}
+        <div style="position: relative; width: 100%; height: 70%;">
+          ${post.media_url
+            ? `<img src="${post.media_url}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; background: rgba(61, 91, 254, 0.1);">`
+            : '<div style="width: 100%; height: 100%; background: rgba(61, 91, 254, 0.1); display: flex; align-items: center; justify-content: center;"><span style="color: var(--text-3); font-size: 11px;">Sem prévia</span></div>'}
+          ${post.isReel ? '<span style="position: absolute; top: 8px; right: 8px; background: rgba(15,20,25,0.75); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 7px; border-radius: 6px;">REEL</span>' : ''}
+        </div>
         <div style="padding: 8px; display: flex; gap: 8px; justify-content: center; font-size: 11px; color: var(--text-2); border-top: 1px solid rgba(61, 91, 254, 0.1);">
-          <span>❤️ ${post.like_count}</span>
-          <span>💬 ${post.comments_count}</span>
+          <span>❤️ ${formatNum(post.like_count)}</span>
+          <span>💬 ${formatNum(post.comments_count)}</span>
         </div>
       </div>
     </a>
