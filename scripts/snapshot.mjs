@@ -6,6 +6,10 @@ const HISTORY_LIMIT = 800;
 // Quantos dias recentes reconferir a cada execução. A Meta guarda insights
 // por ~2 anos, mas 30 dias cobre o estrago sem estourar o limite de chamadas.
 const BACKFILL_DAYS = 30;
+// Ranking de publicações: quantas por dia guardar e por quantos dias.
+// 10 x 35 dias ~ 350 registros, arquivo leve o bastante pro navegador.
+const TOP_POR_DIA = 10;
+const JANELA_TOP = 35;
 
 if(!TOKEN || !IG_USER_ID){
   console.error('Faltam as variáveis de ambiente IG_TOKEN e/ou IG_USER_ID.');
@@ -35,6 +39,96 @@ async function fetchGraph(path, params){
   return json;
 }
 
+// Roda `fn` com no máximo `limit` chamadas simultâneas.
+export async function mapLimit(items, limit, fn){
+  const out = new Array(items.length);
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for(;;){
+      const idx = i++;
+      if(idx >= items.length) return;
+      try{ out[idx] = await fn(items[idx]); }
+      catch(e){ out[idx] = null; }
+    }
+  }));
+  return out;
+}
+
+// Métricas de uma publicação. Pede tudo numa chamada e só cai pra uma a uma
+// se a Meta recusar o combo. 'follows' vai à parte porque reels não aceitam.
+export async function metricasDaMidia(m, fetch_ = fetchGraph){
+  const isVideo = m.media_product_type === 'REELS' || m.media_type === 'VIDEO';
+  const base = ['reach', 'views', 'total_interactions', 'likes', 'comments', 'saved', 'shares'];
+  const vals = {};
+  const absorve = json => (json.data || []).forEach(d => {
+    const v = d.values && d.values[0] ? d.values[0].value : null;
+    if(typeof v === 'number') vals[d.name] = v;
+  });
+
+  try{
+    absorve(await fetch_('/' + m.id + '/insights', { metric: base.join(',') }));
+  }catch(e){
+    for(const metric of base){
+      try{ absorve(await fetch_('/' + m.id + '/insights', { metric })); }catch(e2){}
+    }
+  }
+
+  let follows = null;
+  if(!isVideo){
+    try{
+      const r = await fetch_('/' + m.id + '/insights', { metric: 'follows' });
+      const row = (r.data || []).find(d => d.name === 'follows');
+      const v = row && row.values && row.values[0] ? row.values[0].value : null;
+      if(typeof v === 'number') follows = v;
+    }catch(e){}
+  }
+
+  return {
+    id: m.id,
+    permalink: m.permalink,
+    media_url: m.media_type === 'VIDEO' ? (m.thumbnail_url || null) : (m.media_url || null),
+    media_type: m.media_type,
+    isReel: m.media_product_type === 'REELS',
+    isVideo,
+    caption: (m.caption || '').replace(/\s+/g, ' ').slice(0, 90),
+    timestamp: m.timestamp,
+    date: brazilDateKey(new Date(m.timestamp)),
+    hora: new Intl.DateTimeFormat('pt-BR', { timeZone: TZ, hour: '2-digit', minute: '2-digit' })
+      .format(new Date(m.timestamp)),
+    reach: vals.reach ?? null,
+    views: vals.views ?? null,
+    interactions: vals.total_interactions ?? null,
+    likes: vals.likes ?? null,
+    comments: vals.comments ?? null,
+    saved: vals.saved ?? null,
+    shares: vals.shares ?? null,
+    follows
+  };
+}
+
+// Junta o ranking de um dia ao arquivo, mantendo `recentes` curto e a
+// lista de sempre no topo. Sem isso o arquivo cresceria sem limite e o
+// navegador teria que baixar tudo a cada carregamento.
+export function mesclaTop(atual, novos, diaLimite){
+  const recentes = (atual.recentes || []).filter(p =>
+    !novos.some(n => n.date === p.date) && p.date >= diaLimite
+  );
+  recentes.push(...novos);
+  recentes.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+
+  const porId = new Map();
+  [...(atual.allTime || []), ...novos].forEach(p => {
+    const anterior = porId.get(p.id);
+    // Um post reaparece com números maiores; fica a leitura mais recente.
+    if(!anterior || (p.interactions ?? 0) >= (anterior.interactions ?? 0)) porId.set(p.id, p);
+  });
+  const allTime = [...porId.values()]
+    .sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1))
+    .slice(0, 30);
+
+  return { atualizado: new Date().toISOString(), recentes, allTime };
+}
+
 // Busca uma métrica total_value numa janela explícita.
 // Cada métrica vai numa chamada separada de propósito: pedir duas juntas
 // faz a Meta rejeitar a requisição inteira e perder as duas.
@@ -58,7 +152,7 @@ async function totalValue(metric, since, until){
 async function fetchMediaDoDia(dayStartSec){
   const todas = [];
   let params = {
-    fields: 'id,timestamp,media_type,media_product_type',
+    fields: 'id,timestamp,media_type,media_product_type,media_url,thumbnail_url,permalink,caption',
     limit: '100'
   };
   for(let pagina = 0; pagina < 10; pagina++){
@@ -215,6 +309,34 @@ async function main(){
   if(history.length > HISTORY_LIMIT) history = history.slice(-HISTORY_LIMIT);
   await fs.writeFile(path, JSON.stringify(history, null, 2) + '\n');
   console.log('Snapshot salvo:', JSON.stringify(entry));
+
+  // Ranking das publicações do dia, guardado pro dashboard somar por período.
+  // Fazer isso ao vivo pra 30 dias seriam ~1200 chamadas, inviável no navegador.
+  try{
+    const midiaDoDia = (await fetchMediaDoDia(since))
+      .filter(m => brazilDateKey(new Date(m.timestamp)) === todayKey);
+    const comMetricas = (await mapLimit(midiaDoDia, 6, m => metricasDaMidia(m))).filter(Boolean);
+    comMetricas.sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
+    const topDoDia = comMetricas.slice(0, TOP_POR_DIA);
+
+    const topPath = new URL('../top-posts.json', import.meta.url);
+    let top = { recentes: [], allTime: [] };
+    try{ top = JSON.parse(await fs.readFile(topPath, 'utf8')); }catch(e){}
+
+    const limite = new Date(new Date(todayKey + 'T12:00:00Z').getTime() - JANELA_TOP * 86400000)
+      .toISOString().slice(0, 10);
+    const atualizado = mesclaTop(top, topDoDia, limite);
+    await fs.writeFile(topPath, JSON.stringify(atualizado, null, 2) + '\n');
+    console.log('Top do dia:', topDoDia.length, 'publicações |',
+      atualizado.recentes.length, 'em', JANELA_TOP, 'dias |', atualizado.allTime.length, 'no all-time');
+  }catch(e){ console.warn('Ranking do dia falhou:', e.message); }
 }
 
-main().catch(e => { console.error('Falhou:', e.message); process.exit(1); });
+// Só executa quando chamado direto. O backfill importa as funções daqui e
+// não pode disparar uma captura como efeito colateral do import.
+const chamadoDireto = process.argv[1] &&
+  import.meta.url === new URL('file://' + process.argv[1].replace(/\\/g, '/')).href;
+
+if(chamadoDireto){
+  main().catch(e => { console.error('Falhou:', e.message); process.exit(1); });
+}

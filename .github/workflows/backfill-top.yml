@@ -1,0 +1,41 @@
+name: Backfill do ranking de publicações
+
+# Sem schedule: roda só quando disparado à mão.
+on:
+  workflow_dispatch:
+    inputs:
+      dias:
+        description: 'Quantos dias preencher (1-30)'
+        required: false
+        default: '7'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Preenche o ranking
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          IG_USER_ID: ${{ vars.IG_USER_ID }}
+        run: node scripts/backfill-top.mjs ${{ inputs.dias }}
+
+      - name: Commita se algo mudou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add top-posts.json
+          git diff --cached --quiet || git commit -m "Backfill do ranking de publicações"
+          git push
