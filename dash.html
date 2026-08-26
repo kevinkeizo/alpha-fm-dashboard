@@ -1579,6 +1579,30 @@ body.tv-mode.tv-ativo .tv-sair {
 
 .fmt-num small { white-space: nowrap; }
 
+
+
+/* Diz qual intervalo o filtro realmente cobriu. Sem isso, dois períodos com o
+   mesmo resultado parecem filtro quebrado, quando é o histórico que ainda não
+   chegou lá. */
+.cobertura {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--ink-4);
+  margin-top: 6px;
+}
+
+.cobertura.parcial { color: var(--signal-600); }
+
+.cobertura.parcial::before {
+  content: '';
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--signal-500);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
 </style>
 </head>
 <body>
@@ -2300,6 +2324,7 @@ function renderDashboard(data) {
       <div>
         <h2>Insights</h2>
         <p>O que rende mais, e quando</p>
+        <p id="ins-cobertura" class="cobertura"></p>
       </div>
       <div class="chart-filters">
         <button class="filter-btn top-btn active" data-periodo="hoje">Hoje</button>
@@ -2665,6 +2690,28 @@ function renderTop(hoje, guardado){
   function desenhar(periodo){
     const todos = recorte(periodo);
     const posts = todos.slice(0, 20);
+
+    // ── Cobertura real do período pedido ──
+    const cob = document.getElementById('ins-cobertura');
+    if(cob){
+      const datas = todos.map(p => p.date).filter(Boolean).sort();
+      if(!datas.length){
+        cob.textContent = '';
+        cob.className = 'cobertura';
+      }else{
+        const de = datas[0], ate = datas[datas.length - 1];
+        const dias = Math.round((new Date(ate) - new Date(de)) / 86400000) + 1;
+        const pedido = periodo === 'hoje' ? 1 : periodo === 'all' ? null : Number(periodo);
+        // Só avisa quando o histórico é mais curto que o filtro pedido
+        const curto = pedido && dias < pedido - 1;
+        cob.className = 'cobertura' + (curto ? ' parcial' : '');
+        cob.textContent = periodo === 'hoje'
+          ? diaMes(ate) + ' · ' + todos.length + ' publicações'
+          : (curto
+              ? 'histórico começa em ' + diaMes(de) + ' — ' + dias + ' dias disponíveis dos ' + pedido + ' pedidos'
+              : diaMes(de) + ' a ' + diaMes(ate) + ' · ' + dias + ' dias');
+      }
+    }
 
     // ── Faixa de KPIs: os números que respondem sozinhos ──
     const strip = document.getElementById('ins-strip');

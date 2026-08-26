@@ -26,13 +26,37 @@ function brazilDateKey(d){
   }).format(d);
 }
 
-async function fetchGraph(path, params){
+const espera = ms => new Promise(r => setTimeout(r, ms));
+
+// 30 dias são ~1.200 publicações. Nesse volume a Meta devolve erro transitório
+// com frequência ("An unexpected error has occurred"), que some ao repetir.
+// Sem retry o job inteiro morria na primeira falha.
+function ehTransitorio(msg){
+  return /unexpected error|rate limit|reduce the amount|temporarily|try again|timeout/i.test(msg || '');
+}
+
+async function fetchGraph(path, params, tentativa){
+  const t = tentativa || 0;
   const url = new URL('https://graph.facebook.com/' + API_VERSION + path);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   url.searchParams.set('access_token', TOKEN);
-  const res = await fetch(url.toString());
-  const json = JSON.parse(await res.text());
-  if(json.error) throw new Error(json.error.message);
+
+  let json;
+  try{
+    const res = await fetch(url.toString());
+    json = JSON.parse(await res.text());
+  }catch(e){
+    if(t < 4){ await espera(1500 * Math.pow(2, t)); return fetchGraph(path, params, t + 1); }
+    throw new Error('rede: ' + e.message);
+  }
+
+  if(json.error){
+    if(ehTransitorio(json.error.message) && t < 4){
+      await espera(1500 * Math.pow(2, t));
+      return fetchGraph(path, params, t + 1);
+    }
+    throw new Error(json.error.message);
+  }
   return json;
 }
 
@@ -48,8 +72,17 @@ async function main(){
     fields: 'id,timestamp,media_type,media_product_type,media_url,thumbnail_url,permalink,caption',
     limit: '100'
   };
-  for(let p = 0; p < 30; p++){
-    const r = await fetchGraph('/' + IG_USER_ID + '/media', params);
+  let truncou = false;
+  for(let p = 0; p < 40; p++){
+    let r;
+    try{
+      r = await fetchGraph('/' + IG_USER_ID + '/media', params);
+    }catch(e){
+      // Melhor gravar os dias que já vieram do que perder o job inteiro
+      console.warn('Paginação parou na página ' + p + ':', e.message);
+      truncou = true;
+      break;
+    }
     const data = r.data || [];
     todas.push(...data);
     const ultimo = data[data.length - 1];
@@ -58,8 +91,9 @@ async function main(){
     const after = r.paging && r.paging.cursors && r.paging.cursors.after;
     if(!after) break;
     params = { ...params, after };
+    await espera(300); // respiro entre páginas
   }
-  console.log('Publicações lidas:', todas.length);
+  console.log('Publicações lidas:', todas.length, truncou ? '(paginação truncada)' : '');
 
   // Agrupa por dia, ignorando hoje (que o /api/top resolve ao vivo)
   const porDia = {};
@@ -79,7 +113,7 @@ async function main(){
   try{ top = JSON.parse(await fs.readFile(topPath, 'utf8')); }catch(e){}
 
   for(const dia of dias){
-    const comMetricas = (await mapLimit(porDia[dia], 6, m => metricasDaMidia(m, fetchGraph)))
+    const comMetricas = (await mapLimit(porDia[dia], 4, m => metricasDaMidia(m, fetchGraph)))
       .filter(Boolean);
     comMetricas.sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
     const topDoDia = comMetricas.slice(0, TOP_POR_DIA);
@@ -89,6 +123,8 @@ async function main(){
     top = mesclaTop(top, topDoDia, corte);
 
     const melhor = topDoDia[0];
+    // Grava a cada dia: se a API cair no meio, o que já veio fica salvo
+    await fs.writeFile(topPath, JSON.stringify(top, null, 2) + '\n');
     console.log('  ' + dia + ':', porDia[dia].length, 'publicações ->', topDoDia.length,
       'no ranking | melhor:', melhor ? melhor.interactions + ' interações' : '—');
   }
