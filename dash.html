@@ -112,7 +112,7 @@ body::after {
 }
 
 .sidebar {
-  width: 236px;
+  width: 256px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -959,6 +959,339 @@ body.tv-mode .chart-section { padding: 26px 30px; }
   font-size: 12px;
 }
 
+
+/* ==========================================================================
+   Grid de 12 colunas + tiles assimétricos
+   O padrão que Linear, Stripe, Vercel e Grafana convergiram: faixa de KPIs
+   no topo, grid flexível abaixo, tamanho do tile = importância do dado.
+   ========================================================================== */
+
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.col-3  { grid-column: span 3; }
+.col-4  { grid-column: span 4; }
+.col-5  { grid-column: span 5; }
+.col-6  { grid-column: span 6; }
+.col-7  { grid-column: span 7; }
+.col-8  { grid-column: span 8; }
+.col-12 { grid-column: span 12; }
+
+@media (max-width: 1280px) {
+  .col-3 { grid-column: span 6; }
+  .col-4 { grid-column: span 6; }
+  .col-5, .col-7, .col-8 { grid-column: span 12; }
+}
+
+@media (max-width: 760px) {
+  .col-3, .col-4, .col-6 { grid-column: span 12; }
+}
+
+/* ============================ KPI card ============================ */
+
+.kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 16px 18px 0;
+  box-shadow: var(--lift-1);
+  overflow: hidden;
+  min-height: 132px;
+  transition: border-color 200ms ease, box-shadow 200ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kpi:hover { border-color: var(--signal-200); box-shadow: var(--lift-2); }
+}
+
+.kpi-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Delta compacto: seta + número, sem frase */
+.kpi-delta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-delta.up   { color: var(--gain); background: var(--gain-soft); }
+.kpi-delta.down { color: var(--drop); background: #FBEAEC; }
+.kpi-delta.flat { color: var(--ink-4); background: var(--bg-2); }
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  font-stretch: 108%;
+  letter-spacing: -0.028em;
+  color: var(--ink-1);
+  line-height: 1.08;
+  margin-top: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-sub {
+  font-size: 10.5px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  margin-top: 3px;
+}
+
+/* Sparkline sangra até a borda do card: vira o rodapé do tile */
+.kpi-spark {
+  margin: auto -18px 0;
+  height: 40px;
+  display: block;
+}
+
+/* ============================ Hero ============================ */
+
+.hero-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 26px 0;
+  box-shadow: var(--lift-2);
+  overflow: hidden;
+  min-height: 210px;
+}
+
+.hero-tile::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--signal-500) 0%, var(--signal-400) 34%, var(--peak) 64%, var(--signal-500) 100%);
+  background-size: 200% 100%;
+  animation: sweep 9s linear infinite;
+}
+
+@keyframes sweep { to { background-position: -200% 0; } }
+
+.hero-tile .hero-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+
+.hero-tile .hero-value {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 4.6vw, 66px);
+  font-weight: 700;
+  font-stretch: 118%;
+  color: var(--ink-1);
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-spark { margin: auto -26px 0; height: 76px; display: block; }
+
+/* Tile de ganho: verde reservado ao que é de fato ganho */
+.gain-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(160deg, var(--gain-soft) 0%, #F2FAF7 100%);
+  border: 1px solid rgba(18, 133, 95, 0.22);
+  border-radius: 16px;
+  padding: 24px 26px;
+  min-height: 210px;
+}
+
+.gain-tile .hero-label { color: var(--gain); letter-spacing: 0.16em; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+
+.gain-tile .hero-value {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 4vw, 56px);
+  font-weight: 700;
+  font-stretch: 115%;
+  color: var(--gain);
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.gain-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(18, 133, 95, 0.16);
+}
+
+.gain-meta div { display: flex; flex-direction: column; gap: 1px; }
+
+.gain-meta-l {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(18, 133, 95, 0.7);
+  font-weight: 700;
+}
+
+.gain-meta-v {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gain);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================ Comparação de formatos ============================ */
+
+.fmt-lista { display: flex; flex-direction: column; gap: 12px; }
+
+.fmt-linha { display: grid; grid-template-columns: 88px 1fr auto; align-items: center; gap: 12px; }
+
+.fmt-nome {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.fmt-barra {
+  height: 26px;
+  background: var(--bg-2);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.fmt-preenche {
+  height: 100%;
+  border-radius: 6px;
+  background: var(--signal-500);
+  width: 0;
+  transition: width 700ms var(--ease-out);
+}
+
+.fmt-preenche.reel { background: var(--peak); }
+.fmt-preenche.carrossel { background: var(--signal-500); }
+.fmt-preenche.imagem { background: var(--signal-400); }
+
+.fmt-num {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-1);
+  min-width: 74px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.fmt-num small {
+  display: block;
+  font-size: 9px;
+  color: var(--ink-4);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ============================ Ranking denso ============================ */
+
+/* Barra de fundo proporcional: o tamanho relativo se lê sem comparar números */
+.rank-linha { position: relative; overflow: hidden; }
+
+.rank-fundo {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: var(--signal-100);
+  border-radius: 0 12px 12px 0;
+  z-index: 0;
+  transition: width 700ms var(--ease-out);
+}
+
+.rank-linha > * { position: relative; z-index: 1; }
+
+/* ============================ Distribuição por hora ============================ */
+
+.horas {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  align-items: end;
+  height: 84px;
+}
+
+.hora-col {
+  background: var(--signal-200);
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  transition: background-color 160ms ease, transform 160ms var(--ease-out);
+  transform-origin: bottom;
+}
+
+.hora-col.pico { background: var(--peak); }
+
+@media (hover: hover) and (pointer: fine) {
+  .hora-col:hover { background: var(--signal-500); transform: scaleY(1.06); }
+}
+
+.horas-eixo {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.horas-eixo span {
+  font-size: 8.5px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+/* ============================ Esqueletos ============================ */
+
+.sk-kpi { min-height: 132px; border-radius: 13px; }
+.sk-hero { min-height: 210px; border-radius: 16px; }
+.sk-linha { height: 68px; border-radius: 12px; }
+
+/* ============================ Modo TV ============================ */
+
+body.tv-mode .kpi-value { font-size: 42px; }
+body.tv-mode .kpi { min-height: 158px; }
+body.tv-mode .hero-tile { min-height: 260px; }
+body.tv-mode .gain-tile { min-height: 260px; }
+
 </style>
 </head>
 <body>
@@ -1254,6 +1587,119 @@ function diaMes(d){
   return d ? d.slice(8) + '/' + d.slice(5, 7) : '';
 }
 
+// ── Sparkline ───────────────────────────────────────────────────────────────
+// A pesquisa de dashboards converge num ponto: KPI card são três camadas —
+// número, delta e tendência. Sem a tendência o número não diz se é bom.
+// Sem eixo, sem grade, sem rótulo: é forma, não leitura precisa.
+
+// Card da faixa de insights: rótulo, número, uma linha de contexto. Nada mais.
+function kpiSimples(rotulo, valor, sub, destaque, ganho){
+  return '<div class="kpi col-3" style="min-height:112px">' +
+    '<div class="kpi-top"><span class="kpi-label">' + rotulo + '</span></div>' +
+    '<div class="kpi-value" style="' + (destaque ? 'color:var(--peak);' : ganho ? 'color:var(--gain);' : '') +
+      (String(valor).length > 8 ? 'font-size:24px;' : '') + '">' + valor + '</div>' +
+    (sub ? '<div class="kpi-sub">' + sub + '</div>' : '') +
+    '<div style="margin-top:auto"></div></div>';
+}
+
+function sparkline(valores, opts){
+  const o = opts || {};
+  const cor = o.cor || 'var(--signal-500)';
+  const alt = o.alt || 40;
+  const vals = (valores || []).filter(v => typeof v === 'number');
+  if(vals.length < 2) return `<div style="height:${alt}px"></div>`;
+
+  const w = 240, h = alt;
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const span = (max - min) || 1;
+  // Ocupa só a metade de baixo do espaço: a linha respira sem encostar no topo
+  const topo = h * 0.28;
+  const X = i => (i / (vals.length - 1)) * w;
+  const Y = v => topo + (h - topo - 2) - ((v - min) / span) * (h - topo - 4);
+
+  const pts = vals.map((v, i) => [X(i), Y(v)]);
+  const linha = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = linha + ` L ${w} ${h} L 0 ${h} Z`;
+  const id = 'sk' + Math.random().toString(36).slice(2, 8);
+  const fim = pts[pts.length - 1];
+
+  return `<svg class="kpi-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${cor}" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="${cor}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#${id})"/>
+    <path d="${linha}" fill="none" stroke="${cor}" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <circle cx="${fim[0].toFixed(1)}" cy="${fim[1].toFixed(1)}" r="2.6" fill="${cor}"
+            vector-effect="non-scaling-stroke"/>
+  </svg>`;
+}
+
+// Delta como chip: seta e percentual, sem frase. Compara o valor de hoje
+// (parcial) com a média dos dias fechados, não com o total de ontem — senão
+// ficaria vermelho o dia inteiro só porque o dia não acabou.
+function chipDelta(hoje, referencia, opts){
+  const o = opts || {};
+  if(hoje == null || referencia == null || !referencia){
+    return '<span class="kpi-delta flat">—</span>';
+  }
+  const pct = ((hoje - referencia) / referencia) * 100;
+  const classe = pct >= 3 ? 'up' : pct <= -3 ? 'down' : 'flat';
+  const seta = pct >= 3 ? '↑' : pct <= -3 ? '↓' : '→';
+  const n = Math.abs(pct) >= 100 ? Math.round(Math.abs(pct)) : Math.abs(pct).toFixed(0);
+  return `<span class="kpi-delta ${classe}" title="${o.titulo || ''}">${seta} ${n}%</span>`;
+}
+
+// Média dos últimos N dias fechados, para a métrica pedida
+function mediaDe(history, campo, n){
+  const vals = history.slice(-n).map(h => h[campo]).filter(v => typeof v === 'number');
+  if(!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function serieDe(history, campo, n){
+  return history.slice(-(n || 21)).map(h => h[campo]).filter(v => typeof v === 'number');
+}
+
+// ── Insights calculados ─────────────────────────────────────────────────────
+// Tudo aqui sai dos dados que já temos. Nada é texto explicativo: são números
+// que respondem sozinhos "qual formato rende mais" e "que horário rende mais".
+
+function analisaFormatos(posts){
+  const grupos = { REEL: [], CARROSSEL: [], IMAGEM: [] };
+  posts.forEach(p => {
+    const k = p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM';
+    if(typeof p.interactions === 'number') grupos[k].push(p);
+  });
+  const linhas = Object.entries(grupos).map(([nome, lista]) => {
+    const total = lista.reduce((a, p) => a + (p.interactions || 0), 0);
+    return {
+      nome,
+      qtd: lista.length,
+      media: lista.length ? Math.round(total / lista.length) : 0,
+      alcance: lista.length ? Math.round(lista.reduce((a, p) => a + (p.reach || 0), 0) / lista.length) : 0
+    };
+  }).filter(l => l.qtd > 0);
+  linhas.sort((a, b) => b.media - a.media);
+  return linhas;
+}
+
+function analisaHoras(posts){
+  const balde = Array.from({ length: 24 }, () => ({ soma: 0, qtd: 0 }));
+  posts.forEach(p => {
+    if(!p.hora || typeof p.interactions !== 'number') return;
+    const h = parseInt(p.hora.slice(0, 2), 10);
+    if(isNaN(h)) return;
+    balde[h].soma += p.interactions;
+    balde[h].qtd++;
+  });
+  const medias = balde.map(b => b.qtd ? b.soma / b.qtd : 0);
+  const max = Math.max(...medias) || 1;
+  const melhor = medias.indexOf(max);
+  return { medias, max, melhor };
+}
+
 function lineChartSvg(dates, values) {
   if(!values || values.length < 2) return '';
 
@@ -1420,6 +1866,24 @@ function renderDashboard(data) {
   const dailyGain = data.dailyGain || null;
   const ontem = data.ontem || null;
 
+  // Histórico só com dias fechados, base de toda comparação e sparkline
+  const hist = (data.historico || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+
+  // Ganhos diários derivados da série de seguidores
+  const ganhos = [];
+  for(let i = 1; i < hist.length; i++){
+    if(hist[i].followers != null && hist[i-1].followers != null){
+      ganhos.push({ date: hist[i].date, g: hist[i].followers - hist[i-1].followers });
+    }
+  }
+  const ult7 = ganhos.slice(-7).map(x => x.g);
+  const g7 = ult7.length ? ult7.reduce((a, b) => a + b, 0) / ult7.length : null;
+  const gMax = ganhos.length ? Math.max(...ganhos.map(x => x.g)) : null;
+  const mesAtual = new Date().toISOString().slice(0, 7);
+  const doMes = ganhos.filter(x => x.date.slice(0, 7) === mesAtual).map(x => x.g);
+  const gMes = doMes.length ? doMes.reduce((a, b) => a + b, 0) : null;
+  const vps = (views && followers_count) ? views / followers_count : null;
+
   let dailyGainPct = null;
   if(dailyGain !== null && followers_count) {
     dailyGainPct = ((dailyGain / followers_count) * 100).toFixed(2);
@@ -1429,73 +1893,71 @@ function renderDashboard(data) {
 
   document.getElementById('app').innerHTML = `
     <section class="view active" data-view="geral">
-    <div class="view-head">
-      <h2>Visão Geral</h2>
-      <p>Números de hoje, comparados com o último dia fechado</p>
-    </div>
-    <div class="hero-card">
-      <div class="hero-top">
-        <div>
-          <div class="hero-label">Seguidores</div>
-          <div class="hero-value">${formatNum(followers_count)}</div>
-        </div>
-        <div>
-          <div class="hero-label">Crescimento (hoje)</div>
-          <div class="hero-value">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + formatNum(dailyGain) : '—'}</div>
-          <div class="stat-delta delta-up">${dailyGainPct !== null ? '+' + dailyGainPct + '%' : 'sem dado'}</div>
-        </div>
+    <div class="bento">
+      <div class="hero-tile col-8">
+        <div class="hero-label">Seguidores</div>
+        <div class="hero-value">${formatNum(followers_count)}</div>
+        <div class="kpi-sub">${formatNum(media_count)} publicações no acervo</div>
+        ${sparkline(serieDe(hist, 'followers', 30), { alt: 76 }).replace('kpi-spark', 'hero-spark')}
       </div>
-      <div class="hero-chips">
-        <div class="chip">
-          <div class="chip-label">7 dias</div>
-          <div class="chip-value">+1.2K</div>
-        </div>
-        <div class="chip">
-          <div class="chip-label">30 dias</div>
-          <div class="chip-value">+5.2K</div>
-        </div>
-        <div class="chip">
-          <div class="chip-label">Tendência</div>
-          <div class="chip-value">↗ Subindo</div>
+      <div class="gain-tile col-4">
+        <div class="hero-label">Ganho hoje</div>
+        <div class="hero-value">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + formatNum(dailyGain) : '—'}</div>
+        <div class="gain-meta">
+          <div><span class="gain-meta-l">Média 7d</span><span class="gain-meta-v">${g7 != null ? '+' + formatNum(Math.round(g7)) : '—'}</span></div>
+          <div><span class="gain-meta-l">Melhor dia</span><span class="gain-meta-v">${gMax != null ? '+' + formatNum(gMax) : '—'}</span></div>
+          <div><span class="gain-meta-l">No mês</span><span class="gain-meta-v">${gMes != null ? '+' + formatNum(gMes) : '—'}</span></div>
         </div>
       </div>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-card-label">Visualizações (conta, hoje)</div>
-        <div class="stat-card-value">${formatNum(views)}</div>
-        ${delta(views, ontem && ontem.views)}
+    <div class="bento">
+      <div class="kpi col-3">
+        <div class="kpi-top"><span class="kpi-label">Visualizações</span>${chipDelta(views, mediaDe(hist, 'views', 7))}</div>
+        <div class="kpi-value">${formatNum(views)}</div>
+        <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'views', 7) || 0))}</div>
+        ${sparkline(serieDe(hist, 'views', 21))}
       </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Views dos reels de hoje</div>
-        <div class="stat-card-value">${formatNum(reelViews)}</div>
-        <div class="stat-card-delta delta-flat">${reelsToday ? 'em ' + reelsToday + (reelsToday > 1 ? ' reels publicados hoje' : ' reel publicado hoje') : 'nenhum reel ainda'}</div>
+      <div class="kpi col-3">
+        <div class="kpi-top"><span class="kpi-label">Alcance</span>${chipDelta(reach, mediaDe(hist, 'reach', 7))}</div>
+        <div class="kpi-value">${formatNum(reach)}</div>
+        <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'reach', 7) || 0))}</div>
+        ${sparkline(serieDe(hist, 'reach', 21))}
       </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Alcance (hoje)</div>
-        <div class="stat-card-value">${formatNum(reach)}</div>
-        ${delta(reach, ontem && ontem.reach)}
+      <div class="kpi col-3">
+        <div class="kpi-top"><span class="kpi-label">Interações</span>${chipDelta(totalInteractions, mediaDe(hist, 'interactions', 7))}</div>
+        <div class="kpi-value">${formatNum(totalInteractions)}</div>
+        <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'interactions', 7) || 0))}</div>
+        ${sparkline(serieDe(hist, 'interactions', 21))}
       </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Interações (hoje)</div>
-        <div class="stat-card-value">${formatNum(totalInteractions)}</div>
-        ${delta(totalInteractions, ontem && ontem.interactions)}
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Publicações (hoje)</div>
-        <div class="stat-card-value">${formatNum(postsToday)}</div>
-        <div class="stat-card-delta delta-flat">${formatNum(media_count)} no total</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Taxa de Engajamento</div>
-        <div class="stat-card-value">${engagementRate !== null ? engagementRate.toFixed(1) : '—'}%</div>
-        ${engagementRate !== null && ontem && ontem.engagementRate != null
-          ? `<div class="stat-card-delta ${engagementRate >= ontem.engagementRate ? 'delta-up' : 'delta-down'}">${engagementRate >= ontem.engagementRate ? '↑' : '↓'} ${Math.abs(engagementRate - ontem.engagementRate).toFixed(1)} p.p. vs ontem</div>`
-          : '<div class="stat-card-delta delta-flat">sem comparativo</div>'}
+      <div class="kpi col-3">
+        <div class="kpi-top"><span class="kpi-label">Engajamento</span>${chipDelta(engagementRate, mediaDe(hist, 'engagementRate', 7))}</div>
+        <div class="kpi-value">${engagementRate !== null ? engagementRate.toFixed(1) + '%' : '—'}</div>
+        <div class="kpi-sub">média 7d ${(mediaDe(hist, 'engagementRate', 7) || 0).toFixed(1)}%</div>
+        ${sparkline(serieDe(hist, 'engagementRate', 21), { cor: 'var(--peak)' })}
       </div>
     </div>
 
+    <div class="bento">
+      <div class="kpi col-4">
+        <div class="kpi-top"><span class="kpi-label">Publicações hoje</span>${chipDelta(postsToday, mediaDe(hist, 'posts', 7))}</div>
+        <div class="kpi-value">${formatNum(postsToday)}</div>
+        <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'posts', 7) || 0))} por dia</div>
+        ${sparkline(serieDe(hist, 'posts', 21))}
+      </div>
+      <div class="kpi col-4">
+        <div class="kpi-top"><span class="kpi-label">Views dos reels</span>${chipDelta(reelViews, mediaDe(hist, 'reelViews', 7))}</div>
+        <div class="kpi-value">${formatNum(reelViews)}</div>
+        <div class="kpi-sub">${reelsToday || 0} reels publicados hoje</div>
+        ${sparkline(serieDe(hist, 'reelViews', 21), { cor: 'var(--peak)' })}
+      </div>
+      <div class="kpi col-4">
+        <div class="kpi-top"><span class="kpi-label">Views por seguidor</span></div>
+        <div class="kpi-value">${vps != null ? vps.toFixed(2).replace('.', ',') : '—'}</div>
+        <div class="kpi-sub">quantas vezes a base viu hoje</div>
+        ${sparkline(hist.slice(-21).map(h => (h.views && h.followers) ? h.views / h.followers : null).filter(v => v != null))}
+      </div>
+    </div>
     </section>
 
     <section class="view" data-view="crescimento">
@@ -1520,26 +1982,42 @@ function renderDashboard(data) {
     </section>
 
     <section class="view" data-view="insights">
-    <div class="view-head">
-      <h2>Insights</h2>
-      <p>O que mais performou, por período</p>
-    </div>
-    <div class="chart-section">
-      <div class="chart-title">
-        <span>Top Publicações</span>
-        <div class="chart-filters">
-          <button class="filter-btn top-btn active" data-periodo="hoje">Hoje</button>
-          <button class="filter-btn top-btn" data-periodo="7">7 dias</button>
-          <button class="filter-btn top-btn" data-periodo="30">30 dias</button>
-          <button class="filter-btn top-btn" data-periodo="all">Sempre</button>
-        </div>
+    <div class="view-head" style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <div>
+        <h2>Insights</h2>
+        <p>O que rende mais, e quando</p>
       </div>
-      <div id="top-nota" style="font-size: 11px; color: var(--ink-3); font-family: var(--font-mono); margin: -6px 0 14px;"></div>
-      <div id="top-lista" style="display: flex; flex-direction: column; gap: 8px;">
-        <div class="vazio-msg">Carregando ranking...</div>
+      <div class="chart-filters">
+        <button class="filter-btn top-btn active" data-periodo="hoje">Hoje</button>
+        <button class="filter-btn top-btn" data-periodo="7">7 dias</button>
+        <button class="filter-btn top-btn" data-periodo="30">30 dias</button>
+        <button class="filter-btn top-btn" data-periodo="all">Sempre</button>
       </div>
     </div>
 
+    <div class="bento" id="ins-strip"></div>
+
+    <div class="bento">
+      <div class="chart-section col-5" style="margin:0">
+        <div class="chart-title"><span>Rendimento por formato</span></div>
+        <div id="ins-formatos" class="fmt-lista"></div>
+      </div>
+      <div class="chart-section col-7" style="margin:0">
+        <div class="chart-title"><span>Interações por horário</span><span id="ins-pico" class="kpi-sub"></span></div>
+        <div class="horas" id="ins-horas"></div>
+        <div class="horas-eixo" id="ins-horas-eixo"></div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">
+        <span>Ranking de publicações</span>
+        <span id="top-nota" class="kpi-sub"></span>
+      </div>
+      <div id="top-lista" style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="skeleton sk-linha"></div><div class="skeleton sk-linha"></div><div class="skeleton sk-linha"></div>
+      </div>
+    </div>
     </section>
 
     <section class="view" data-view="publicacoes">
@@ -1709,6 +2187,7 @@ async function load(){
       }
       // Último dia fechado, usado como referência nos cards
       data.ontem = yesterday || null;
+      data.historico = sorted;
     }
 
     renderDashboard(data);
@@ -1819,7 +2298,6 @@ function ligarNavegacao(){
 
 function renderTop(hoje, guardado){
   const lista = document.getElementById('top-lista');
-  const nota = document.getElementById('top-nota');
   if(!lista) return;
 
   // O arquivo só tem dias fechados, então o de hoje entra sempre pelo ao vivo.
@@ -1840,25 +2318,80 @@ function renderTop(hoje, guardado){
   if(badge) badge.textContent = hoje.length ? hoje.length : '';
 
   function desenhar(periodo){
-    // Na seção dedicada cabe mais que os 10 de antes
-    const posts = recorte(periodo).slice(0, 20);
+    const todos = recorte(periodo);
+    const posts = todos.slice(0, 20);
 
-    if(nota){
-      const temFollows = posts.some(p => p.follows != null);
-      nota.textContent = temFollows
-        ? 'Ordenado por interações. O Instagram só informa seguidores ganhos em imagens e carrosséis — reels não reportam.'
-        : 'Ordenado por interações.';
+    // ── Faixa de KPIs: os números que respondem sozinhos ──
+    const strip = document.getElementById('ins-strip');
+    if(strip){
+      const inter = todos.reduce((a, p) => a + (p.interactions || 0), 0);
+      const alc = todos.reduce((a, p) => a + (p.reach || 0), 0);
+      const seg = todos.reduce((a, p) => a + (p.follows || 0), 0);
+      const temSeg = todos.some(p => p.follows != null);
+      const melhor = todos[0];
+      const fmts = analisaFormatos(todos);
+      const campeao = fmts[0];
+
+      strip.innerHTML = [
+        kpiSimples('Publicações', formatNum(todos.length), (todos.filter(p => p.isVideo).length) + ' reels'),
+        kpiSimples('Interações', formatNum(inter), todos.length ? 'média ' + formatNum(Math.round(inter / todos.length)) : '—'),
+        kpiSimples('Alcance somado', formatNum(alc), todos.length ? 'média ' + formatNum(Math.round(alc / todos.length)) : '—'),
+        campeao
+          ? kpiSimples('Formato campeão', campeao.nome, formatNum(campeao.media) + ' por publicação', true)
+          : kpiSimples('Formato campeão', '—', ''),
+        temSeg
+          ? kpiSimples('Seguidores ganhos', '+' + formatNum(seg), 'só imagens e carrosséis', false, true)
+          : ''
+      ].join('');
     }
 
+    // ── Formatos: barra proporcional, o tamanho relativo se lê sem comparar ──
+    const fmtEl = document.getElementById('ins-formatos');
+    if(fmtEl){
+      const fmts = analisaFormatos(todos);
+      const teto = Math.max(...fmts.map(f => f.media), 1);
+      fmtEl.innerHTML = fmts.length ? fmts.map(f => {
+        const classe = f.nome.toLowerCase();
+        return '<div class="fmt-linha">' +
+          '<span class="fmt-nome">' + f.nome + '</span>' +
+          '<div class="fmt-barra"><div class="fmt-preenche ' + classe + '" style="width:' + ((f.media / teto) * 100).toFixed(1) + '%"></div></div>' +
+          '<span class="fmt-num">' + formatNum(f.media) + '<small>' + f.qtd + ' publicações</small></span>' +
+        '</div>';
+      }).join('') : '<div class="vazio-msg">Sem dados no período</div>';
+    }
+
+    // ── Horas: 24 colunas, o pico em âmbar ──
+    const hEl = document.getElementById('ins-horas');
+    const hEixo = document.getElementById('ins-horas-eixo');
+    if(hEl){
+      const { medias, max, melhor } = analisaHoras(todos);
+      hEl.innerHTML = medias.map((m, h) =>
+        '<div class="hora-col' + (h === melhor && max > 0 ? ' pico' : '') + '" style="height:' +
+        Math.max(3, (m / max) * 100).toFixed(1) + '%" title="' + String(h).padStart(2, '0') + 'h · ' +
+        formatNum(Math.round(m)) + ' interações em média"></div>'
+      ).join('');
+      if(hEixo) hEixo.innerHTML = medias.map((_, h) => '<span>' + (h % 3 === 0 ? String(h).padStart(2, '0') : '') + '</span>').join('');
+      const pico = document.getElementById('ins-pico');
+      if(pico) pico.textContent = max > 0 ? 'pico às ' + String(melhor).padStart(2, '0') + 'h' : '';
+    }
+
+    // ── Nota do ranking: curta, e só quando há o que ressalvar ──
+    const nota = document.getElementById('top-nota');
+    if(nota) nota.textContent = posts.some(p => p.follows != null)
+      ? 'por interações · reels não reportam seguidores'
+      : 'por interações';
+
     if(posts.length === 0){
-      lista.innerHTML = `<div class="vazio-msg">${
-        periodo === 'hoje' ? 'Nenhuma publicação hoje ainda' : 'Sem dados nesse período ainda — o histórico começa a encher a cada noite'
-      }</div>`;
+      lista.innerHTML = '<div class="vazio-msg">' + (periodo === 'hoje'
+        ? 'Nenhuma publicação hoje ainda'
+        : 'Sem dados nesse período — o histórico enche a cada noite') + '</div>';
       return;
     }
 
+    const teto = Math.max(...posts.map(p => p.interactions || 0), 1);
     lista.innerHTML = posts.map((p, i) => `
       <a class="rank-linha" href="${p.permalink}" target="_blank" rel="noopener">
+        <span class="rank-fundo" style="width:${(((p.interactions || 0) / teto) * 100).toFixed(1)}%"></span>
         <span class="rank-pos">${i + 1}</span>
         <div class="rank-thumb">${p.media_url ? `<img src="${p.media_url}" loading="lazy" alt="">` : ''}</div>
         <div class="rank-meta">
