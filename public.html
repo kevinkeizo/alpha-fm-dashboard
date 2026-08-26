@@ -6,7 +6,7 @@
 <title>Alpha FM · Instagram Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 /* ==========================================================================
@@ -44,9 +44,9 @@
   --drop: #C4384B;
 
   /* Texto sobre superfície */
-  --font-display: 'Archivo', 'Inter Tight', -apple-system, sans-serif;
-  --font-body: 'Inter Tight', -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'Manrope', -apple-system, sans-serif;
+  --font-body: 'Manrope', -apple-system, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 
   /* Curvas — as nativas do CSS são fracas demais pra parecer intencional */
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -143,8 +143,7 @@ body::after {
 .sidebar-brand-text h1 {
   font-family: var(--font-display);
   font-size: 15px;
-  font-weight: 700;
-  font-stretch: 112%;
+  font-weight: 600;
   letter-spacing: -0.005em;
   white-space: nowrap;
   color: var(--ink-1);
@@ -367,9 +366,8 @@ body.nav-collapsed .nav-item.active::before { left: -10px; }
 
 .view-head h2 {
   font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 700;
-  font-stretch: 108%;
+  font-size: 25px;
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--ink-1);
 }
@@ -430,7 +428,7 @@ body.nav-collapsed .nav-item.active::before { left: -10px; }
 
 .hero-label {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.16em;
   color: var(--ink-3);
@@ -440,10 +438,9 @@ body.nav-collapsed .nav-item.active::before { left: -10px; }
   font-family: var(--font-display);
   font-size: clamp(52px, 5.6vw, 76px);
   font-weight: 700;
-  font-stretch: 118%;
   color: var(--ink-1);
   line-height: 0.92;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.022em;
 }
 
 /* Caixa de ganho: verde reservado, nunca decorativo */
@@ -548,7 +545,6 @@ body.nav-collapsed .nav-item.active::before { left: -10px; }
   font-family: var(--font-display);
   font-size: 30px;
   font-weight: 700;
-  font-stretch: 108%;
   letter-spacing: -0.025em;
   color: var(--ink-1);
   line-height: 1.05;
@@ -588,8 +584,7 @@ body.nav-collapsed .nav-item.active::before { left: -10px; }
 .chart-title > span:first-child {
   font-family: var(--font-display);
   font-size: 15px;
-  font-weight: 700;
-  font-stretch: 105%;
+  font-weight: 600;
   letter-spacing: -0.012em;
   color: var(--ink-1);
 }
@@ -743,7 +738,6 @@ body.tv-mode .chart-section { padding: 26px 30px; }
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 700;
-  font-stretch: 105%;
   font-variant-numeric: tabular-nums;
   margin-top: 2px;
 }
@@ -841,7 +835,7 @@ body.tv-mode .chart-section { padding: 26px 30px; }
 .rank-num-v {
   font-family: var(--font-mono);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--ink-1);
   font-variant-numeric: tabular-nums;
 }
@@ -1019,7 +1013,7 @@ body.tv-mode .chart-section { padding: 26px 30px; }
 
 .kpi-label {
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.11em;
   color: var(--ink-3);
@@ -1046,10 +1040,9 @@ body.tv-mode .chart-section { padding: 26px 30px; }
 
 .kpi-value {
   font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 700;
-  font-stretch: 108%;
-  letter-spacing: -0.028em;
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.018em;
   color: var(--ink-1);
   line-height: 1.08;
   margin-top: 10px;
@@ -1107,12 +1100,11 @@ body.tv-mode .chart-section { padding: 26px 30px; }
 
 .hero-tile .hero-value {
   font-family: var(--font-display);
-  font-size: clamp(48px, 4.6vw, 66px);
-  font-weight: 700;
-  font-stretch: 118%;
+  font-size: clamp(46px, 4.4vw, 62px);
+  font-weight: 600;
   color: var(--ink-1);
   line-height: 0.94;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.022em;
   margin-top: 8px;
   font-variant-numeric: tabular-nums;
 }
@@ -1136,12 +1128,11 @@ body.tv-mode .chart-section { padding: 26px 30px; }
 
 .gain-tile .hero-value {
   font-family: var(--font-display);
-  font-size: clamp(40px, 4vw, 56px);
-  font-weight: 700;
-  font-stretch: 115%;
+  font-size: clamp(38px, 3.7vw, 52px);
+  font-weight: 600;
   color: var(--gain);
   line-height: 0.96;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
 }
 
@@ -1208,7 +1199,7 @@ body.tv-mode .chart-section { padding: 26px 30px; }
 .fmt-num {
   font-family: var(--font-mono);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--ink-1);
   min-width: 74px;
   text-align: right;
@@ -1453,7 +1444,7 @@ body.tv-mode .gain-tile { min-height: 260px; }
   text-align: right;
   font-family: var(--font-mono);
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 500;
   color: var(--ink-1);
   font-variant-numeric: tabular-nums;
   line-height: 1.2;
@@ -1696,6 +1687,52 @@ body.tv-mode.tv-ativo .tv-sair {
 body.dado-velho .kpi-value,
 body.dado-velho .hero-value { opacity: 0.55; }
 
+
+
+/* Faixas de KPI: colunas iguais, independentes do grid de 12. Sem isto os
+   cards caíam em 1/12 da largura e cortavam rótulo e número. */
+.strip-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.strip-4 > * { grid-column: auto !important; }
+
+@media (max-width: 1100px) { .strip-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 620px)  { .strip-4 { grid-template-columns: 1fr; } }
+
+/* Rótulo do card: cabe em duas linhas em vez de virar reticências */
+.kpi-label {
+  white-space: normal;
+  overflow: visible;
+  line-height: 1.3;
+}
+
+.kpi-sub {
+  line-height: 1.4;
+  max-width: 100%;
+}
+
+/* ══ Audiência: nome de cidade precisa de espaço ═════════════════════════════ */
+.aud-lista .fmt-linha { grid-template-columns: minmax(0, 148px) 1fr 108px; }
+
+.aud-lista .fmt-nome {
+  text-transform: none;
+  letter-spacing: 0.005em;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aud-lista .fmt-uf {
+  color: var(--ink-4);
+  font-size: 10.5px;
+  font-weight: 400;
+}
+
+@media (max-width: 1400px) {
+  .aud-lista .fmt-linha { grid-template-columns: minmax(0, 120px) 1fr 100px; }
+}
+
 </style>
 </head>
 <body>
@@ -1897,8 +1934,9 @@ function diaMes(d){
 function kpiSimples(rotulo, valor, sub, destaque, ganho){
   return '<div class="kpi" style="min-height:110px;padding-bottom:16px">' +
     '<div class="kpi-top"><span class="kpi-label">' + rotulo + '</span></div>' +
-    '<div class="kpi-value" style="' + (destaque ? 'color:var(--peak);' : ganho ? 'color:var(--gain);' : '') +
-      (String(valor).length > 8 ? 'font-size:24px;' : '') + '">' + valor + '</div>' +
+    '<div class="kpi-value" style="' + (destaque ? 'color:var(--signal-600);' : ganho ? 'color:var(--gain);' : '') +
+      (String(valor).length > 11 ? 'font-size:20px;' : String(valor).length > 7 ? 'font-size:24px;' : '') +
+      'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + valor + '</div>' +
     (sub ? '<div class="kpi-sub">' + sub + '</div>' : '') +
     '</div>';
 }
@@ -2406,27 +2444,27 @@ function renderDashboard(data) {
       <p>Quem são os seguidores — o dado que sustenta proposta comercial</p>
     </div>
 
-    <div class="bento" id="aud-strip"></div>
+    <div class="bento strip-4" id="aud-strip"></div>
 
     <div class="bento">
       <div class="chart-section col-7" style="margin:0">
         <div class="chart-title"><span>Faixa etária</span><span id="aud-idade-sub" class="kpi-sub"></span></div>
-        <div id="aud-idade" class="fmt-lista"></div>
+        <div id="aud-idade" class="fmt-lista aud-lista"></div>
       </div>
       <div class="chart-section col-5" style="margin:0">
         <div class="chart-title"><span>Gênero</span></div>
-        <div id="aud-genero" class="fmt-lista"></div>
+        <div id="aud-genero" class="fmt-lista aud-lista"></div>
       </div>
     </div>
 
     <div class="bento">
       <div class="chart-section col-7" style="margin:0">
         <div class="chart-title"><span>Principais cidades</span></div>
-        <div id="aud-cidade" class="fmt-lista"></div>
+        <div id="aud-cidade" class="fmt-lista aud-lista"></div>
       </div>
       <div class="chart-section col-5" style="margin:0">
         <div class="chart-title"><span>Países</span></div>
-        <div id="aud-pais" class="fmt-lista"></div>
+        <div id="aud-pais" class="fmt-lista aud-lista"></div>
       </div>
     </div>
     </section>
@@ -2496,7 +2534,7 @@ function renderDashboard(data) {
       <h2>Publicações</h2>
       <p>O que saiu no ar recentemente</p>
     </div>
-    <div class="bento" id="st-strip"></div>
+    <div class="bento strip-4" id="st-strip"></div>
 
     <div class="chart-section">
       <div class="chart-title">
@@ -2834,8 +2872,8 @@ function barrasDe(itens, total, opts){
   return itens.map(i => {
     const pct = total ? (i.valor / total) * 100 : 0;
     return '<div class="fmt-linha">' +
-      '<span class="fmt-nome" style="text-transform:none;letter-spacing:0.02em;font-size:11.5px">' +
-        i.chave + (i.uf ? ' <span style="color:var(--ink-4)">' + i.uf + '</span>' : '') +
+      '<span class="fmt-nome" title="' + i.chave + (i.uf ? ', ' + i.uf : '') + '">' +
+        i.chave + (i.uf ? ' <span class="fmt-uf">' + i.uf + '</span>' : '') +
       '</span>' +
       '<div class="fmt-barra"><div class="fmt-preenche" style="width:' +
         ((i.valor / teto) * 100).toFixed(1) + '%;' + (o.cor ? 'background:' + o.cor : '') + '"></div></div>' +
@@ -2865,9 +2903,9 @@ async function carregarAudiencia(){
 
     const strip = document.getElementById('aud-strip');
     if(strip) strip.innerHTML = [
-      kpiSimples('Faixa dominante', maiorIdade ? maiorIdade.chave : '—',
+      kpiSimples('Faixa etária', maiorIdade ? maiorIdade.chave : '—',
         maiorIdade && tot.idade ? formatNum(maiorIdade.valor) + ' · ' + ((maiorIdade.valor / tot.idade) * 100).toFixed(0) + '% da base' : ''),
-      kpiSimples('Público feminino', fem && tot.genero ? ((fem.valor / tot.genero) * 100).toFixed(0) + '%' : '—',
+      kpiSimples('Feminino', fem && tot.genero ? ((fem.valor / tot.genero) * 100).toFixed(0) + '%' : '—',
         fem ? formatNum(fem.valor) + ' seguidoras' : ''),
       kpiSimples('Maior cidade', cidade1 ? cidade1.chave : '—',
         cidade1 && tot.cidade ? formatNum(cidade1.valor) + ' · ' + ((cidade1.valor / tot.cidade) * 100).toFixed(0) + '% da base' : ''),
@@ -2904,9 +2942,9 @@ async function carregarStories(){
     const strip = document.getElementById('st-strip');
     if(strip) strip.innerHTML = [
       kpiSimples('Stories no ar', formatNum(d.ativos), 'expiram em 24h'),
-      kpiSimples('Views somadas', formatNum(r.views), 'todos os stories ativos'),
+      kpiSimples('Views', formatNum(r.views), 'somadas dos ativos'),
       // Alcance de story não soma: a mesma pessoa vê vários seguidos
-      kpiSimples('Maior alcance', formatNum(r.alcanceMaximo), 'num story · média ' + formatNum(r.alcanceMedio)),
+      kpiSimples('Alcance máximo', formatNum(r.alcanceMaximo), 'num story · média ' + formatNum(r.alcanceMedio)),
       kpiSimples('Respostas', formatNum(r.replies), 'mensagens recebidas', false, (r.replies || 0) > 0)
     ].join('');
 
