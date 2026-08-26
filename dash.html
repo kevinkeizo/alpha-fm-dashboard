@@ -1643,6 +1643,59 @@ body.tv-mode.tv-ativo .tv-sair {
   .kpi-value.subindo::after, .hero-value.subindo::after { animation: none; opacity: 0; }
 }
 
+
+
+/* ══ Faixa de aviso ══════════════════════════════════════════════════════════
+   Só aparece quando há o que avisar. Fica no topo do conteúdo, não sobre ele:
+   num telão, alerta que cobre dado é pior que o problema que anuncia. */
+.faixa {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  border: 1px solid;
+}
+
+.faixa.visivel { display: flex; }
+
+.faixa.atencao {
+  background: #FFF8E8;
+  border-color: #E8C77A;
+  color: #7A5A12;
+}
+
+.faixa.critico {
+  background: #FDEDEF;
+  border-color: #E8A0AA;
+  color: #8C1F2E;
+}
+
+.faixa.info {
+  background: var(--signal-100);
+  border-color: var(--signal-200);
+  color: var(--signal-700);
+}
+
+.faixa svg { width: 18px; height: 18px; flex-shrink: 0; stroke-width: 2; }
+
+.faixa b { font-weight: 700; }
+
+.faixa-acao {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+/* Dado velho: o número continua, mas marcado. Melhor dado antigo identificado
+   que tela de erro vermelha no meio da redação. */
+body.dado-velho .kpi-value,
+body.dado-velho .hero-value { opacity: 0.55; }
+
 </style>
 </head>
 <body>
@@ -1689,6 +1742,10 @@ body.tv-mode.tv-ativo .tv-sair {
         <span>Publicações</span>
         <span class="nav-badge" id="badge-posts"></span>
       </button>
+      <button class="nav-item" data-view="audiencia" title="Audiência">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Audiência</span>
+      </button>
       <button class="nav-item" data-view="crescimento" title="Crescimento">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 6h6v6"/><path d="M23 6l-8.5 8.5-5-5L1 18"/></svg>
         <span>Crescimento</span>
@@ -1717,8 +1774,11 @@ body.tv-mode.tv-ativo .tv-sair {
   </aside>
 
   <div class="wrap">
-    <div class="container" id="app">
+    <div class="container">
+      <div class="faixa" id="faixa-aviso"></div>
+      <div id="app">
       <div class="loading"><div class="spin"></div> carregando</div>
+      </div>
     </div>
   </div>
 </div>
@@ -2340,6 +2400,37 @@ function renderDashboard(data) {
     </div>
     </section>
 
+    <section class="view" data-view="audiencia">
+    <div class="view-head">
+      <h2>Audiência</h2>
+      <p>Quem são os seguidores — o dado que sustenta proposta comercial</p>
+    </div>
+
+    <div class="bento" id="aud-strip"></div>
+
+    <div class="bento">
+      <div class="chart-section col-7" style="margin:0">
+        <div class="chart-title"><span>Faixa etária</span><span id="aud-idade-sub" class="kpi-sub"></span></div>
+        <div id="aud-idade" class="fmt-lista"></div>
+      </div>
+      <div class="chart-section col-5" style="margin:0">
+        <div class="chart-title"><span>Gênero</span></div>
+        <div id="aud-genero" class="fmt-lista"></div>
+      </div>
+    </div>
+
+    <div class="bento">
+      <div class="chart-section col-7" style="margin:0">
+        <div class="chart-title"><span>Principais cidades</span></div>
+        <div id="aud-cidade" class="fmt-lista"></div>
+      </div>
+      <div class="chart-section col-5" style="margin:0">
+        <div class="chart-title"><span>Países</span></div>
+        <div id="aud-pais" class="fmt-lista"></div>
+      </div>
+    </div>
+    </section>
+
     <section class="view" data-view="crescimento">
     <div class="view-head">
       <h2>Crescimento</h2>
@@ -2405,6 +2496,20 @@ function renderDashboard(data) {
       <h2>Publicações</h2>
       <p>O que saiu no ar recentemente</p>
     </div>
+    <div class="bento" id="st-strip"></div>
+
+    <div class="chart-section">
+      <div class="chart-title">
+        <span>Stories no ar</span>
+        <span id="st-sub" class="kpi-sub"></span>
+      </div>
+      <div id="st-lista" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:12px;">
+        <div class="skeleton" style="aspect-ratio:9/16; border-radius:12px"></div>
+        <div class="skeleton" style="aspect-ratio:9/16; border-radius:12px"></div>
+        <div class="skeleton" style="aspect-ratio:9/16; border-radius:12px"></div>
+      </div>
+    </div>
+
     <div class="chart-section">
       <div class="chart-title">
         <span>Últimas Publicações</span>
@@ -2571,17 +2676,38 @@ function renderDashboard(data) {
 
 // Load
 async function load(){
+  let data, history, posts;
   try{
-    const [data, history, posts] = await Promise.all([fetchAllData(), fetchHistory(), fetchPosts()]);
+    [data, history, posts] = await Promise.all([fetchAllData(), fetchHistory(), fetchPosts()]);
+    guardarEstado({ data, history });
+  }catch(e){
+    // Cai pro último retrato bom em vez de sumir com o painel
+    const guardado = lerEstado();
+    if(!guardado){
+      document.getElementById('app').innerHTML =
+        '<div class="loading" style="flex-direction:column;gap:10px">' +
+        '<div>Não foi possível carregar os dados</div>' +
+        '<div style="font-size:11px;opacity:.7">' + e.message + '</div></div>';
+      mostrarFaixa('critico', '<b>Sem conexão com a API.</b> Nada foi carregado ainda.', 'tentando de novo em 1 min');
+      setTimeout(() => location.reload(), 60000);
+      return;
+    }
+    data = guardado.data;
+    history = guardado.history || [];
+    posts = { posts: [], resumo: null };
+    document.body.classList.add('dado-velho');
+    mostrarFaixa('atencao',
+      '<b>Mostrando os últimos dados recebidos.</b> A conexão com o Instagram falhou agora há pouco.',
+      'há ' + minutosDesde(guardado.quando) + ' min');
+  }
 
-    // Calcula dailyGain comparando com dia anterior
+  try{
     if(history.length > 0) {
       const sorted = [...history].sort((a,b) => a.date.localeCompare(b.date));
       const yesterday = sorted[sorted.length - 1];
       if(yesterday && yesterday.followers) {
         data.dailyGain = (data.profile.followers_count - yesterday.followers);
       }
-      // Último dia fechado, usado como referência nos cards
       data.ontem = yesterday || null;
       data.historico = sorted;
     }
@@ -2589,13 +2715,18 @@ async function load(){
     renderDashboard(data);
     renderPosts(posts.posts, posts.resumo);
 
-    // O ranking é mais lento (uma chamada por publicação), então não segura
-    // o resto do dashboard: entra assim que ficar pronto.
+    // Só avisa do token se não houver aviso mais urgente na tela
+    if(!document.body.classList.contains('dado-velho')) avisarToken(data.tokenStatus);
+
     Promise.all([fetchTopHoje(), fetchTopGuardado()])
       .then(([hoje, guardado]) => renderTop(hoje, guardado))
       .catch(() => {});
+
+    carregarAudiencia();
+    carregarStories();
   }catch(e){
-    document.getElementById('app').innerHTML = `<div class="loading" style="color:red;">Erro: ${e.message}</div>`;
+    document.getElementById('app').innerHTML =
+      '<div class="loading" style="color:var(--drop)">Erro ao montar o painel: ' + e.message + '</div>';
   }
 }
 
@@ -2690,6 +2821,117 @@ function ligarNavegacao(){
   const inicial = location.hash.slice(1);
   const valida = [...itens].some(i => i.dataset.view === inicial);
   mostrar(valida ? inicial : 'geral');
+}
+
+
+// ── Audiência ───────────────────────────────────────────────────────────────
+// Barras proporcionais reusando o componente de formato: mesma linguagem
+// visual em todo o painel, e quem já leu uma sabe ler a outra.
+function barrasDe(itens, total, opts){
+  const o = opts || {};
+  if(!itens || !itens.length) return '<div class="vazio-msg">Sem dados</div>';
+  const teto = Math.max(...itens.map(i => i.valor), 1);
+  return itens.map(i => {
+    const pct = total ? (i.valor / total) * 100 : 0;
+    return '<div class="fmt-linha">' +
+      '<span class="fmt-nome" style="text-transform:none;letter-spacing:0.02em;font-size:11.5px">' +
+        i.chave + (i.uf ? ' <span style="color:var(--ink-4)">' + i.uf + '</span>' : '') +
+      '</span>' +
+      '<div class="fmt-barra"><div class="fmt-preenche" style="width:' +
+        ((i.valor / teto) * 100).toFixed(1) + '%;' + (o.cor ? 'background:' + o.cor : '') + '"></div></div>' +
+      '<span class="fmt-num">' + formatNum(i.valor) +
+        '<small>' + pct.toFixed(1).replace('.', ',') + '% da base</small></span>' +
+    '</div>';
+  }).join('');
+}
+
+async function carregarAudiencia(){
+  const alvo = document.getElementById('aud-idade');
+  if(!alvo) return;
+  try{
+    const res = await fetch(API_URL.replace('/api/data', '/api/audience'));
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const a = await res.json();
+    if(a.error) throw new Error(a.error);
+
+    const tot = a.totais || {};
+
+    // Faixa dominante e concentração geográfica: os dois números que a
+    // equipe comercial repete numa reunião.
+    const maiorIdade = [...a.idade].sort((x, y) => y.valor - x.valor)[0];
+    const fem = a.genero.find(g => g.chave === 'Feminino');
+    const cidade1 = a.cidade[0];
+    const brasil = a.pais.find(p => p.chave === 'BR');
+
+    const strip = document.getElementById('aud-strip');
+    if(strip) strip.innerHTML = [
+      kpiSimples('Faixa dominante', maiorIdade ? maiorIdade.chave : '—',
+        maiorIdade && tot.idade ? formatNum(maiorIdade.valor) + ' · ' + ((maiorIdade.valor / tot.idade) * 100).toFixed(0) + '% da base' : ''),
+      kpiSimples('Público feminino', fem && tot.genero ? ((fem.valor / tot.genero) * 100).toFixed(0) + '%' : '—',
+        fem ? formatNum(fem.valor) + ' seguidoras' : ''),
+      kpiSimples('Maior cidade', cidade1 ? cidade1.chave : '—',
+        cidade1 && tot.cidade ? formatNum(cidade1.valor) + ' · ' + ((cidade1.valor / tot.cidade) * 100).toFixed(0) + '% da base' : ''),
+      kpiSimples('No Brasil', brasil && tot.pais ? ((brasil.valor / tot.pais) * 100).toFixed(0) + '%' : '—',
+        brasil ? formatNum(brasil.valor) + ' seguidores' : '')
+    ].join('');
+
+    document.getElementById('aud-idade').innerHTML = barrasDe(a.idade, tot.idade);
+    const sub = document.getElementById('aud-idade-sub');
+    if(sub) sub.textContent = tot.idade ? formatNum(tot.idade) + ' seguidores classificados' : '';
+
+    document.getElementById('aud-genero').innerHTML = barrasDe(a.genero, tot.genero);
+    document.getElementById('aud-cidade').innerHTML = barrasDe(a.cidade, tot.cidade);
+    document.getElementById('aud-pais').innerHTML = barrasDe(a.pais, tot.pais);
+  }catch(e){
+    ['aud-idade','aud-genero','aud-cidade','aud-pais'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = '<div class="vazio-msg">Não foi possível carregar</div>';
+    });
+  }
+}
+
+// ── Stories ─────────────────────────────────────────────────────────────────
+async function carregarStories(){
+  const lista = document.getElementById('st-lista');
+  if(!lista) return;
+  try{
+    const res = await fetch(API_URL.replace('/api/data', '/api/stories'));
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    if(d.error) throw new Error(d.error);
+
+    const r = d.resumo || {};
+    const strip = document.getElementById('st-strip');
+    if(strip) strip.innerHTML = [
+      kpiSimples('Stories no ar', formatNum(d.ativos), 'expiram em 24h'),
+      kpiSimples('Views somadas', formatNum(r.views), 'todos os stories ativos'),
+      // Alcance de story não soma: a mesma pessoa vê vários seguidos
+      kpiSimples('Maior alcance', formatNum(r.alcanceMaximo), 'num story · média ' + formatNum(r.alcanceMedio)),
+      kpiSimples('Respostas', formatNum(r.replies), 'mensagens recebidas', false, (r.replies || 0) > 0)
+    ].join('');
+
+    const sub = document.getElementById('st-sub');
+    if(sub) sub.textContent = d.ativos ? 'a Meta só expõe os das últimas 24h' : '';
+
+    lista.innerHTML = d.stories.length ? d.stories.map(st =>
+      '<a class="post-card" href="' + st.permalink + '" target="_blank" rel="noopener">' +
+        '<div class="post-media" style="aspect-ratio:9/16">' +
+          (st.media_url ? '<img class="post-img" src="' + st.media_url + '" loading="lazy" alt="">' : '') +
+          '<span class="post-hora">' + st.hora + '</span>' +
+          (st.views != null ? '<span class="post-views">' + formatNum(st.views) + '</span>' : '') +
+        '</div>' +
+        '<div class="post-foot">' +
+          '<span title="alcance">◎ ' + formatNum(st.reach) + '</span>' +
+          '<span title="respostas">◗ ' + formatNum(st.replies) + '</span>' +
+        '</div>' +
+      '</a>'
+    ).join('') : '<div class="vazio-msg">Nenhum story no ar agora</div>';
+
+    const badge = document.getElementById('badge-stories');
+    if(badge) badge.textContent = d.ativos || '';
+  }catch(e){
+    lista.innerHTML = '<div class="vazio-msg">Não foi possível carregar os stories</div>';
+  }
 }
 
 function renderTop(hoje, guardado){
@@ -2904,6 +3146,80 @@ function desenharPosts(container, posts, tipo){
 
 
 
+
+// ── Faixa de aviso ──────────────────────────────────────────────────────────
+function mostrarFaixa(tipo, html, acao){
+  const el = document.getElementById('faixa-aviso');
+  if(!el) return;
+  if(!tipo){ el.className = 'faixa'; el.innerHTML = ''; return; }
+  const icones = {
+    atencao: '<path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',
+    critico: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+    info:    '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>'
+  };
+  el.className = 'faixa visivel ' + tipo;
+  el.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">' + (icones[tipo] || '') + '</svg>' +
+    '<span>' + html + '</span>' +
+    (acao ? '<span class="faixa-acao">' + acao + '</span>' : '');
+}
+
+// Avisa com folga: 15 dias pra alguém se organizar, 5 pra ser inadiável.
+// Quando o token vencer eu provavelmente não vou estar por perto — então o
+// aviso precisa dizer o que fazer, não só que algo vai quebrar.
+function avisarToken(ts){
+  if(!ts) return false;
+  const d = ts.daysUntilExpiry;
+  if(ts.isExpired){
+    mostrarFaixa('critico',
+      '<b>O acesso ao Instagram expirou.</b> Os números pararam de atualizar. ' +
+      'É preciso gerar um novo token no Meta for Developers e atualizar a variável IG_TOKEN na Vercel.',
+      'venceu em ' + ts.expiryDate);
+    return true;
+  }
+  if(d <= 5){
+    mostrarFaixa('critico',
+      '<b>O acesso ao Instagram vence em ' + d + (d === 1 ? ' dia' : ' dias') + '.</b> ' +
+      'Quando vencer, o dashboard para de atualizar. Renove o token no Meta for Developers.',
+      'vence em ' + ts.expiryDate);
+    return true;
+  }
+  if(d <= 15){
+    mostrarFaixa('atencao',
+      '<b>O acesso ao Instagram vence em ' + d + ' dias</b> (' + ts.expiryDate + '). ' +
+      'Vale renovar antes que pare.',
+      'IG_TOKEN · Vercel');
+    return true;
+  }
+  return false;
+}
+
+// ── Último estado bom ───────────────────────────────────────────────────────
+// Um blip de rede de 3 segundos derrubava a tela inteira pra um texto vermelho
+// — no telão da redação. Guardar o último retrato bom deixa o painel de pé.
+const GUARDA = 'alpha-ultimo';
+
+function guardarEstado(data){
+  try{
+    localStorage.setItem(GUARDA, JSON.stringify({ quando: Date.now(), data }));
+  }catch(e){}
+}
+
+function lerEstado(){
+  try{
+    const cru = localStorage.getItem(GUARDA);
+    if(!cru) return null;
+    const o = JSON.parse(cru);
+    // Mais de 12h é retrato de outro dia: melhor não fingir que é de agora
+    if(Date.now() - o.quando > 12 * 3600000) return null;
+    return o;
+  }catch(e){ return null; }
+}
+
+function minutosDesde(ms){
+  return Math.max(1, Math.round((Date.now() - ms) / 60000));
+}
+
 // ── Pulso ao vivo ───────────────────────────────────────────────────────────
 // Num telão que fica ligado o dia inteiro, número parado parece tela travada.
 // A cada minuto relê a API e, quando um valor muda de fato, ele sobe (ou
@@ -2997,7 +3313,18 @@ function desenharPosts(container, posts, tipo){
 
       const sub = document.getElementById('brand-subtitle');
       if(sub && d.profile) sub.textContent = '@' + d.profile.username + ' · atualizado ' + fmtTime();
-    }catch(e){ /* uma falha de rede não pode derrubar o laço */ }
+      // Voltou a responder: tira a marca de dado velho
+      if(document.body.classList.contains('dado-velho')){
+        document.body.classList.remove('dado-velho');
+        mostrarFaixa(null);
+        avisarToken(d.tokenStatus);
+      }
+      guardarEstado({ data: d, history: window.__hist || [] });
+    }catch(e){
+      // Uma falha isolada não derruba o laço, mas marca a tela
+      document.body.classList.add('dado-velho');
+      mostrarFaixa('atencao', '<b>Reconectando ao Instagram.</b> Os números abaixo são os últimos recebidos.', 'nova tentativa em 1 min');
+    }
   }
 
   // Semeia com o que já está na tela pra primeira leitura não animar do zero
