@@ -1175,7 +1175,7 @@ body.tv-mode .chart-section { padding: 26px 30px; }
 
 .fmt-lista { display: flex; flex-direction: column; gap: 12px; }
 
-.fmt-linha { display: grid; grid-template-columns: 88px 1fr auto; align-items: center; gap: 12px; }
+.fmt-linha { display: grid; grid-template-columns: 92px 1fr 116px; align-items: center; gap: 12px; }
 
 .fmt-nome {
   font-size: 10px;
@@ -1543,6 +1543,42 @@ body.tv-mode.tv-ativo .tv-sair {
 
 .hero-tile .kpi-area { width: calc(100% + 52px); margin: auto -26px 0; }
 
+
+
+/* ══ Mini-barras dos KPIs ════════════════════════════════════════════════════
+   Uma barra por dia, a última destacada. Lê melhor que curva neste tamanho. */
+.spark-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 36px;
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+
+.spark-bars i {
+  flex: 1;
+  background: var(--signal-200);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+  display: block;
+}
+
+.spark-bars i.hoje { background: var(--signal-500); }
+
+.hero-tile .spark-bars { margin-bottom: 22px; }
+
+
+
+/* Amostra pequena: barra listrada, pra não ler como um resultado firme */
+.fmt-preenche.fraca {
+  background-image: repeating-linear-gradient(
+    -45deg, transparent 0 5px, rgba(255,255,255,0.35) 5px 10px
+  );
+}
+
+.fmt-num small { white-space: nowrap; }
+
 </style>
 </head>
 <body>
@@ -1744,6 +1780,25 @@ function kpiSimples(rotulo, valor, sub, destaque, ganho){
 }
 
 
+
+
+// Mini-barras: uma barra por dia, a última destacada. Em 34px de altura isso
+// lê melhor que uma curva — dá pra apontar o dia alto sem seguir a linha.
+function sparkBars(valores, opts){
+  const o = typeof opts === 'number' ? { n: opts } : (opts || {});
+  const n = o.n || 14;
+  const vals = (valores || []).filter(v => typeof v === 'number').slice(-n);
+  if(vals.length < 2) return '<div class="spark-bars"></div>';
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const span = (max - min) || 1;
+  const est = o.alt ? ' style="height:' + o.alt + 'px"' : '';
+  return '<div class="spark-bars"' + est + '>' + vals.map((v, i) => {
+    // Piso de 18% pra barra baixa ainda existir como barra
+    const alt = 18 + ((v - min) / span) * 82;
+    const ultima = i === vals.length - 1 ? ' class="hoje"' : '';
+    return '<i' + ultima + ' style="height:' + alt.toFixed(1) + '%"></i>';
+  }).join('') + '</div>';
+}
 
 // Interpolação monótona (Fritsch–Carlson). Uma spline comum inventa picos
 // entre os pontos — num gráfico de dado real isso é mentira. Esta mantém a
@@ -2142,7 +2197,7 @@ function renderDashboard(data) {
         <div class="hero-label">Seguidores</div>
         <div class="hero-value">${formatNum(followers_count)}</div>
         <div class="kpi-sub">${formatNum(media_count)} publicações no acervo · barras = ganho por dia</div>
-        ${sparkArea(ganhos.map(x => x.g), { n: 21, alt: 92 })}
+        ${sparkBars(ganhos.map(x => x.g), { n: 21, alt: 88 })}
       </div>
       <div class="gain-tile col-4">
         <div class="hero-label">Ganho hoje</div>
@@ -2160,25 +2215,25 @@ function renderDashboard(data) {
         <div class="kpi-top"><span class="kpi-label">Visualizações</span>${chipRitmo(views, mediaDe(hist, 'views', 7))}</div>
         <div class="kpi-value">${formatNum(views)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'views', 7) || 0))}</div>
-        ${sparkArea(serieDe(hist, 'views', 14))}
+        ${sparkBars(serieDe(hist, 'views', 14))}
       </div>
       <div class="kpi col-3">
         <div class="kpi-top"><span class="kpi-label">Alcance</span>${chipRitmo(reach, mediaDe(hist, 'reach', 7))}</div>
         <div class="kpi-value">${formatNum(reach)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'reach', 7) || 0))}</div>
-        ${sparkArea(serieDe(hist, 'reach', 14))}
+        ${sparkBars(serieDe(hist, 'reach', 14))}
       </div>
       <div class="kpi col-3">
         <div class="kpi-top"><span class="kpi-label">Interações</span>${chipRitmo(totalInteractions, mediaDe(hist, 'interactions', 7))}</div>
         <div class="kpi-value">${formatNum(totalInteractions)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'interactions', 7) || 0))}</div>
-        ${sparkArea(serieDe(hist, 'interactions', 14))}
+        ${sparkBars(serieDe(hist, 'interactions', 14))}
       </div>
       <div class="kpi col-3">
         <div class="kpi-top"><span class="kpi-label">Engajamento</span>${chipDelta(engagementRate, mediaDe(hist, 'engagementRate', 7))}</div>
         <div class="kpi-value">${engagementRate !== null ? engagementRate.toFixed(1) + '%' : '—'}</div>
         <div class="kpi-sub">média 7d ${(mediaDe(hist, 'engagementRate', 7) || 0).toFixed(1)}%</div>
-        ${sparkArea(serieDe(hist, 'engagementRate', 14))}
+        ${sparkBars(serieDe(hist, 'engagementRate', 14))}
       </div>
     </div>
 
@@ -2187,19 +2242,19 @@ function renderDashboard(data) {
         <div class="kpi-top"><span class="kpi-label">Publicações hoje</span>${chipRitmo(postsToday, mediaDe(hist, 'posts', 7))}</div>
         <div class="kpi-value">${formatNum(postsToday)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'posts', 7) || 0))} por dia</div>
-        ${sparkArea(serieDe(hist, 'posts', 14))}
+        ${sparkBars(serieDe(hist, 'posts', 14))}
       </div>
       <div class="kpi col-4">
         <div class="kpi-top"><span class="kpi-label">Views dos reels</span>${chipRitmo(reelViews, mediaDe(hist, 'reelViews', 7))}</div>
         <div class="kpi-value">${formatNum(reelViews)}</div>
         <div class="kpi-sub">${reelsToday || 0} reels publicados hoje</div>
-        ${sparkArea(serieDe(hist, 'reelViews', 14))}
+        ${sparkBars(serieDe(hist, 'reelViews', 14))}
       </div>
       <div class="kpi col-4">
         <div class="kpi-top"><span class="kpi-label">Views por seguidor</span></div>
         <div class="kpi-value">${vps != null ? vps.toFixed(2).replace('.', ',') : '—'}</div>
         <div class="kpi-sub">quantas vezes a base viu hoje</div>
-        ${sparkArea(hist.slice(-14).map(h => (h.views && h.followers) ? h.views / h.followers : null).filter(v => v != null))}
+        ${sparkBars(hist.slice(-14).map(h => (h.views && h.followers) ? h.views / h.followers : null).filter(v => v != null))}
       </div>
     </div>
 
@@ -2258,7 +2313,7 @@ function renderDashboard(data) {
 
     <div class="bento">
       <div class="chart-section col-5" style="margin:0">
-        <div class="chart-title"><span>Rendimento por formato</span></div>
+        <div class="chart-title"><span>Rendimento por formato</span><span class="kpi-sub">média de interações por publicação</span></div>
         <div id="ins-formatos" class="fmt-lista"></div>
       </div>
       <div class="chart-section col-7" style="margin:0">
@@ -2642,10 +2697,16 @@ function renderTop(hoje, guardado){
       const teto = Math.max(...fmts.map(f => f.media), 1);
       fmtEl.innerHTML = fmts.length ? fmts.map(f => {
         const classe = f.nome.toLowerCase();
+        // Com menos de 3 publicações a média vira ruído: um post fora da curva
+        // inverte o ranking. Melhor marcar do que deixar decidir pauta em cima disso.
+        const fraco = f.qtd < 3;
         return '<div class="fmt-linha">' +
           '<span class="fmt-nome">' + f.nome + '</span>' +
-          '<div class="fmt-barra"><div class="fmt-preenche ' + classe + '" style="width:' + ((f.media / teto) * 100).toFixed(1) + '%"></div></div>' +
-          '<span class="fmt-num">' + formatNum(f.media) + '<small>' + f.qtd + ' publicações</small></span>' +
+          '<div class="fmt-barra"><div class="fmt-preenche ' + classe + (fraco ? ' fraca' : '') +
+            '" style="width:' + ((f.media / teto) * 100).toFixed(1) + '%"></div></div>' +
+          '<span class="fmt-num">' + formatNum(f.media) +
+            '<small>' + (fraco ? '⚠ só ' : 'em ') + f.qtd + ' publicaç' + (f.qtd === 1 ? 'ão' : 'ões') + '</small>' +
+          '</span>' +
         '</div>';
       }).join('') : '<div class="vazio-msg">Sem dados no período</div>';
     }
