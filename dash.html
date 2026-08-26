@@ -1420,46 +1420,149 @@ body.tv-mode .gain-tile { min-height: 260px; }
 /* ══ Destaques do dia ════════════════════════════════════════════════════════ */
 .destaque {
   display: grid;
-  grid-template-columns: 40px minmax(0,1fr) auto;
+  grid-template-columns: 40px minmax(0, 1fr) 74px;
   align-items: center;
   gap: 12px;
-  padding: 8px 0;
+  padding: 10px 0;
   text-decoration: none;
   border-bottom: 1px solid var(--line);
 }
 
 .destaque:last-child { border-bottom: none; }
 
-.destaque-thumb { width: 40px; height: 40px; border-radius: 8px; overflow: hidden; background: var(--bg-2); }
+@media (hover: hover) and (pointer: fine) {
+  .destaque:hover .destaque-cap { color: var(--signal-600); }
+}
+
+.destaque-thumb {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-2);
+  display: block;
+}
+
 .destaque-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+/* min-width:0 é o que deixa o 1fr encolher e o ellipsis funcionar */
+.destaque-meta { display: block; min-width: 0; }
+
 .destaque-cap {
-  font-size: 12px;
+  display: block;
+  font-size: 12.5px;
   color: var(--ink-1);
+  font-weight: 500;
+  line-height: 1.35;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: color 160ms ease;
 }
 
-.destaque-sub { font-size: 10px; color: var(--ink-4); font-family: var(--font-mono); margin-top: 2px; }
+.destaque-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  margin-top: 3px;
+}
 
 .destaque-num {
+  display: block;
+  text-align: right;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  color: var(--signal-600);
+  color: var(--ink-1);
   font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.destaque-num small {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 1px;
 }
 
 /* ══ Horas: mais alto e com faixa de referência ══════════════════════════════ */
 .horas { height: 108px; }
 .hora-col.pico { background: var(--signal-600); }
 
+
+
+/* ══ Sair do modo TV ═════════════════════════════════════════════════════════
+   O modo TV esconde a sidebar, que é onde vive o botão que o liga. Sem uma
+   saída visível ele vira armadilha: só recarregando a página. */
+.tv-sair {
+  display: none;
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 300;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: var(--lift-2);
+  /* Some sozinho depois de alguns segundos pra não sujar o telão, e volta
+     ao primeiro movimento do mouse. */
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out), border-color 160ms ease;
+  pointer-events: none;
+}
+
+body.tv-mode .tv-sair { display: flex; }
+
+body.tv-mode.tv-ativo .tv-sair {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.tv-sair svg { width: 15px; height: 15px; stroke-width: 2; }
+
+@media (hover: hover) and (pointer: fine) {
+  .tv-sair:hover { border-color: var(--signal-500); color: var(--signal-600); }
+}
+
+.tv-sair:active { transform: scale(0.97); }
+
+.tv-sair kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--ink-3);
+  border: 1px solid var(--line);
+}
+
 </style>
 </head>
 <body>
 <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
 
+<button class="tv-sair" id="btn-sair-tv" title="Sair do modo TV">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+  <span>Sair do modo TV</span>
+  <kbd>Esc</kbd>
+</button>
 <div class="shell">
   <aside class="sidebar">
     <div class="sidebar-brand">
@@ -2151,9 +2254,7 @@ function renderDashboard(data) {
   ligarNavegacao();
   animarNumeros(document.getElementById('app'));
 
-  document.getElementById('btn-tv').addEventListener('click', () => {
-    document.body.classList.toggle('tv-mode');
-  });
+  document.getElementById('btn-tv').onclick = () => window.alphaTV.alternar();
 
   // onclick (e não addEventListener) porque a sidebar é estática: se o render
   // rodar de novo, o listener seria empilhado e o toggle se anularia.
@@ -2437,9 +2538,16 @@ function renderTop(hoje, guardado){
     dEl.innerHTML = tres.length ? tres.map(p =>
       '<a class="destaque" href="' + p.permalink + '" target="_blank" rel="noopener">' +
         '<span class="destaque-thumb">' + (p.media_url ? '<img src="' + p.media_url + '" loading="lazy" alt="">' : '') + '</span>' +
-        '<span><span class="destaque-cap">' + (p.caption || '(sem legenda)') + '</span>' +
-        '<span class="destaque-sub">' + (p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM') + ' · ' + (p.hora || '') + '</span></span>' +
-        '<span class="destaque-num">' + formatNum(p.interactions) + '</span>' +
+        '<span class="destaque-meta">' +
+          '<span class="destaque-cap">' + (p.caption || '(sem legenda)') + '</span>' +
+          '<span class="destaque-sub">' +
+            '<span class="rank-tag ' + (p.isVideo ? 'reel' : '') + '">' +
+              (p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM') +
+            '</span>' +
+            '<span>' + (p.hora || '') + '</span>' +
+          '</span>' +
+        '</span>' +
+        '<span class="destaque-num">' + formatNum(p.interactions) + '<small>interações</small></span>' +
       '</a>'
     ).join('') : '<div class="vazio-msg">Nenhuma publicação hoje ainda</div>';
   }
@@ -2573,6 +2681,49 @@ function desenharPosts(container, posts, tipo){
     </a>
   `).join('');
 }
+
+
+// Modo TV: liga, desliga por botão ou Esc, e esconde o botão quando o mouse
+// para de se mexer — num telão ninguém quer chrome permanente na tela.
+(function modoTV(){
+  let ocioso;
+
+  function acorda(){
+    if(!document.body.classList.contains('tv-mode')) return;
+    document.body.classList.add('tv-ativo');
+    clearTimeout(ocioso);
+    ocioso = setTimeout(() => document.body.classList.remove('tv-ativo'), 2600);
+  }
+
+  function sair(){
+    document.body.classList.remove('tv-mode', 'tv-ativo');
+    clearTimeout(ocioso);
+    try{ localStorage.setItem('alpha-tv', '0'); }catch(e){}
+  }
+
+  function entrar(){
+    document.body.classList.add('tv-mode');
+    acorda();
+    try{ localStorage.setItem('alpha-tv', '1'); }catch(e){}
+  }
+
+  window.alphaTV = { entrar, sair, alternar(){
+    document.body.classList.contains('tv-mode') ? sair() : entrar();
+  }};
+
+  const btn = document.getElementById('btn-sair-tv');
+  if(btn) btn.onclick = sair;
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && document.body.classList.contains('tv-mode')) sair();
+  });
+
+  ['mousemove', 'pointerdown', 'keydown'].forEach(ev =>
+    document.addEventListener(ev, acorda, { passive: true }));
+
+  // Retoma o modo TV depois de um reload: o telão pode reiniciar sozinho
+  try{ if(localStorage.getItem('alpha-tv') === '1') entrar(); }catch(e){}
+})();
 
 // Restaura o menu recolhido antes de pintar, pra não dar salto na tela
 try{ if(localStorage.getItem('alpha-nav') === '1') document.body.classList.add('nav-collapsed'); }catch(e){}
