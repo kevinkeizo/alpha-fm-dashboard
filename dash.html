@@ -1603,6 +1603,46 @@ body.tv-mode.tv-ativo .tv-sair {
   vertical-align: middle;
 }
 
+
+
+/* Realce de atualização: some sozinho. Um número que muda sem aviso nenhum
+   parece glitch; com um brilho de 700ms lê como "chegou dado novo". */
+.kpi-value.subindo,
+.hero-value.subindo {
+  color: var(--signal-500);
+  transition: color 700ms var(--ease-out);
+}
+
+.kpi-value.subindo.caindo,
+.hero-value.subindo.caindo { color: var(--ink-2); }
+
+/* A seta aparece só durante a animação */
+.kpi-value.subindo::after,
+.hero-value.subindo::after {
+  content: '▲';
+  font-size: 0.4em;
+  vertical-align: middle;
+  margin-left: 0.35em;
+  color: var(--gain);
+  animation: piscaSeta 700ms var(--ease-out);
+}
+
+.kpi-value.subindo.caindo::after,
+.hero-value.subindo.caindo::after {
+  content: '▼';
+  color: var(--ink-4);
+}
+
+@keyframes piscaSeta {
+  0%   { opacity: 0; transform: translateY(3px); }
+  30%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kpi-value.subindo::after, .hero-value.subindo::after { animation: none; opacity: 0; }
+}
+
 </style>
 </head>
 <body>
@@ -1913,16 +1953,17 @@ function fracaoDoDia(){
 
 // Delta contra o RITMO esperado, não contra o dia inteiro de ontem.
 // Comparar um dia pela metade com um dia fechado deixava tudo vermelho às 14h.
-function chipRitmo(atual, media7){
-  if(atual == null || !media7) return '<span class="kpi-delta flat">—</span>';
+function chipRitmo(atual, media7, chave){
+  const marca = chave ? ' data-chip="' + chave + '"' : '';
+  if(atual == null || !media7) return '<span class="kpi-delta flat"' + marca + '>—</span>';
   const esperado = media7 * fracaoDoDia();
-  if(!esperado) return '<span class="kpi-delta flat">—</span>';
+  if(!esperado) return '<span class="kpi-delta flat"' + marca + '>—</span>';
   const pct = ((atual - esperado) / esperado) * 100;
   const classe = pct >= 5 ? 'up' : pct <= -5 ? 'down' : 'flat';
   const seta = pct >= 5 ? '↑' : pct <= -5 ? '↓' : '→';
   const n = Math.min(999, Math.round(Math.abs(pct)));
-  return '<span class="kpi-delta ' + classe + '" title="comparado ao ritmo esperado para esta hora">' +
-    seta + ' ' + n + '%</span>';
+  return '<span class="kpi-delta ' + classe + '"' + marca +
+    ' title="comparado ao ritmo esperado para esta hora">' + seta + ' ' + n + '%</span>';
 }
 
 function sparkline(valores, opts){
@@ -1964,14 +2005,15 @@ function sparkline(valores, opts){
 // ficaria vermelho o dia inteiro só porque o dia não acabou.
 function chipDelta(hoje, referencia, opts){
   const o = opts || {};
+  const marca = o.chave ? ' data-chip="' + o.chave + '"' : '';
   if(hoje == null || referencia == null || !referencia){
-    return '<span class="kpi-delta flat">—</span>';
+    return '<span class="kpi-delta flat"' + marca + '>—</span>';
   }
   const pct = ((hoje - referencia) / referencia) * 100;
   const classe = pct >= 3 ? 'up' : pct <= -3 ? 'down' : 'flat';
   const seta = pct >= 3 ? '↑' : pct <= -3 ? '↓' : '→';
   const n = Math.abs(pct) >= 100 ? Math.round(Math.abs(pct)) : Math.abs(pct).toFixed(0);
-  return `<span class="kpi-delta ${classe}" title="${o.titulo || ''}">${seta} ${n}%</span>`;
+  return '<span class="kpi-delta ' + classe + '"' + marca + '>' + seta + ' ' + n + '%</span>';
 }
 
 // Média dos últimos N dias fechados, para a métrica pedida
@@ -2219,13 +2261,13 @@ function renderDashboard(data) {
     <div class="bento">
       <div class="hero-tile col-8">
         <div class="hero-label">Seguidores</div>
-        <div class="hero-value">${formatNum(followers_count)}</div>
+        <div class="hero-value" data-metrica="followers" data-fmt="num">${formatNum(followers_count)}</div>
         <div class="kpi-sub">${formatNum(media_count)} publicações no acervo · barras = ganho por dia</div>
         ${sparkBars(ganhos.map(x => x.g), { n: 21, alt: 88 })}
       </div>
       <div class="gain-tile col-4">
         <div class="hero-label">Ganho hoje</div>
-        <div class="hero-value">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + formatNum(dailyGain) : '—'}</div>
+        <div class="hero-value" data-metrica="dailyGain" data-fmt="sinal">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + formatNum(dailyGain) : '—'}</div>
         <div class="gain-meta">
           <div><span class="gain-meta-l">Média 7d</span><span class="gain-meta-v">${g7 != null ? '+' + formatNum(Math.round(g7)) : '—'}</span></div>
           <div><span class="gain-meta-l">Melhor dia</span><span class="gain-meta-v">${gMax != null ? '+' + formatNum(gMax) : '—'}</span></div>
@@ -2236,26 +2278,26 @@ function renderDashboard(data) {
 
     <div class="bento">
       <div class="kpi col-3">
-        <div class="kpi-top"><span class="kpi-label">Visualizações</span>${chipRitmo(views, mediaDe(hist, 'views', 7))}</div>
-        <div class="kpi-value">${formatNum(views)}</div>
+        <div class="kpi-top"><span class="kpi-label">Visualizações</span>${chipRitmo(views, mediaDe(hist, 'views', 7), 'views')}</div>
+        <div class="kpi-value" data-metrica="views" data-fmt="num">${formatNum(views)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'views', 7) || 0))}</div>
         ${sparkBars(serieDe(hist, 'views', 14))}
       </div>
       <div class="kpi col-3">
-        <div class="kpi-top"><span class="kpi-label">Alcance</span>${chipRitmo(reach, mediaDe(hist, 'reach', 7))}</div>
-        <div class="kpi-value">${formatNum(reach)}</div>
+        <div class="kpi-top"><span class="kpi-label">Alcance</span>${chipRitmo(reach, mediaDe(hist, 'reach', 7), 'reach')}</div>
+        <div class="kpi-value" data-metrica="reach" data-fmt="num">${formatNum(reach)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'reach', 7) || 0))}</div>
         ${sparkBars(serieDe(hist, 'reach', 14))}
       </div>
       <div class="kpi col-3">
-        <div class="kpi-top"><span class="kpi-label">Interações</span>${chipRitmo(totalInteractions, mediaDe(hist, 'interactions', 7))}</div>
-        <div class="kpi-value">${formatNum(totalInteractions)}</div>
+        <div class="kpi-top"><span class="kpi-label">Interações</span>${chipRitmo(totalInteractions, mediaDe(hist, 'interactions', 7), 'interactions')}</div>
+        <div class="kpi-value" data-metrica="interactions" data-fmt="num">${formatNum(totalInteractions)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'interactions', 7) || 0))}</div>
         ${sparkBars(serieDe(hist, 'interactions', 14))}
       </div>
       <div class="kpi col-3">
-        <div class="kpi-top"><span class="kpi-label">Engajamento</span>${chipDelta(engagementRate, mediaDe(hist, 'engagementRate', 7))}</div>
-        <div class="kpi-value">${engagementRate !== null ? engagementRate.toFixed(1) + '%' : '—'}</div>
+        <div class="kpi-top"><span class="kpi-label">Engajamento</span>${chipDelta(engagementRate, mediaDe(hist, 'engagementRate', 7), { chave: 'engagement' })}</div>
+        <div class="kpi-value" data-metrica="engagement" data-fmt="pct">${engagementRate !== null ? engagementRate.toFixed(1) + '%' : '—'}</div>
         <div class="kpi-sub">média 7d ${(mediaDe(hist, 'engagementRate', 7) || 0).toFixed(1)}%</div>
         ${sparkBars(serieDe(hist, 'engagementRate', 14))}
       </div>
@@ -2263,20 +2305,20 @@ function renderDashboard(data) {
 
     <div class="bento">
       <div class="kpi col-4">
-        <div class="kpi-top"><span class="kpi-label">Publicações hoje</span>${chipRitmo(postsToday, mediaDe(hist, 'posts', 7))}</div>
-        <div class="kpi-value">${formatNum(postsToday)}</div>
+        <div class="kpi-top"><span class="kpi-label">Publicações hoje</span>${chipRitmo(postsToday, mediaDe(hist, 'posts', 7), 'posts')}</div>
+        <div class="kpi-value" data-metrica="posts" data-fmt="num">${formatNum(postsToday)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'posts', 7) || 0))} por dia</div>
         ${sparkBars(serieDe(hist, 'posts', 14))}
       </div>
       <div class="kpi col-4">
-        <div class="kpi-top"><span class="kpi-label">Views dos reels</span>${chipRitmo(reelViews, mediaDe(hist, 'reelViews', 7))}</div>
-        <div class="kpi-value">${formatNum(reelViews)}</div>
+        <div class="kpi-top"><span class="kpi-label">Views dos reels</span>${chipRitmo(reelViews, mediaDe(hist, 'reelViews', 7), 'reelViews')}</div>
+        <div class="kpi-value" data-metrica="reelViews" data-fmt="num">${formatNum(reelViews)}</div>
         <div class="kpi-sub">${reelsToday || 0} reels publicados hoje</div>
         ${sparkBars(serieDe(hist, 'reelViews', 14))}
       </div>
       <div class="kpi col-4">
         <div class="kpi-top"><span class="kpi-label">Views por seguidor</span></div>
-        <div class="kpi-value">${vps != null ? vps.toFixed(2).replace('.', ',') : '—'}</div>
+        <div class="kpi-value" data-metrica="vps" data-fmt="dec2">${vps != null ? vps.toFixed(2).replace('.', ',') : '—'}</div>
         <div class="kpi-sub">quantas vezes a base viu hoje</div>
         ${sparkBars(hist.slice(-14).map(h => (h.views && h.followers) ? h.views / h.followers : null).filter(v => v != null))}
       </div>
@@ -2330,7 +2372,6 @@ function renderDashboard(data) {
         <button class="filter-btn top-btn active" data-periodo="hoje">Hoje</button>
         <button class="filter-btn top-btn" data-periodo="7">7 dias</button>
         <button class="filter-btn top-btn" data-periodo="30">30 dias</button>
-        <button class="filter-btn top-btn" data-periodo="all">Sempre</button>
       </div>
     </div>
 
@@ -2385,6 +2426,14 @@ function renderDashboard(data) {
 
   ligarNavegacao();
   animarNumeros(document.getElementById('app'));
+
+  // Guarda o estado atual pro pulso saber de onde animar
+  window.__hist = hist;
+  if(window.__semearPulso) window.__semearPulso({
+    followers: followers_count, dailyGain, views, reach,
+    interactions: totalInteractions, engagement: engagementRate,
+    posts: postsToday, reelViews, vps
+  });
 
   document.getElementById('btn-tv').onclick = () => window.alphaTV.alternar();
 
@@ -2648,17 +2697,28 @@ function renderTop(hoje, guardado){
   if(!lista) return;
 
   // O arquivo só tem dias fechados, então o de hoje entra sempre pelo ao vivo.
-  function juntar(guardados){
+  function semRepetir(listas){
     const porId = new Map();
-    [...guardados, ...hoje].forEach(p => porId.set(p.id, p));
-    return [...porId.values()].sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
+    listas.flat().forEach(p => { if(p && p.id) porId.set(p.id, p); });
+    return [...porId.values()];
   }
 
-  function recorte(periodo){
-    if(periodo === 'hoje') return hoje;
-    if(periodo === 'all') return juntar(guardado.allTime);
+  const porInteracoes = (a, b) => (b.interactions ?? -1) - (a.interactions ?? -1);
+
+  // UNIVERSO: tudo que existe no período. Base dos agregados — total de
+  // publicações, médias por formato, distribuição por horário. Precisa ser
+  // representativo, então nunca sai do hall da fama.
+  function universo(periodo){
+    if(periodo === 'hoje') return hoje.slice();
     const corte = new Date(Date.now() - Number(periodo) * 86400000).toISOString().slice(0, 10);
-    return juntar(guardado.recentes.filter(p => p.date >= corte));
+    return semRepetir([guardado.recentes.filter(p => p.date >= corte), hoje]);
+  }
+
+  // RANKING: as melhores. Em "Sempre" o hall da fama entra, porque guarda
+  // recordes que já saíram da janela de 35 dias do arquivo.
+  function paraRanking(periodo){
+    if(periodo === 'hoje') return hoje.slice().sort(porInteracoes);
+    return universo(periodo).sort(porInteracoes);
   }
 
   // Top 3 de hoje na Visão Geral
@@ -2688,8 +2748,8 @@ function renderTop(hoje, guardado){
   if(badge) badge.textContent = hoje.length ? hoje.length : '';
 
   function desenhar(periodo){
-    const todos = recorte(periodo);
-    const posts = todos.slice(0, 20);
+    const todos = universo(periodo);          // agregados
+    const posts = paraRanking(periodo).slice(0, 20); // lista
 
     // ── Cobertura real do período pedido ──
     const cob = document.getElementById('ins-cobertura');
@@ -2701,7 +2761,7 @@ function renderTop(hoje, guardado){
       }else{
         const de = datas[0], ate = datas[datas.length - 1];
         const dias = Math.round((new Date(ate) - new Date(de)) / 86400000) + 1;
-        const pedido = periodo === 'hoje' ? 1 : periodo === 'all' ? null : Number(periodo);
+        const pedido = periodo === 'hoje' ? 1 : Number(periodo);
         // Só avisa quando o histórico é mais curto que o filtro pedido
         const curto = pedido && dias < pedido - 1;
         cob.className = 'cobertura' + (curto ? ' parcial' : '');
@@ -2842,6 +2902,111 @@ function desenharPosts(container, posts, tipo){
   `).join('');
 }
 
+
+
+// ── Pulso ao vivo ───────────────────────────────────────────────────────────
+// Num telão que fica ligado o dia inteiro, número parado parece tela travada.
+// A cada minuto relê a API e, quando um valor muda de fato, ele sobe (ou
+// desce) até o novo em vez de trocar seco.
+//
+// Só anima o que mudou: a API tem cache de 5 min, então quatro em cada cinco
+// leituras vêm iguais. Animar tudo toda vez viraria ruído — e a régua do Emil
+// é clara: se o usuário vê muitas vezes por dia, ou tem propósito ou não anima.
+// O propósito aqui é indicar estado: mostrar que o dado está vivo.
+(function pulsoAoVivo(){
+  const INTERVALO = 60000;
+  let anterior = {};
+  let parado = false;
+
+  function formata(v, fmt){
+    if(v == null) return '—';
+    if(fmt === 'pct')  return v.toFixed(1) + '%';
+    if(fmt === 'dec2') return v.toFixed(2).replace('.', ',');
+    if(fmt === 'sinal') return (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('pt-BR');
+    return Math.round(v).toLocaleString('pt-BR');
+  }
+
+  function anima(el, de, para, fmt){
+    const dur = 800;
+    const t0 = performance.now();
+    el.classList.add('subindo');
+    function passo(agora){
+      const p = Math.min(1, (agora - t0) / dur);
+      const e = 1 - Math.pow(1 - p, 4);       // ease-out forte
+      el.textContent = formata(de + (para - de) * e, fmt);
+      if(p < 1) requestAnimationFrame(passo);
+      else{
+        el.textContent = formata(para, fmt);
+        setTimeout(() => el.classList.remove('subindo'), 700);
+      }
+    }
+    requestAnimationFrame(passo);
+  }
+
+  function aplica(valores){
+    Object.entries(valores).forEach(([chave, novo]) => {
+      if(novo == null) return;
+      const el = document.querySelector('[data-metrica="' + chave + '"]');
+      if(!el) return;
+      const velho = anterior[chave];
+      if(velho == null || velho === novo){
+        if(velho == null) el.textContent = formata(novo, el.dataset.fmt);
+        anterior[chave] = novo;
+        return;
+      }
+      // Direção da seta: pra cima em alta, pra baixo em queda
+      el.classList.toggle('caindo', novo < velho);
+      anima(el, velho, novo, el.dataset.fmt);
+      anterior[chave] = novo;
+    });
+  }
+
+  async function tick(){
+    if(parado || document.hidden) return;
+    try{
+      const d = await fetchAllData();
+      const hist = window.__hist || [];
+      const ultimo = hist.length ? hist[hist.length - 1] : null;
+      aplica({
+        followers: d.profile && d.profile.followers_count,
+        dailyGain: (ultimo && ultimo.followers && d.profile)
+          ? d.profile.followers_count - ultimo.followers : null,
+        views: d.views,
+        reach: d.reach,
+        interactions: d.totalInteractions,
+        engagement: d.engagementRate,
+        posts: d.postsToday,
+        reelViews: d.reelViews,
+        vps: (d.views && d.profile && d.profile.followers_count)
+          ? d.views / d.profile.followers_count : null
+      });
+      // Chips junto: o ritmo esperado muda a cada minuto que passa do dia
+      const m7 = c => mediaDe(hist, c, 7);
+      const novosChips = {
+        views:        chipRitmo(d.views, m7('views'), 'views'),
+        reach:        chipRitmo(d.reach, m7('reach'), 'reach'),
+        interactions: chipRitmo(d.totalInteractions, m7('interactions'), 'interactions'),
+        posts:        chipRitmo(d.postsToday, m7('posts'), 'posts'),
+        reelViews:    chipRitmo(d.reelViews, m7('reelViews'), 'reelViews'),
+        engagement:   chipDelta(d.engagementRate, m7('engagementRate'), { chave: 'engagement' })
+      };
+      Object.entries(novosChips).forEach(([k, html]) => {
+        const alvo = document.querySelector('[data-chip="' + k + '"]');
+        if(alvo) alvo.outerHTML = html;
+      });
+
+      const sub = document.getElementById('brand-subtitle');
+      if(sub && d.profile) sub.textContent = '@' + d.profile.username + ' · atualizado ' + fmtTime();
+    }catch(e){ /* uma falha de rede não pode derrubar o laço */ }
+  }
+
+  // Semeia com o que já está na tela pra primeira leitura não animar do zero
+  window.__semearPulso = function(valores){ anterior = Object.assign({}, valores); };
+
+  setInterval(tick, INTERVALO);
+  // Aba oculta não precisa consultar a API; ao voltar, atualiza na hora
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) tick(); });
+})();
 
 // Modo TV: liga, desliga por botão ou Esc, e esconde o botão quando o mouse
 // para de se mexer — num telão ninguém quer chrome permanente na tela.
