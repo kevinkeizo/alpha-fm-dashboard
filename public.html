@@ -692,6 +692,30 @@ async function fetchPosts(){
   }
 }
 
+// Ranking guardado pelo snapshot noturno: 35 dias de recentes + top de sempre
+async function fetchTopGuardado(){
+  try{
+    const res = await fetch('https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/top-posts.json');
+    if(!res.ok) return { recentes: [], allTime: [] };
+    const j = await res.json();
+    return { recentes: j.recentes || [], allTime: j.allTime || [] };
+  }catch(e){
+    return { recentes: [], allTime: [] };
+  }
+}
+
+// O dia de hoje vem ao vivo: o snapshot só grava o dia já fechado
+async function fetchTopHoje(){
+  try{
+    const res = await fetch(API_URL.replace('/api/data', '/api/top'));
+    if(!res.ok) return [];
+    const j = await res.json();
+    return j.posts || [];
+  }catch(e){
+    return [];
+  }
+}
+
 function formatNum(n) {
   if (n === null || n === undefined) return '—';
   return n.toLocaleString('pt-BR');
@@ -867,6 +891,22 @@ function renderDashboard(data) {
 
     <div class="chart-section">
       <div class="chart-title">
+        <span>Top Publicações</span>
+        <div class="chart-filters">
+          <button class="filter-btn top-btn active" data-periodo="hoje">Hoje</button>
+          <button class="filter-btn top-btn" data-periodo="7">7 dias</button>
+          <button class="filter-btn top-btn" data-periodo="30">30 dias</button>
+          <button class="filter-btn top-btn" data-periodo="all">Sempre</button>
+        </div>
+      </div>
+      <div id="top-nota" style="font-size: 11px; color: var(--text-3); font-family: var(--font-mono); margin: -6px 0 14px;"></div>
+      <div id="top-lista" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px;">
+        <div style="color: var(--text-3); text-align: center; padding: 30px 0; font-family: var(--font-mono); font-size: 12px;">Carregando ranking...</div>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">
         <span>Últimas Publicações</span>
         <div style="display: flex; align-items: center; gap: 14px;">
           <span id="posts-resumo" style="font-size: 12px; font-weight: 500; color: var(--text-2); font-family: var(--font-mono);"></span>
@@ -1018,6 +1058,12 @@ async function load(){
 
     renderDashboard(data);
     renderPosts(posts.posts, posts.resumo);
+
+    // O ranking é mais lento (uma chamada por publicação), então não segura
+    // o resto do dashboard: entra assim que ficar pronto.
+    Promise.all([fetchTopHoje(), fetchTopGuardado()])
+      .then(([hoje, guardado]) => renderTop(hoje, guardado))
+      .catch(() => {});
   }catch(e){
     document.getElementById('app').innerHTML = `<div class="loading" style="color:red;">Erro: ${e.message}</div>`;
   }
@@ -1048,6 +1094,81 @@ function renderPosts(posts, resumo){
   });
 
   desenharPosts(container, posts, 'todos');
+}
+
+function renderTop(hoje, guardado){
+  const lista = document.getElementById('top-lista');
+  const nota = document.getElementById('top-nota');
+  if(!lista) return;
+
+  function recorte(periodo){
+    if(periodo === 'hoje') return hoje;
+    if(periodo === 'all') return guardado.allTime;
+    const corte = new Date(Date.now() - Number(periodo) * 86400000).toISOString().slice(0, 10);
+    const recentes = guardado.recentes.filter(p => p.date >= corte);
+    // O dia de hoje ainda não está no arquivo; entra pelo ao vivo.
+    return [...hoje, ...recentes]
+      .sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
+  }
+
+  function desenhar(periodo){
+    const posts = recorte(periodo).slice(0, 10);
+
+    if(nota){
+      const temFollows = posts.some(p => p.follows != null);
+      nota.textContent = temFollows
+        ? 'Ordenado por interações. O Instagram só informa seguidores ganhos em imagens e carrosséis — reels não reportam.'
+        : 'Ordenado por interações.';
+    }
+
+    if(posts.length === 0){
+      lista.innerHTML = `<div style="color: var(--text-3); text-align: center; padding: 30px 0; font-family: var(--font-mono); font-size: 12px;">${
+        periodo === 'hoje' ? 'Nenhuma publicação hoje ainda' : 'Sem dados nesse período ainda — o histórico começa a encher a cada noite'
+      }</div>`;
+      return;
+    }
+
+    lista.innerHTML = posts.map((p, i) => `
+      <a href="${p.permalink}" target="_blank" style="text-decoration: none; display: flex; align-items: center; gap: 14px; padding: 10px 14px; border: 1px solid rgba(61, 91, 254, 0.15); border-radius: 12px; background: rgba(255,255,255,0.5); transition: all 0.2s ease;"
+         onmouseover="this.style.borderColor='var(--primary)'; this.style.background='rgba(255,255,255,0.9)'"
+         onmouseout="this.style.borderColor='rgba(61, 91, 254, 0.15)'; this.style.background='rgba(255,255,255,0.5)'">
+        <span style="font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: ${i < 3 ? 'var(--primary)' : 'var(--text-3)'}; min-width: 22px;">${i + 1}</span>
+        <div style="position: relative; width: 46px; height: 46px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: rgba(61,91,254,0.08);">
+          ${p.media_url ? `<img src="${p.media_url}" loading="lazy" style="width:100%; height:100%; object-fit: cover;">` : ''}
+        </div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 12px; color: var(--text-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.caption || '(sem legenda)'}</div>
+          <div style="font-size: 11px; color: var(--text-3); font-family: var(--font-mono); margin-top: 3px;">
+            ${p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM'} · ${p.date ? p.date.slice(8) + '/' + p.date.slice(5,7) : ''} ${p.hora || ''}
+          </div>
+        </div>
+        <div style="display: flex; gap: 18px; text-align: right; flex-shrink: 0;">
+          <div>
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-1); font-family: var(--font-mono);">${formatNum(p.interactions)}</div>
+            <div style="font-size: 10px; color: var(--text-3);">interações</div>
+          </div>
+          <div style="min-width: 62px;">
+            <div style="font-size: 15px; font-weight: 700; color: var(--text-2); font-family: var(--font-mono);">${formatNum(p.reach)}</div>
+            <div style="font-size: 10px; color: var(--text-3);">alcance</div>
+          </div>
+          <div style="min-width: 54px;">
+            <div style="font-size: 15px; font-weight: 700; color: ${p.follows ? 'var(--success)' : 'var(--text-3)'}; font-family: var(--font-mono);">${p.follows != null ? '+' + p.follows : '—'}</div>
+            <div style="font-size: 10px; color: var(--text-3);">seguidores</div>
+          </div>
+        </div>
+      </a>
+    `).join('');
+  }
+
+  document.querySelectorAll('.top-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.top-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      desenhar(btn.dataset.periodo);
+    });
+  });
+
+  desenhar('hoje');
 }
 
 function desenharPosts(container, posts, tipo){
