@@ -1,3 +1,4 @@
+const { exigirLogin } = require('../lib/auth');
 const TOKEN = process.env.IG_TOKEN;
 const IG_USER_ID = process.env.IG_USER_ID;
 const API_VERSION = 'v22.0';
@@ -183,6 +184,8 @@ module.exports = async (req, res) => {
     res.status(200).end();
     return;
   }
+
+  if (!exigirLogin(req, res)) return;
 
   if (req.method !== 'GET') {
     res.status(405).json({ error: 'Method not allowed' });

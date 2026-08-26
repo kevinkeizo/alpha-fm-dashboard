@@ -1,3 +1,4 @@
+const { exigirLogin } = require('../lib/auth');
 // Stories no ar agora. A Meta só expõe os ativos (24h), então isto é um
 // retrato do momento — não dá pra recuperar story de ontem por aqui. Por isso
 // o snapshot noturno também grava o agregado do dia no histórico.
@@ -58,6 +59,8 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Content-Type', 'application/json');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
+
+  if (!exigirLogin(req, res)) return;
 
   try {
     const agora = Date.now();

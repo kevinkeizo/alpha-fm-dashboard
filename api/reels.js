@@ -1,3 +1,4 @@
+const { exigirLogin } = require('../lib/auth');
 const TOKEN = process.env.IG_TOKEN;
 const IG_USER_ID = process.env.IG_USER_ID;
 const API_VERSION = 'v22.0';
@@ -27,6 +28,8 @@ async function fetchGraph(path, params) {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Content-Type', 'application/json');
+
+  if (!exigirLogin(req, res)) return;
 
   try {
     // ?limit=N controla quantos reels listar (padrão 12)

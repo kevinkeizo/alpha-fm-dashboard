@@ -1733,10 +1733,199 @@ body.dado-velho .hero-value { opacity: 0.55; }
   .aud-lista .fmt-linha { grid-template-columns: minmax(0, 120px) 1fr 100px; }
 }
 
+
+
+/* ══ Tela de login ═══════════════════════════════════════════════════════════
+   Cobre tudo até haver token válido. O conteúdo por baixo nem chega a ser
+   carregado — nenhuma chamada à API sai antes do login. */
+.portao {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.portao[hidden] { display: none; }
+
+.portao-caixa {
+  width: 100%;
+  max-width: 372px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 36px 34px 30px;
+  box-shadow: var(--lift-3);
+  position: relative;
+  overflow: hidden;
+}
+
+.portao-caixa::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--signal-500), var(--signal-400), var(--signal-500));
+  background-size: 200% 100%;
+  animation: sweep 9s linear infinite;
+}
+
+.portao-marca {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.portao-marca svg { width: 44px; height: 44px; border-radius: 11px; box-shadow: var(--lift-2); }
+
+.portao-marca h1 {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.portao-marca p {
+  font-size: 11px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+
+.campo { margin-bottom: 14px; }
+
+.campo label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 7px;
+}
+
+.campo input {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--bg);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-1);
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+.campo input:focus {
+  outline: none;
+  border-color: var(--signal-500);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(61, 91, 254, 0.12);
+}
+
+.portao-btn {
+  width: 100%;
+  padding: 12px;
+  margin-top: 6px;
+  border: none;
+  border-radius: 10px;
+  background: var(--signal-500);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 140ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .portao-btn:hover { background: var(--signal-600); }
+}
+
+.portao-btn:active { transform: scale(0.985); }
+.portao-btn:disabled { opacity: 0.6; cursor: default; }
+
+.portao-erro {
+  display: none;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: #FDEDEF;
+  border: 1px solid #E8A0AA;
+  color: #8C1F2E;
+  font-size: 12px;
+}
+
+.portao-erro.visivel { display: block; }
+
+/* Sacode na senha errada: feedback imediato sem precisar ler o aviso */
+@keyframes sacode {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
+.portao-caixa.errou { animation: sacode 320ms var(--ease-out); }
+
+.portao-rodape {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+  font-size: 10.5px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portao-caixa.errou { animation: none; }
+}
+
+/* Sair: aparece junto das ações da barra lateral */
+body.sem-login #btn-sair { display: none; }
+
 </style>
 </head>
 <body>
 <div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
+
+<div class="portao" id="portao">
+  <form class="portao-caixa" id="portao-form" autocomplete="on">
+    <div class="portao-marca">
+      <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="logoGradL" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#3D5BFE"/><stop offset="100%" style="stop-color:#2D3F9E"/>
+        </linearGradient></defs>
+        <rect width="240" height="240" rx="40" fill="url(#logoGradL)"/>
+        <text x="120" y="110" font-family="Manrope, sans-serif" font-size="100" font-weight="700" fill="white" text-anchor="middle" letter-spacing="-3" dominant-baseline="middle">alpha</text>
+        <text x="120" y="165" font-family="Manrope, sans-serif" font-size="28" font-weight="600" fill="white" text-anchor="middle" letter-spacing="2">FM 101.7</text>
+      </svg>
+      <div>
+        <h1>Alpha FM</h1>
+        <p>Instagram Analytics</p>
+      </div>
+    </div>
+
+    <div class="campo">
+      <label for="usuario">Usuário</label>
+      <input type="text" id="usuario" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+    </div>
+
+    <div class="campo">
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" name="password" autocomplete="current-password" required>
+    </div>
+
+    <button type="submit" class="portao-btn" id="portao-btn">Entrar</button>
+    <div class="portao-erro" id="portao-erro"></div>
+
+    <div class="portao-rodape">acesso restrito · equipe Alpha FM</div>
+  </form>
+</div>
 
 <button class="tv-sair" id="btn-sair-tv" title="Sair do modo TV">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
@@ -1803,6 +1992,10 @@ body.dado-velho .hero-value { opacity: 0.55; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
         <span>Atualizar</span>
       </button>
+      <button class="sidebar-action" id="btn-sair" title="Sair">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        <span>Sair</span>
+      </button>
       <button class="sidebar-action" id="btn-collapse" title="Recolher menu">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
         <span>Recolher</span>
@@ -1835,7 +2028,13 @@ const API_URL = 'https://alpha-fm-api-git-main-alpha-fm1.vercel.app/api/data';
 const LOGO_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAACXBIWXMAABcSAAAXEgFxLsqaAAAA20lEQVQYV5XRMQ7CMBBFUYrEVliQkJhYmZiZWBhYWViYuAEn4AZcgBtwAk7ACbgBFwCLhKBgYmKhhYSSloGEhsiwieVJblJ7b8+/99vd3/+Zx+NxvV6f7/d5WJYFj8cj7vf7P/v9Pns8nnhZFn6eJ8vLdR0+z1N+npdxXZflcRjSNE3par/ff1MU5e12o2maeJ5HnudRVRW0bRvO53N+PIe2bZNlmbhcLjQvS0ZRRJIkfP9Rvq4rKorCjxKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQi/fgDJ1jH8cPMxfwAAAAASUVORK5CYII=';
 
 async function fetchAllData(){
-  const res = await fetch(API_URL);
+  const res = await fetch(comToken(API_URL));
+  if(res.status === 401){
+    // Token venceu ou foi revogado: volta pro login em vez de erro solto
+    guardarToken('');
+    location.reload();
+    throw new Error('sessao-expirada');
+  }
   if(!res.ok) throw new Error('API error: ' + res.status);
   return res.json();
 }
@@ -1852,7 +2051,7 @@ async function fetchHistory(){
 
 async function fetchPosts(){
   try{
-    const res = await fetch(API_URL.replace('/api/data', '/api/posts'));
+    const res = await fetch(comToken(API_URL.replace('/api/data', '/api/posts')));
     if(!res.ok) return { posts: [], resumo: null };
     const json = await res.json();
     return { posts: json.posts || [], resumo: json.resumo || null };
@@ -1877,7 +2076,7 @@ async function fetchTopGuardado(){
 // O dia de hoje vem ao vivo: o snapshot só grava o dia já fechado
 async function fetchTopHoje(){
   try{
-    const res = await fetch(API_URL.replace('/api/data', '/api/top'));
+    const res = await fetch(comToken(API_URL.replace('/api/data', '/api/top')));
     if(!res.ok) return [];
     const j = await res.json();
     return j.posts || [];
@@ -2582,6 +2781,9 @@ function renderDashboard(data) {
 
   // onclick (e não addEventListener) porque a sidebar é estática: se o render
   // rodar de novo, o listener seria empilhado e o toggle se anularia.
+  const btnSair = document.getElementById('btn-sair');
+  if(btnSair) btnSair.onclick = sair;
+
   document.getElementById('btn-collapse').onclick = () => {
     document.body.classList.toggle('nav-collapsed');
     try{ localStorage.setItem('alpha-nav', document.body.classList.contains('nav-collapsed') ? '1' : '0'); }catch(e){}
@@ -2887,7 +3089,7 @@ async function carregarAudiencia(){
   const alvo = document.getElementById('aud-idade');
   if(!alvo) return;
   try{
-    const res = await fetch(API_URL.replace('/api/data', '/api/audience'));
+    const res = await fetch(comToken(API_URL.replace('/api/data', '/api/audience')));
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const a = await res.json();
     if(a.error) throw new Error(a.error);
@@ -2933,7 +3135,7 @@ async function carregarStories(){
   const lista = document.getElementById('st-lista');
   if(!lista) return;
   try{
-    const res = await fetch(API_URL.replace('/api/data', '/api/stories'));
+    const res = await fetch(comToken(API_URL.replace('/api/data', '/api/stories')));
     if(!res.ok) throw new Error('HTTP ' + res.status);
     const d = await res.json();
     if(d.error) throw new Error(d.error);
@@ -3258,6 +3460,116 @@ function minutosDesde(ms){
   return Math.max(1, Math.round((Date.now() - ms) / 60000));
 }
 
+
+// ── Portão de acesso ────────────────────────────────────────────────────────
+// A validação é no servidor: a senha nunca chega ao navegador e os endpoints
+// recusam quem não traz token. Uma tela de login só no HTML seria enfeite —
+// o repositório é público e a senha apareceria no código-fonte.
+const CHAVE_TOKEN = 'alpha-token';
+
+function tokenSalvo(){
+  try{ return localStorage.getItem(CHAVE_TOKEN) || ''; }catch(e){ return ''; }
+}
+
+function guardarToken(t){
+  try{ t ? localStorage.setItem(CHAVE_TOKEN, t) : localStorage.removeItem(CHAVE_TOKEN); }catch(e){}
+}
+
+// Anexa o token a qualquer chamada da API
+function comToken(url){
+  const t = tokenSalvo();
+  if(!t) return url;
+  return url + (url.indexOf('?') >= 0 ? '&' : '?') + 't=' + encodeURIComponent(t);
+}
+
+function sair(){
+  guardarToken('');
+  location.reload();
+}
+
+function abrirPortao(){
+  const p = document.getElementById('portao');
+  if(p) p.hidden = true;
+}
+
+// Verifica com o servidor se o login está ligado e se o token guardado vale.
+// Devolve true quando pode seguir direto pro painel.
+async function verificarAcesso(){
+  try{
+    const r = await fetch(API_URL.replace('/api/data', '/api/login') + '?t=' + encodeURIComponent(tokenSalvo()));
+    if(!r.ok) throw new Error('HTTP ' + r.status);
+    const j = await r.json();
+    if(!j.ativo){
+      // Login não configurado na Vercel: painel aberto, e o botão Sair some
+      document.body.classList.add('sem-login');
+      return true;
+    }
+    return !!j.valido;
+  }catch(e){
+    // Sem resposta do servidor não dá pra afirmar que o token vale
+    return false;
+  }
+}
+
+function ligarPortao(){
+  const form = document.getElementById('portao-form');
+  if(!form) return;
+  const btn = document.getElementById('portao-btn');
+  const erro = document.getElementById('portao-erro');
+  const caixa = document.querySelector('.portao-caixa');
+
+  form.addEventListener('submit', async ev => {
+    ev.preventDefault();
+    erro.classList.remove('visivel');
+    btn.disabled = true;
+    btn.textContent = 'Entrando…';
+
+    try{
+      const r = await fetch(API_URL.replace('/api/data', '/api/login'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          usuario: document.getElementById('usuario').value,
+          senha: document.getElementById('senha').value
+        })
+      });
+      const j = await r.json();
+
+      if(j.ok){
+        if(j.token) guardarToken(j.token);
+        if(j.semLogin) document.body.classList.add('sem-login');
+        abrirPortao();
+        load();
+        return;
+      }
+
+      erro.textContent = j.error || 'Não foi possível entrar';
+      erro.classList.add('visivel');
+      caixa.classList.remove('errou');
+      void caixa.offsetWidth;   // reinicia a animação
+      caixa.classList.add('errou');
+      document.getElementById('senha').select();
+    }catch(e){
+      erro.textContent = 'Sem conexão com o servidor';
+      erro.classList.add('visivel');
+    }finally{
+      btn.disabled = false;
+      btn.textContent = 'Entrar';
+    }
+  });
+
+  document.getElementById('usuario').focus();
+}
+
+// Ponto de entrada: só carrega o painel depois de passar pelo portão
+async function iniciar(){
+  ligarPortao();
+  if(await verificarAcesso()){
+    abrirPortao();
+    load();
+  }
+}
+
 // ── Pulso ao vivo ───────────────────────────────────────────────────────────
 // Num telão que fica ligado o dia inteiro, número parado parece tela travada.
 // A cada minuto relê a API e, quando um valor muda de fato, ele sobe (ou
@@ -3418,7 +3730,7 @@ function minutosDesde(ms){
 // Restaura o menu recolhido antes de pintar, pra não dar salto na tela
 try{ if(localStorage.getItem('alpha-nav') === '1') document.body.classList.add('nav-collapsed'); }catch(e){}
 
-load();
+iniciar();
 </script>
 </body>
 </html>

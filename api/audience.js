@@ -1,3 +1,4 @@
+const { exigirLogin } = require('../lib/auth');
 // Demografia da base de seguidores: idade, gênero, cidade e país.
 // É um retrato lifetime que muda devagar, então o cache é longo — não faz
 // sentido consultar a Meta a cada carregamento pra um número que anda por mês.
@@ -47,6 +48,8 @@ module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Content-Type', 'application/json');
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
+
+  if (!exigirLogin(req, res)) return;
 
   try {
     const agora = Date.now();
