@@ -1101,14 +1101,18 @@ function renderTop(hoje, guardado){
   const nota = document.getElementById('top-nota');
   if(!lista) return;
 
+  // O arquivo só tem dias fechados, então o de hoje entra sempre pelo ao vivo.
+  function juntar(guardados){
+    const porId = new Map();
+    [...guardados, ...hoje].forEach(p => porId.set(p.id, p));
+    return [...porId.values()].sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
+  }
+
   function recorte(periodo){
     if(periodo === 'hoje') return hoje;
-    if(periodo === 'all') return guardado.allTime;
+    if(periodo === 'all') return juntar(guardado.allTime);
     const corte = new Date(Date.now() - Number(periodo) * 86400000).toISOString().slice(0, 10);
-    const recentes = guardado.recentes.filter(p => p.date >= corte);
-    // O dia de hoje ainda não está no arquivo; entra pelo ao vivo.
-    return [...hoje, ...recentes]
-      .sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
+    return juntar(guardado.recentes.filter(p => p.date >= corte));
   }
 
   function desenhar(periodo){
