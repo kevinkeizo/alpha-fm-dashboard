@@ -5,575 +5,1710 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Alpha FM · Instagram Analytics</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
+/* ==========================================================================
+   Alpha FM · Instagram Analytics
+   Sistema visual derivado do assunto: uma rádio. Onda, frequência, sinal.
+   ========================================================================== */
+
 :root {
-  --primary: #3D5BFE;
-  --primary-dark: #2D3F9E;
-  --primary-light: #5470FF;
-  --bg: #F8F9FC;
+  /* Tinta — azul profundo de estúdio, não cinza neutro */
+  --ink-1: #0B1020;
+  --ink-2: #454B63;
+  --ink-3: #7B8098;
+  --ink-4: #A8ACBE;
+
+  /* Superfícies */
+  --bg: #F2F4FA;
+  --bg-2: #E9ECF6;
   --surface: #FFFFFF;
-  --surface-light: #F3F4FA;
-  --text-1: #0F1419;
-  --text-2: #5C5F73;
-  --text-3: #8B8D9A;
-  --success: #10B981;
-  --danger: #EF4444;
-  --accent: #FF6B35;
-  --font-display: 'Inter', -apple-system, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --line: rgba(11, 16, 32, 0.08);
+  --line-strong: rgba(11, 16, 32, 0.14);
+
+  /* Sinal — o azul da marca, em escala */
+  --signal-100: #EEF1FF;
+  --signal-200: #D6DDFF;
+  --signal-400: #7C90FF;
+  --signal-500: #3D5BFE;
+  --signal-600: #2B41C7;
+  --signal-700: #1D2C8C;
+
+  /* Acentos: âmbar = pico, verde = ganho. Reservados, nunca decorativos. */
+  --peak: #1D2C8C;
+  --peak-soft: #E4E9FF;
+  --gain: #12855F;
+  --gain-soft: #E6F4EF;
+  --drop: #C4384B;
+
+  /* Texto sobre superfície */
+  --font-display: 'Archivo', 'Inter Tight', -apple-system, sans-serif;
+  --font-body: 'Inter Tight', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* Curvas — as nativas do CSS são fracas demais pra parecer intencional */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* Elevação em três degraus, sempre com um tom de azul na sombra */
+  --lift-1: 0 1px 2px rgba(11, 16, 32, 0.04), 0 2px 8px rgba(11, 16, 32, 0.03);
+  --lift-2: 0 2px 4px rgba(11, 16, 32, 0.04), 0 8px 24px rgba(11, 16, 32, 0.06);
+  --lift-3: 0 4px 8px rgba(29, 44, 140, 0.06), 0 16px 48px rgba(29, 44, 140, 0.10);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
+html, body { width: 100%; height: 100%; overflow: hidden; }
 
 body {
-  background: linear-gradient(135deg, var(--bg) 0%, #EFF0F7 100%);
-  color: var(--text-1);
-  font-family: var(--font-display);
+  background: var(--bg);
+  color: var(--ink-1);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   position: relative;
-  animation: gradientShift 15s ease-in-out infinite;
 }
 
-@keyframes gradientShift {
-  0%, 100% {
-    background: linear-gradient(135deg, var(--bg) 0%, #EFF0F7 100%);
-  }
-  50% {
-    background: linear-gradient(135deg, #F0F2FA 0%, #E8EAFC 100%);
-  }
+/* Números tabulares em tudo que é dado: sem isso, valores que atualizam
+   dançam na horizontal a cada tick. */
+.hero-value, .stat-card-value, .chip-value, .nav-badge,
+.stat-card-delta, [data-num] {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1, 'zero' 1;
 }
 
 #canvas-bg {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0;
   width: 100%;
   height: 100%;
   z-index: 0;
-  opacity: 0.15;
-  animation: floatBg 20s ease-in-out infinite;
+  pointer-events: none;
 }
 
-@keyframes floatBg {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(20px); }
+/* Vinheta suave: puxa o olho pro centro e disfarça a borda da malha 3D */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(120% 90% at 50% 0%, transparent 40%, rgba(233, 236, 246, 0.55) 100%);
 }
 
-.wrap {
+/* ============================ Casca ============================ */
+
+.shell {
   position: relative;
-  z-index: 10;
+  z-index: 2;
+  display: flex;
   width: 100%;
   height: 100%;
-  overflow-y: auto;
-  overflow-x: hidden;
 }
 
-/* Header */
-.header {
+.sidebar {
+  width: 256px;
+  flex-shrink: 0;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 40px;
-  gap: 16px;
-  border-bottom: 1px solid rgba(61, 91, 254, 0.08);
-  backdrop-filter: blur(20px);
-  background: rgba(248, 249, 252, 0.6);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  flex-direction: column;
+  padding: 24px 14px 18px;
+  gap: 26px;
+  border-right: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  transition: width 260ms var(--ease-out), padding 260ms var(--ease-out);
+  overflow: hidden;
 }
 
-.brand {
+.sidebar-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
+  padding: 0 8px;
 }
 
 .brand-logo {
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   flex-shrink: 0;
-  filter: drop-shadow(0 4px 12px rgba(61, 91, 254, 0.2));
-  transition: transform 0.3s ease;
+  border-radius: 10px;
+  box-shadow: var(--lift-2);
 }
 
-.brand-logo:hover {
-  transform: scale(1.05);
+.sidebar-brand-text h1 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  font-stretch: 112%;
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  color: var(--ink-1);
 }
 
-.brand-text h1 {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-  color: var(--text-1);
-}
-
-.brand-text p {
-  font-size: 12px;
-  color: var(--text-2);
+.sidebar-brand-text p {
+  font-size: 10px;
+  color: var(--ink-3);
   font-family: var(--font-mono);
-  margin-top: 2px;
+  margin-top: 1px;
+  white-space: nowrap;
 }
 
-.header-actions {
+.nav { display: flex; flex-direction: column; gap: 3px; flex: 1; }
+
+.nav-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.nav-item {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 550;
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  white-space: nowrap;
+  transition: background-color 160ms ease, color 160ms ease, transform 140ms var(--ease-out);
+}
+
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; stroke-width: 1.9; }
+
+@media (hover: hover) and (pointer: fine) {
+  .nav-item:hover { background: var(--signal-100); color: var(--signal-600); }
+}
+
+.nav-item:active { transform: scale(0.985); }
+
+.nav-item.active {
+  background: var(--signal-500);
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(61, 91, 254, 0.24), 0 8px 20px rgba(61, 91, 254, 0.18);
+}
+
+/* Marca de sintonia: a barrinha à esquerda do item ativo */
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: -14px;
+  top: 50%;
+  width: 3px;
+  height: 18px;
+  border-radius: 0 3px 3px 0;
+  background: var(--signal-500);
+  transform: translateY(-50%);
+}
+
+.nav-badge {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+.sidebar-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
 }
 
 .status-chip {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 20px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--success);
+  justify-content: center;
+  gap: 7px;
+  padding: 7px 12px;
+  margin-bottom: 4px;
+  background: var(--gain-soft);
+  border: 1px solid rgba(18, 133, 95, 0.18);
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--gain);
   font-family: var(--font-mono);
 }
 
 .live-dot {
   width: 6px;
   height: 6px;
-  background: var(--success);
+  background: var(--gain);
   border-radius: 50%;
-  animation: pulse 1.5s ease-in-out infinite;
+  position: relative;
+  flex-shrink: 0;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+/* Pulso de transmissão: anel que expande, não um fade de opacidade */
+.live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--gain);
+  animation: transmit 2s var(--ease-out) infinite;
 }
 
-.icon-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: var(--text-2);
+@keyframes transmit {
+  0%   { transform: scale(1); opacity: 0.7; }
+  70%  { transform: scale(3); opacity: 0; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+.sidebar-action {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 550;
+  font-family: var(--font-body);
   cursor: pointer;
-  transition: all 0.2s ease;
+  text-align: left;
+  white-space: nowrap;
+  transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 140ms var(--ease-out);
 }
 
-.icon-btn:hover {
-  background: rgba(61, 91, 254, 0.1);
-  border-color: var(--primary);
-  color: var(--primary);
+.sidebar-action svg { width: 15px; height: 15px; flex-shrink: 0; stroke-width: 1.9; }
+
+@media (hover: hover) and (pointer: fine) {
+  .sidebar-action:hover {
+    border-color: var(--line-strong);
+    color: var(--signal-600);
+    background: var(--surface);
+  }
 }
 
-.icon-btn svg {
-  width: 16px;
-  height: 16px;
-}
+.sidebar-action:active { transform: scale(0.97); }
 
-/* Main content */
-.container {
-  padding: 40px;
-  max-width: 1400px;
-  margin: 0 auto;
+body.nav-collapsed .sidebar { width: 64px; padding-left: 10px; padding-right: 10px; }
+body.nav-collapsed .sidebar-brand-text,
+body.nav-collapsed .sidebar-action span,
+body.nav-collapsed .nav-item span:not(.nav-badge),
+body.nav-collapsed .nav-badge,
+body.nav-collapsed .status-chip span:not(.live-dot),
+body.nav-collapsed .nav-label { display: none; }
+body.nav-collapsed .nav-item,
+body.nav-collapsed .sidebar-action,
+body.nav-collapsed .status-chip { justify-content: center; padding-left: 0; padding-right: 0; }
+body.nav-collapsed .nav-item.active::before { left: -10px; }
+
+.wrap {
   position: relative;
-  z-index: 1;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
-/* Hero Card - MEGA */
+.wrap::-webkit-scrollbar { width: 10px; }
+.wrap::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 10px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+.container {
+  padding: 40px 44px 64px;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+
+/* ============================ Views ============================ */
+
+.view { display: none; }
+.view.active { display: block; }
+
+/* Entrada escalonada: cada bloco entra 50ms depois do anterior */
+.view.active > * {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: riseIn 460ms var(--ease-out) forwards;
+}
+.view.active > *:nth-child(1) { animation-delay: 0ms; }
+.view.active > *:nth-child(2) { animation-delay: 50ms; }
+.view.active > *:nth-child(3) { animation-delay: 100ms; }
+.view.active > *:nth-child(4) { animation-delay: 150ms; }
+
+@keyframes riseIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.view-head { margin-bottom: 30px; }
+
+.view-head h2 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  font-stretch: 108%;
+  letter-spacing: -0.02em;
+  color: var(--ink-1);
+}
+
+.view-head p {
+  font-size: 13px;
+  color: var(--ink-3);
+  margin-top: 5px;
+}
+
+/* ============================ Hero ============================ */
+
 .hero-card {
-  background: linear-gradient(135deg, rgba(61, 91, 254, 0.08) 0%, rgba(84, 112, 255, 0.04) 100%);
-  border: 1px solid rgba(61, 91, 254, 0.2);
-  border-radius: 24px;
-  padding: 48px;
-  margin-bottom: 40px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 20px 60px rgba(61, 91, 254, 0.15);
-  animation: fadeUp 0.8s ease-out;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 38px 40px;
+  margin-bottom: 22px;
+  box-shadow: var(--lift-2);
+  overflow: hidden;
 }
 
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Faixa de sinal no topo do card, como a régua de um equipamento */
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg,
+    var(--signal-500) 0%, var(--signal-400) 32%,
+    var(--peak) 62%, var(--signal-500) 100%);
+  background-size: 200% 100%;
+  animation: sweep 9s linear infinite;
+}
+
+@keyframes sweep {
+  to { background-position: -200% 0; }
 }
 
 .hero-top {
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: 1.35fr 1fr;
   gap: 40px;
-  margin-bottom: 0;
   align-items: stretch;
 }
 
 @media (max-width: 900px) {
-  .hero-top {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
+  .hero-top { grid-template-columns: 1fr; gap: 28px; }
 }
 
-/* Total Seguidores */
 .hero-top > div:first-child {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 14px;
   justify-content: flex-start;
 }
 
 .hero-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1.2px;
-  color: var(--text-2);
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
 }
 
 .hero-value {
-  font-size: 72px;
-  font-weight: 900;
-  font-family: var(--font-mono);
-  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
+  font-family: var(--font-display);
+  font-size: clamp(52px, 5.6vw, 76px);
+  font-weight: 700;
+  font-stretch: 118%;
+  color: var(--ink-1);
+  line-height: 0.92;
+  letter-spacing: -0.035em;
 }
 
-/* Ganho Diário - BOX DESTAQUE */
+/* Caixa de ganho: verde reservado, nunca decorativo */
 .hero-top > div:last-child {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 32px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(34, 197, 94, 0.06) 100%);
-  border: 2px solid rgba(16, 185, 129, 0.4);
-  border-radius: 16px;
-  backdrop-filter: blur(10px);
+  gap: 12px;
+  padding: 26px 28px;
+  background: var(--gain-soft);
+  border: 1px solid rgba(18, 133, 95, 0.2);
+  border-radius: 14px;
 }
 
-.hero-top > div:last-child .hero-label {
-  color: var(--success);
-  font-size: 11px;
-}
+.hero-top > div:last-child .hero-label { color: var(--gain); }
 
 .hero-top > div:last-child .hero-value {
-  background: linear-gradient(135deg, var(--success) 0%, #10B981 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 52px;
+  color: var(--gain);
+  font-size: clamp(38px, 3.8vw, 52px);
 }
 
 .hero-top > div:last-child .stat-delta {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--success);
-  background: transparent;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 8px;
+  color: var(--gain);
+  font-family: var(--font-mono);
+  margin-top: 2px;
 }
 
-/* Comparativos */
 .hero-chips {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
   padding-top: 16px;
-  border-top: 1px solid rgba(61, 91, 254, 0.15);
+  border-top: 1px solid var(--line);
 }
 
 .chip {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 10px 12px;
-  background: rgba(61, 91, 254, 0.08);
-  border-radius: 8px;
-  border: 1px solid rgba(61, 91, 254, 0.15);
+  gap: 2px;
+  padding: 9px 12px;
+  background: var(--signal-100);
+  border-radius: 9px;
+  border: 1px solid var(--signal-200);
 }
 
 .chip-label {
-  font-size: 10px;
-  color: var(--text-3);
+  font-size: 9px;
+  color: var(--ink-3);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
-  font-weight: 600;
+  letter-spacing: 0.1em;
+  font-weight: 700;
 }
 
 .chip-value {
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   font-family: var(--font-mono);
-  color: var(--primary-light);
+  color: var(--signal-600);
 }
 
-/* Stat Cards */
+/* ============================ Stat cards ============================ */
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-  margin-bottom: 40px;
+  gap: 14px;
+  margin-bottom: 22px;
 }
 
-@media (max-width: 1200px) {
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
-}
-
-@media (max-width: 600px) {
-  .stats-grid {
-    grid-template-columns: 1fr;
-  }
-}
+@media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .stats-grid { grid-template-columns: 1fr; } }
 
 .stat-card {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
-  border: 1px solid rgba(61, 91, 254, 0.2);
-  border-radius: 16px;
-  padding: 28px;
-  backdrop-filter: blur(10px);
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: fadeUp 0.8s ease-out;
-  animation-fill-mode: both;
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 20px 22px;
+  box-shadow: var(--lift-1);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out), border-color 200ms ease;
 }
 
-.stat-card:nth-child(1) { animation-delay: 0.1s; }
-.stat-card:nth-child(2) { animation-delay: 0.2s; }
-.stat-card:nth-child(3) { animation-delay: 0.3s; }
-.stat-card:nth-child(4) { animation-delay: 0.4s; }
-
-.stat-card:hover {
-  background: linear-gradient(135deg, rgba(61, 91, 254, 0.12) 0%, rgba(84, 112, 255, 0.06) 100%);
-  border-color: var(--primary);
-  transform: translateY(-8px);
-  box-shadow: 0 20px 50px rgba(61, 91, 254, 0.2);
+@media (hover: hover) and (pointer: fine) {
+  .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--lift-3);
+    border-color: var(--signal-200);
+  }
 }
 
 .stat-card-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--text-2);
-  margin-bottom: 12px;
+  letter-spacing: 0.12em;
+  color: var(--ink-3);
+  margin-bottom: 10px;
 }
 
 .stat-card-value {
-  font-size: 36px;
-  font-weight: 900;
-  font-family: var(--font-mono);
-  color: var(--primary-light);
-  line-height: 1;
-  margin-bottom: 12px;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+  font-stretch: 108%;
+  letter-spacing: -0.025em;
+  color: var(--ink-1);
+  line-height: 1.05;
 }
 
 .stat-card-delta {
-  font-size: 12px;
-  font-family: var(--font-mono);
+  margin-top: 8px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 0;
-  background: transparent;
+  font-family: var(--font-mono);
 }
 
-.delta-up {
-  color: var(--success);
-}
+.delta-up   { color: var(--gain); }
+.delta-down { color: var(--drop); }
+.delta-flat { color: var(--ink-4); }
 
-.delta-down {
-  color: var(--danger);
-}
+/* ============================ Seções ============================ */
 
-.delta-flat {
-  color: var(--text-3);
-}
-
-/* Charts */
 .chart-section {
-  background: linear-gradient(135deg, rgba(61, 91, 254, 0.08) 0%, rgba(84, 112, 255, 0.04) 100%);
-  border: 1px solid rgba(61, 91, 254, 0.2);
-  border-radius: 20px;
-  padding: 32px;
-  margin-bottom: 30px;
-  backdrop-filter: blur(20px);
-  animation: fadeUp 0.8s ease-out 0.5s both;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 26px 26px;
+  margin-bottom: 20px;
+  box-shadow: var(--lift-1);
 }
 
 .chart-title {
-  font-size: 14px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.7px;
-  color: var(--text-1);
-  margin-bottom: 24px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.chart-title > span:first-child {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  font-stretch: 105%;
+  letter-spacing: -0.012em;
+  color: var(--ink-1);
 }
 
 .chart-filters {
   display: flex;
-  gap: 10px;
+  gap: 3px;
+  padding: 3px;
+  background: var(--bg-2);
+  border-radius: 9px;
 }
 
 .filter-btn {
-  padding: 6px 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(61, 91, 254, 0.2);
+  padding: 6px 13px;
+  border-radius: 7px;
+  border: none;
   background: transparent;
-  color: var(--text-2);
-  font-size: 12px;
-  font-weight: 600;
+  color: var(--ink-2);
+  font-size: 11px;
+  font-weight: 650;
   cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
+  transition: background-color 160ms ease, color 160ms ease, transform 140ms var(--ease-out);
 }
 
-.filter-btn:hover {
-  border-color: var(--primary);
-  color: var(--primary);
+@media (hover: hover) and (pointer: fine) {
+  .filter-btn:hover { color: var(--ink-1); }
 }
+
+.filter-btn:active { transform: scale(0.96); }
 
 .filter-btn.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
+  background: var(--surface);
+  color: var(--signal-600);
+  box-shadow: var(--lift-1);
 }
 
-.chart-holder {
-  height: 280px;
-  position: relative;
-}
+.chart-holder { position: relative; }
 
-/* TV Mode */
-body.tv-mode {
-  padding: 0;
-}
+/* ============================ Loading ============================ */
 
-body.tv-mode .header {
-  padding: 20px 40px;
-}
-
-body.tv-mode .container {
-  padding: 32px 40px;
-}
-
-body.tv-mode .hero-card {
-  padding: 40px;
-  margin-bottom: 20px;
-}
-
-body.tv-mode .hero-top {
-  gap: 40px;
-  margin-bottom: 0;
-}
-
-body.tv-mode .hero-value {
-  font-size: 64px;
-}
-
-body.tv-mode .hero-top > div:last-child {
-  padding: 24px;
-}
-
-body.tv-mode .hero-top > div:last-child .hero-value {
-  font-size: 44px;
-}
-
-body.tv-mode .stats-grid {
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 0;
-}
-
-body.tv-mode .stat-card {
-  padding: 20px;
-}
-
-body.tv-mode .stat-card-value {
-  font-size: 32px;
-}
-
-body.tv-mode .chart-section {
-  display: none;
-}
-
-body.tv-mode .header-actions .icon-btn:not(#btn-tv) {
-  display: none;
-}
-
-/* Scroll */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(61, 91, 254, 0.3);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(61, 91, 254, 0.5);
-}
-
-/* Loading */
 .loading {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: var(--text-2);
+  padding: 120px 0;
+  color: var(--ink-3);
   font-family: var(--font-mono);
-  font-size: 13px;
-  padding: 60px 0;
+  font-size: 12px;
 }
 
 .spin {
-  width: 16px;
-  height: 16px;
-  border: 2px solid rgba(61, 91, 254, 0.2);
-  border-top-color: var(--primary);
+  width: 15px;
+  height: 15px;
+  border: 2px solid var(--signal-200);
+  border-top-color: var(--signal-500);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  /* Rápido de propósito: giro veloz faz o carregamento parecer mais curto */
+  animation: spin 620ms linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Esqueleto no lugar de spinner onde já se sabe a forma do conteúdo */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-2) 25%, #F5F7FC 50%, var(--bg-2) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+  border-radius: 8px;
 }
+
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ============================ Modo TV ============================ */
+
+body.tv-mode .sidebar { display: none; }
+body.tv-mode .container { max-width: none; padding: 30px 40px; }
+body.tv-mode .view-head { display: none; }
+body.tv-mode .hero-value { font-size: clamp(72px, 8vw, 118px); }
+body.tv-mode .hero-top > div:last-child .hero-value { font-size: clamp(52px, 5.5vw, 82px); }
+body.tv-mode .stat-card-value { font-size: 40px; }
+body.tv-mode .stat-card { padding: 24px 26px; }
+body.tv-mode .chart-section { padding: 26px 30px; }
+
+/* ============================ Acessibilidade ============================ */
+
+:focus-visible {
+  outline: 2px solid var(--signal-500);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Movimento reduzido: some o deslocamento, mantém opacidade e cor —
+   que ainda ajudam a entender o que mudou. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .view.active > * { opacity: 1; transform: none; }
+  .stat-card:hover { transform: none; }
+}
+
+@media (max-width: 900px) {
+  .sidebar { width: 64px; padding-left: 10px; padding-right: 10px; }
+  .sidebar-brand-text, .sidebar-action span, .nav-item span:not(.nav-badge),
+  .nav-badge, .nav-label, .status-chip span:not(.live-dot) { display: none; }
+  .nav-item, .sidebar-action, .status-chip { justify-content: center; padding-left: 0; padding-right: 0; }
+  .container { padding: 26px 20px 48px; }
+  .hero-card { padding: 26px 24px; }
+}
+
+
+/* ============================ Tooltip do gráfico ============================ */
+
+.chart-holder { position: relative; }
+
+.grafico { display: block; overflow: visible; }
+
+.grafico .crosshair { transition: opacity 140ms ease; }
+
+.tooltip-grafico {
+  position: absolute;
+  pointer-events: none;
+  z-index: 5;
+  padding: 9px 12px;
+  background: var(--ink-1);
+  color: #fff;
+  border-radius: 9px;
+  box-shadow: var(--lift-3);
+  opacity: 0;
+  /* Nunca de scale(0): nada no mundo real aparece do nada */
+  transform-origin: left center;
+  transition: opacity 140ms var(--ease-out);
+  white-space: nowrap;
+}
+
+.tooltip-grafico.visivel { opacity: 1; }
+
+.tip-data {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  opacity: 0.6;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.tip-valor {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  font-stretch: 105%;
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+.tip-ganho {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: #7BE0B8;
+  margin-top: 2px;
+}
+
+/* ============================ Lista do ranking ============================ */
+
+.rank-linha {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  text-decoration: none;
+  transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out), border-color 180ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .rank-linha:hover {
+    transform: translateY(-1px);
+    border-color: var(--signal-200);
+    box-shadow: var(--lift-2);
+  }
+}
+
+.rank-linha:active { transform: scale(0.995); }
+
+.rank-pos {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-4);
+  min-width: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Só os três primeiros ganham cor — pódio, não decoração */
+.rank-linha:nth-child(-n+3) .rank-pos { color: var(--signal-500); }
+
+.rank-thumb {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 9px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-2);
+}
+
+.rank-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.rank-meta { flex: 1; min-width: 0; }
+
+.rank-cap {
+  font-size: 12.5px;
+  color: var(--ink-1);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-sub {
+  font-size: 10.5px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  margin-top: 3px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.rank-tag {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--signal-100);
+  color: var(--signal-600);
+}
+
+.rank-tag.reel { background: var(--peak-soft); color: var(--peak); }
+
+.rank-nums { display: flex; gap: 20px; text-align: right; flex-shrink: 0; }
+
+.rank-num-v {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-num-l {
+  font-size: 9px;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+
+.rank-num-v.ganho { color: var(--gain); }
+.rank-num-v.vazio { color: var(--ink-4); font-weight: 500; }
+
+/* Entrada escalonada da lista */
+.rank-linha {
+  opacity: 0;
+  animation: riseIn 380ms var(--ease-out) forwards;
+}
+.rank-linha:nth-child(1) { animation-delay: 0ms; }
+.rank-linha:nth-child(2) { animation-delay: 35ms; }
+.rank-linha:nth-child(3) { animation-delay: 70ms; }
+.rank-linha:nth-child(4) { animation-delay: 105ms; }
+.rank-linha:nth-child(5) { animation-delay: 140ms; }
+.rank-linha:nth-child(n+6) { animation-delay: 170ms; }
+
+/* ============================ Cartões de publicação ============================ */
+
+.post-card {
+  display: block;
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  overflow: hidden;
+  background: var(--surface);
+  transition: transform 200ms var(--ease-out), box-shadow 200ms var(--ease-out), border-color 200ms ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .post-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--lift-3);
+    border-color: var(--signal-200);
+  }
+  .post-card:hover .post-img { transform: scale(1.04); }
+}
+
+.post-card:active { transform: scale(0.99); }
+
+.post-media { position: relative; aspect-ratio: 1; overflow: hidden; background: var(--bg-2); }
+
+.post-img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+  transition: transform 400ms var(--ease-out);
+}
+
+.post-badge {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: rgba(11, 16, 32, 0.72);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 3px 7px;
+  border-radius: 6px;
+}
+
+.post-hora {
+  position: absolute;
+  top: 8px; left: 8px;
+  background: rgba(61, 91, 254, 0.9);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 3px 7px;
+  border-radius: 6px;
+}
+
+.post-views {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 22px 10px 8px;
+  background: linear-gradient(transparent, rgba(11, 16, 32, 0.82));
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.post-foot {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 9px;
+  font-size: 11px;
+  color: var(--ink-2);
+  font-family: var(--font-mono);
+  border-top: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
+}
+
+.vazio-msg {
+  grid-column: 1/-1;
+  text-align: center;
+  padding: 44px 20px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+
+/* ==========================================================================
+   Grid de 12 colunas + tiles assimétricos
+   O padrão que Linear, Stripe, Vercel e Grafana convergiram: faixa de KPIs
+   no topo, grid flexível abaixo, tamanho do tile = importância do dado.
+   ========================================================================== */
+
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.col-3  { grid-column: span 3; }
+.col-4  { grid-column: span 4; }
+.col-5  { grid-column: span 5; }
+.col-6  { grid-column: span 6; }
+.col-7  { grid-column: span 7; }
+.col-8  { grid-column: span 8; }
+.col-12 { grid-column: span 12; }
+
+@media (max-width: 1280px) {
+  .col-3 { grid-column: span 6; }
+  .col-4 { grid-column: span 6; }
+  .col-5, .col-7, .col-8 { grid-column: span 12; }
+}
+
+@media (max-width: 760px) {
+  .col-3, .col-4, .col-6 { grid-column: span 12; }
+}
+
+/* ============================ KPI card ============================ */
+
+.kpi {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 16px 18px 0;
+  box-shadow: var(--lift-1);
+  overflow: hidden;
+  min-height: 132px;
+  transition: border-color 200ms ease, box-shadow 200ms var(--ease-out);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kpi:hover { border-color: var(--signal-200); box-shadow: var(--lift-2); }
+}
+
+.kpi-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Delta compacto: seta + número, sem frase */
+.kpi-delta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-delta.up   { color: var(--gain); background: var(--gain-soft); }
+.kpi-delta.down { color: var(--drop); background: #FBEAEC; }
+.kpi-delta.flat { color: var(--ink-4); background: var(--bg-2); }
+
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 32px;
+  font-weight: 700;
+  font-stretch: 108%;
+  letter-spacing: -0.028em;
+  color: var(--ink-1);
+  line-height: 1.08;
+  margin-top: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-sub {
+  font-size: 10.5px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  margin-top: 3px;
+}
+
+/* Sparkline sangra até a borda do card: vira o rodapé do tile */
+.kpi-spark {
+  margin: auto -18px 0;
+  height: 40px;
+  display: block;
+}
+
+/* ============================ Hero ============================ */
+
+.hero-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 24px 26px 0;
+  box-shadow: var(--lift-2);
+  overflow: hidden;
+  min-height: 210px;
+}
+
+.hero-tile::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--signal-500) 0%, var(--signal-400) 34%, var(--peak) 64%, var(--signal-500) 100%);
+  background-size: 200% 100%;
+  animation: sweep 9s linear infinite;
+}
+
+@keyframes sweep { to { background-position: -200% 0; } }
+
+.hero-tile .hero-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+
+.hero-tile .hero-value {
+  font-family: var(--font-display);
+  font-size: clamp(48px, 4.6vw, 66px);
+  font-weight: 700;
+  font-stretch: 118%;
+  color: var(--ink-1);
+  line-height: 0.94;
+  letter-spacing: -0.035em;
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-spark { margin: auto -26px 0; height: 76px; display: block; }
+
+/* Tile de ganho: verde reservado ao que é de fato ganho */
+.gain-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  background: linear-gradient(160deg, var(--gain-soft) 0%, #F2FAF7 100%);
+  border: 1px solid rgba(18, 133, 95, 0.22);
+  border-radius: 16px;
+  padding: 24px 26px;
+  min-height: 210px;
+}
+
+.gain-tile .hero-label { color: var(--gain); letter-spacing: 0.16em; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+
+.gain-tile .hero-value {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 4vw, 56px);
+  font-weight: 700;
+  font-stretch: 115%;
+  color: var(--gain);
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.gain-meta {
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(18, 133, 95, 0.16);
+}
+
+.gain-meta div { display: flex; flex-direction: column; gap: 1px; }
+
+.gain-meta-l {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(18, 133, 95, 0.7);
+  font-weight: 700;
+}
+
+.gain-meta-v {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gain);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================ Comparação de formatos ============================ */
+
+.fmt-lista { display: flex; flex-direction: column; gap: 12px; }
+
+.fmt-linha { display: grid; grid-template-columns: 92px 1fr 116px; align-items: center; gap: 12px; }
+
+.fmt-nome {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+
+.fmt-barra {
+  height: 26px;
+  background: var(--bg-2);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+}
+
+.fmt-preenche {
+  height: 100%;
+  border-radius: 6px;
+  background: var(--signal-500);
+  width: 0;
+  transition: width 700ms var(--ease-out);
+}
+
+.fmt-preenche.reel { background: var(--peak); }
+.fmt-preenche.carrossel { background: var(--signal-500); }
+.fmt-preenche.imagem { background: var(--signal-400); }
+
+.fmt-num {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-1);
+  min-width: 74px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.fmt-num small {
+  display: block;
+  font-size: 9px;
+  color: var(--ink-4);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ============================ Ranking denso ============================ */
+
+/* Barra de fundo proporcional: o tamanho relativo se lê sem comparar números */
+.rank-linha { position: relative; overflow: hidden; }
+
+.rank-linha > * { position: relative; z-index: 1; }
+
+/* ============================ Distribuição por hora ============================ */
+
+.horas {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  align-items: end;
+  height: 84px;
+}
+
+.hora-col {
+  background: var(--signal-200);
+  border-radius: 3px 3px 0 0;
+  min-height: 3px;
+  transition: background-color 160ms ease, transform 160ms var(--ease-out);
+  transform-origin: bottom;
+}
+
+.hora-col.pico { background: var(--peak); }
+
+@media (hover: hover) and (pointer: fine) {
+  .hora-col:hover { background: var(--signal-500); transform: scaleY(1.06); }
+}
+
+.horas-eixo {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  margin-top: 6px;
+}
+
+.horas-eixo span {
+  font-size: 8.5px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+/* ============================ Esqueletos ============================ */
+
+.sk-kpi { min-height: 132px; border-radius: 13px; }
+.sk-hero { min-height: 210px; border-radius: 16px; }
+.sk-linha { height: 68px; border-radius: 12px; }
+
+/* ============================ Modo TV ============================ */
+
+body.tv-mode .kpi-value { font-size: 42px; }
+body.tv-mode .kpi { min-height: 158px; }
+body.tv-mode .hero-tile { min-height: 260px; }
+body.tv-mode .gain-tile { min-height: 260px; }
+
+
+
+/* ══ Fundo: aurora ═══════════════════════════════════════════════════════════
+   A malha wireframe competia com o conteúdo — linha dura atrás de texto vira
+   ruído. Três manchas desfocadas derivando devagar dão profundidade sem
+   disputar atenção. Só transform anima, então roda na GPU sem custo de layout. */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.aurora span:nth-child(1) {
+  width: 46vw; height: 46vw;
+  top: -14vw; left: -8vw;
+  background: radial-gradient(circle, rgba(61,91,254,0.30), transparent 68%);
+  animation: deriva1 34s var(--ease-in-out) infinite;
+}
+
+.aurora span:nth-child(2) {
+  width: 40vw; height: 40vw;
+  top: 18vw; right: -10vw;
+  background: radial-gradient(circle, rgba(124,144,255,0.26), transparent 68%);
+  animation: deriva2 42s var(--ease-in-out) infinite;
+}
+
+.aurora span:nth-child(3) {
+  width: 52vw; height: 52vw;
+  bottom: -22vw; left: 24vw;
+  background: radial-gradient(circle, rgba(29,44,140,0.16), transparent 70%);
+  animation: deriva3 50s var(--ease-in-out) infinite;
+}
+
+@keyframes deriva1 {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(6vw, 4vw, 0) scale(1.12); }
+}
+@keyframes deriva2 {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(-5vw, 6vw, 0) scale(0.92); }
+}
+@keyframes deriva3 {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(4vw, -5vw, 0) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora span { animation: none; }
+}
+
+/* ══ Ranking: grade fixa ═════════════════════════════════════════════════════
+   Era flex, e a barra de fundo (que devia ser absoluta) entrava no fluxo e
+   empurrava tudo em cascata. Agora é grid de colunas fixas: alinha sempre. */
+.rank-linha {
+  display: grid;
+  grid-template-columns: 26px 44px minmax(0, 1fr) 86px 86px 78px;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  padding: 9px 16px;
+}
+
+/* Barra proporcional como pseudo-elemento: não existe no fluxo, não empurra */
+.rank-linha::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: var(--peso, 0%);
+  background: var(--signal-100);
+  z-index: 0;
+  transition: width 700ms var(--ease-out);
+}
+
+.rank-linha > * { position: relative; z-index: 1; }
+
+.rank-thumb { width: 44px; height: 44px; }
+
+.rank-meta { display: block; min-width: 0; }
+.rank-cap { display: block; }
+.rank-sub { display: flex; align-items: center; gap: 7px; }
+.rank-num { display: block; text-align: right; }
+.rank-num-v, .rank-num-l { display: block; }
+
+.rank-num { text-align: right; }
+
+.rank-num-v { font-size: 13.5px; }
+
+.rank-pos { text-align: center; min-width: 0; }
+
+@media (max-width: 1100px) {
+  .rank-linha { grid-template-columns: 24px 40px minmax(0, 1fr) 76px; }
+  .rank-num.esconde { display: none; }
+}
+
+
+.kpi { padding-bottom: 0; }
+
+/* ══ Faixa de insights: 5 cards sem sobra ════════════════════════════════════ */
+.strip-5 { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1280px) { .strip-5 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px)  { .strip-5 { grid-template-columns: 1fr; } }
+.strip-5 > * { grid-column: auto !important; }
+
+/* ══ Destaques do dia ════════════════════════════════════════════════════════ */
+.destaque {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 74px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.destaque:last-child { border-bottom: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .destaque:hover .destaque-cap { color: var(--signal-600); }
+}
+
+.destaque-thumb {
+  width: 40px; height: 40px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--bg-2);
+  display: block;
+}
+
+.destaque-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* min-width:0 é o que deixa o 1fr encolher e o ellipsis funcionar */
+.destaque-meta { display: block; min-width: 0; }
+
+.destaque-cap {
+  display: block;
+  font-size: 12.5px;
+  color: var(--ink-1);
+  font-weight: 500;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+
+.destaque-sub {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  margin-top: 3px;
+}
+
+.destaque-num {
+  display: block;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.destaque-num small {
+  display: block;
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+
+/* ══ Horas: mais alto e com faixa de referência ══════════════════════════════ */
+.horas { height: 108px; }
+.hora-col.pico { background: var(--signal-600); }
+
+
+
+/* ══ Sair do modo TV ═════════════════════════════════════════════════════════
+   O modo TV esconde a sidebar, que é onde vive o botão que o liga. Sem uma
+   saída visível ele vira armadilha: só recarregando a página. */
+.tv-sair {
+  display: none;
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 300;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--ink-2);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: var(--lift-2);
+  /* Some sozinho depois de alguns segundos pra não sujar o telão, e volta
+     ao primeiro movimento do mouse. */
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out), border-color 160ms ease;
+  pointer-events: none;
+}
+
+body.tv-mode .tv-sair { display: flex; }
+
+body.tv-mode.tv-ativo .tv-sair {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.tv-sair svg { width: 15px; height: 15px; stroke-width: 2; }
+
+@media (hover: hover) and (pointer: fine) {
+  .tv-sair:hover { border-color: var(--signal-500); color: var(--signal-600); }
+}
+
+.tv-sair:active { transform: scale(0.97); }
+
+.tv-sair kbd {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--bg-2);
+  color: var(--ink-3);
+  border: 1px solid var(--line);
+}
+
+
+
+/* Área sangra até as bordas do card e vira o rodapé do tile */
+.kpi-area {
+  display: block;
+  width: calc(100% + 36px);
+  margin: auto -18px 0;
+}
+
+.hero-tile .kpi-area { width: calc(100% + 52px); margin: auto -26px 0; }
+
+
+
+/* ══ Mini-barras dos KPIs ════════════════════════════════════════════════════
+   Uma barra por dia, a última destacada. Lê melhor que curva neste tamanho. */
+.spark-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 36px;
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+
+.spark-bars i {
+  flex: 1;
+  background: var(--signal-200);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+  display: block;
+}
+
+.spark-bars i.hoje { background: var(--signal-500); }
+
+.hero-tile .spark-bars { margin-bottom: 22px; }
+
+
+
+/* Amostra pequena: barra listrada, pra não ler como um resultado firme */
+.fmt-preenche.fraca {
+  background-image: repeating-linear-gradient(
+    -45deg, transparent 0 5px, rgba(255,255,255,0.35) 5px 10px
+  );
+}
+
+.fmt-num small { white-space: nowrap; }
+
+
+
+/* Diz qual intervalo o filtro realmente cobriu. Sem isso, dois períodos com o
+   mesmo resultado parecem filtro quebrado, quando é o histórico que ainda não
+   chegou lá. */
+.cobertura {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--ink-4);
+  margin-top: 6px;
+}
+
+.cobertura.parcial { color: var(--signal-600); }
+
+.cobertura.parcial::before {
+  content: '';
+  display: inline-block;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--signal-500);
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+
+
+/* Realce de atualização: some sozinho. Um número que muda sem aviso nenhum
+   parece glitch; com um brilho de 700ms lê como "chegou dado novo". */
+.kpi-value.subindo,
+.hero-value.subindo {
+  color: var(--signal-500);
+  transition: color 700ms var(--ease-out);
+}
+
+.kpi-value.subindo.caindo,
+.hero-value.subindo.caindo { color: var(--ink-2); }
+
+/* A seta aparece só durante a animação */
+.kpi-value.subindo::after,
+.hero-value.subindo::after {
+  content: '▲';
+  font-size: 0.4em;
+  vertical-align: middle;
+  margin-left: 0.35em;
+  color: var(--gain);
+  animation: piscaSeta 700ms var(--ease-out);
+}
+
+.kpi-value.subindo.caindo::after,
+.hero-value.subindo.caindo::after {
+  content: '▼';
+  color: var(--ink-4);
+}
+
+@keyframes piscaSeta {
+  0%   { opacity: 0; transform: translateY(3px); }
+  30%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kpi-value.subindo::after, .hero-value.subindo::after { animation: none; opacity: 0; }
+}
+
+
+
+/* ══ Faixa de aviso ══════════════════════════════════════════════════════════
+   Só aparece quando há o que avisar. Fica no topo do conteúdo, não sobre ele:
+   num telão, alerta que cobre dado é pior que o problema que anuncia. */
+.faixa {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  border: 1px solid;
+}
+
+.faixa.visivel { display: flex; }
+
+.faixa.atencao {
+  background: #FFF8E8;
+  border-color: #E8C77A;
+  color: #7A5A12;
+}
+
+.faixa.critico {
+  background: #FDEDEF;
+  border-color: #E8A0AA;
+  color: #8C1F2E;
+}
+
+.faixa.info {
+  background: var(--signal-100);
+  border-color: var(--signal-200);
+  color: var(--signal-700);
+}
+
+.faixa svg { width: 18px; height: 18px; flex-shrink: 0; stroke-width: 2; }
+
+.faixa b { font-weight: 700; }
+
+.faixa-acao {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.8;
+  white-space: nowrap;
+}
+
+/* Dado velho: o número continua, mas marcado. Melhor dado antigo identificado
+   que tela de erro vermelha no meio da redação. */
+body.dado-velho .kpi-value,
+body.dado-velho .hero-value { opacity: 0.55; }
+
 </style>
 </head>
 <body>
-<canvas id="canvas-bg"></canvas>
+<div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
 
-<div class="wrap">
-  <div class="header">
-    <div class="brand">
+<button class="tv-sair" id="btn-sair-tv" title="Sair do modo TV">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+  <span>Sair do modo TV</span>
+  <kbd>Esc</kbd>
+</button>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
       <svg class="brand-logo" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -585,81 +1720,79 @@ body.tv-mode .header-actions .icon-btn:not(#btn-tv) {
         <text x="120" y="110" font-family="'Inter', -apple-system, sans-serif" font-size="100" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-3" dominant-baseline="middle">alpha</text>
         <text x="120" y="165" font-family="'Inter', -apple-system, sans-serif" font-size="28" font-weight="700" fill="white" text-anchor="middle" letter-spacing="2">FM 101.7</text>
       </svg>
-      <div class="brand-text">
-        <h1>Alpha FM · Instagram</h1>
-        <p id="brand-subtitle">@radiosalphafm · atualizado agora</p>
+      <div class="sidebar-brand-text">
+        <h1>Alpha FM</h1>
+        <p id="brand-subtitle">carregando…</p>
       </div>
     </div>
-    <div class="header-actions">
-      <span class="status-chip"><span class="live-dot"></span>ao vivo</span>
-      <div class="icon-btn" id="btn-export" title="Exportar XLSX">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
-      </div>
-      <div class="icon-btn" id="btn-tv" title="Modo TV">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
-      </div>
-      <div class="icon-btn" id="btn-refresh" title="Atualizar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-      </div>
-    </div>
-  </div>
 
-  <div class="container" id="app">
-    <div class="loading"><div class="spin"></div> carregando</div>
+    <nav class="nav">
+      <div class="nav-label">Painel</div>
+      <button class="nav-item active" data-view="geral" title="Visão Geral">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        <span>Visão Geral</span>
+      </button>
+      <button class="nav-item" data-view="insights" title="Insights">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg>
+        <span>Insights</span>
+        <span class="nav-badge" id="badge-insights"></span>
+      </button>
+      <button class="nav-item" data-view="publicacoes" title="Publicações">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>
+        <span>Publicações</span>
+        <span class="nav-badge" id="badge-posts"></span>
+      </button>
+      <button class="nav-item" data-view="audiencia" title="Audiência">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Audiência</span>
+      </button>
+      <button class="nav-item" data-view="crescimento" title="Crescimento">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 6h6v6"/><path d="M23 6l-8.5 8.5-5-5L1 18"/></svg>
+        <span>Crescimento</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <span class="status-chip" style="justify-content: center;"><span class="live-dot"></span><span>ao vivo</span></span>
+      <button class="sidebar-action" id="btn-export" title="Exportar XLSX">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5M12 15V3"/></svg>
+        <span>Exportar XLSX</span>
+      </button>
+      <button class="sidebar-action" id="btn-tv" title="Modo TV">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 18v3"/></svg>
+        <span>Modo TV</span>
+      </button>
+      <button class="sidebar-action" id="btn-refresh" title="Atualizar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        <span>Atualizar</span>
+      </button>
+      <button class="sidebar-action" id="btn-collapse" title="Recolher menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        <span>Recolher</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="wrap">
+    <div class="container">
+      <div class="faixa" id="faixa-aviso"></div>
+      <div id="app">
+      <div class="loading"><div class="spin"></div> carregando</div>
+      </div>
+    </div>
   </div>
 </div>
 
 <script>
-// Three.js Background
-const canvas = document.getElementById('canvas-bg');
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x000000, 0);
-camera.position.z = 5;
-
-// Partículas de fundo
-const particlesGeometry = new THREE.BufferGeometry();
-const particleCount = 300;
-const positions = new Float32Array(particleCount * 3);
-
-for (let i = 0; i < particleCount * 3; i += 3) {
-  positions[i] = (Math.random() - 0.5) * 20;
-  positions[i + 1] = (Math.random() - 0.5) * 20;
-  positions[i + 2] = (Math.random() - 0.5) * 20;
-}
-
-particlesGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-
-const particlesMaterial = new THREE.PointsMaterial({
-  color: 0x5470FF,
-  size: 0.08,
-  sizeAttenuation: true,
-  transparent: true,
-  opacity: 0.4,
-});
-
-const particles = new THREE.Points(particlesGeometry, particlesMaterial);
-scene.add(particles);
-
-// Animação
-function animate() {
-  requestAnimationFrame(animate);
-  particles.rotation.x += 0.0001;
-  particles.rotation.y += 0.0002;
-  renderer.render(scene, camera);
-}
-
-animate();
-
-// Resize
-window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-});
+// ── Fundo: malha de onda ────────────────────────────────────────────────────
+// O assunto é uma rádio, então o fundo é literalmente uma onda propagando.
+// Duas frequências somadas em fases diferentes, como um sinal composto.
+//
+// Vive num telão 24/7, então tudo aqui é defensivo: pausa quando a aba some,
+// limita o pixel ratio, sobrevive a perda de contexto WebGL e desliga inteiro
+// se a pessoa pediu menos movimento.
+// Fundo agora é CSS (ver .aurora). Sem WebGL: um canvas 3D rodando 24/7 num
+// telão é risco de perda de contexto e calor de GPU sem contrapartida visual.
 
 const API_URL = 'https://alpha-fm-api-git-main-alpha-fm1.vercel.app/api/data';
 const LOGO_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAACXBIWXMAABcSAAAXEgFxLsqaAAAA20lEQVQYV5XRMQ7CMBBFUYrEVliQkJhYmZiZWBhYWViYuAEn4AZcgBtwAk7ACbgBFwCLhKBgYmKhhYSSloGEhsiwieVJblJ7b8+/99vd3/+Zx+NxvV6f7/d5WJYFj8cj7vf7P/v9Pns8nnhZFn6eJ8vLdR0+z1N+npdxXZflcRjSNE3par/ff1MU5e12o2maeJ5HnudRVRW0bRvO53N+PIe2bZNlmbhcLjQvS0ZRRJIkfP9Rvq4rKorCjxKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQi/fgDJ1jH8cPMxfwAAAAASUVORK5CYII=';
@@ -739,42 +1872,396 @@ function fmtTime() {
   return new Date().toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-function lineChartSvg(dates, values) {
-  if(!values.length) return '';
-  const h = 280, w = 900, padding = 50;
-  const minVal = Math.min(...values);
-  const maxVal = Math.max(...values);
-  const range = maxVal - minVal || 1;
+// ── Gráfico de linha ────────────────────────────────────────────────────────
+// Uma série só, então não leva legenda: o título já diz o que é.
+// Rótulos são seletivos (primeiro, último e o pico) — número em cima de cada
+// ponto vira ruído e some com a leitura da forma, que é o que importa aqui.
 
-  const points = values.map((v, i) => {
-    const x = padding + (i / (Math.max(1, values.length - 1))) * (w - padding * 2);
-    const y = h - padding - ((v - minVal) / range) * (h - padding * 2 - 30);
-    return {x, y, v, date: dates[i]};
+function compacto(n){
+  if(n == null) return '—';
+  if(Math.abs(n) >= 1e6) return (n / 1e6).toFixed(2).replace('.', ',') + ' mi';
+  if(Math.abs(n) >= 1e3) return (n / 1e3).toFixed(1).replace('.', ',') + ' mil';
+  return String(n);
+}
+
+function diaMes(d){
+  return d ? d.slice(8) + '/' + d.slice(5, 7) : '';
+}
+
+// ── Sparkline ───────────────────────────────────────────────────────────────
+// A pesquisa de dashboards converge num ponto: KPI card são três camadas —
+// número, delta e tendência. Sem a tendência o número não diz se é bom.
+// Sem eixo, sem grade, sem rótulo: é forma, não leitura precisa.
+
+// Card da faixa de insights: rótulo, número, uma linha de contexto. Nada mais.
+function kpiSimples(rotulo, valor, sub, destaque, ganho){
+  return '<div class="kpi" style="min-height:110px;padding-bottom:16px">' +
+    '<div class="kpi-top"><span class="kpi-label">' + rotulo + '</span></div>' +
+    '<div class="kpi-value" style="' + (destaque ? 'color:var(--peak);' : ganho ? 'color:var(--gain);' : '') +
+      (String(valor).length > 8 ? 'font-size:24px;' : '') + '">' + valor + '</div>' +
+    (sub ? '<div class="kpi-sub">' + sub + '</div>' : '') +
+    '</div>';
+}
+
+
+
+
+// Mini-barras: uma barra por dia, a última destacada. Em 34px de altura isso
+// lê melhor que uma curva — dá pra apontar o dia alto sem seguir a linha.
+function sparkBars(valores, opts){
+  const o = typeof opts === 'number' ? { n: opts } : (opts || {});
+  const n = o.n || 14;
+  const vals = (valores || []).filter(v => typeof v === 'number').slice(-n);
+  if(vals.length < 2) return '<div class="spark-bars"></div>';
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const span = (max - min) || 1;
+  const est = o.alt ? ' style="height:' + o.alt + 'px"' : '';
+  return '<div class="spark-bars"' + est + '>' + vals.map((v, i) => {
+    // Piso de 18% pra barra baixa ainda existir como barra
+    const alt = 18 + ((v - min) / span) * 82;
+    const ultima = i === vals.length - 1 ? ' class="hoje"' : '';
+    return '<i' + ultima + ' style="height:' + alt.toFixed(1) + '%"></i>';
+  }).join('') + '</div>';
+}
+
+// Interpolação monótona (Fritsch–Carlson). Uma spline comum inventa picos
+// entre os pontos — num gráfico de dado real isso é mentira. Esta mantém a
+// curva presa aos valores: se dois dias sobem, a curva não desce no meio.
+function caminhoSuave(pts){
+  const n = pts.length;
+  if(n < 2) return '';
+  if(n === 2) return 'M' + pts[0][0] + ' ' + pts[0][1] + ' L' + pts[1][0] + ' ' + pts[1][1];
+
+  const dx = [], dy = [], m = [];
+  for(let i = 0; i < n - 1; i++){
+    dx[i] = pts[i+1][0] - pts[i][0];
+    dy[i] = pts[i+1][1] - pts[i][1];
+    m[i] = dy[i] / (dx[i] || 1);
+  }
+
+  const t = [m[0]];
+  for(let i = 1; i < n - 1; i++){
+    if(m[i-1] * m[i] <= 0){
+      t[i] = 0; // ponto de virada: tangente zero trava o overshoot
+    }else{
+      t[i] = (m[i-1] + m[i]) / 2;
+      const lim = 3 * Math.min(Math.abs(m[i-1]), Math.abs(m[i]));
+      if(Math.abs(t[i]) > lim) t[i] = Math.sign(t[i]) * lim;
+    }
+  }
+  t[n-1] = m[n-2];
+
+  let d = 'M' + pts[0][0].toFixed(1) + ' ' + pts[0][1].toFixed(1);
+  for(let i = 0; i < n - 1; i++){
+    const c = dx[i] / 3;
+    d += ' C' + (pts[i][0] + c).toFixed(1) + ' ' + (pts[i][1] + t[i] * c).toFixed(1) +
+         ' ' + (pts[i+1][0] - c).toFixed(1) + ' ' + (pts[i+1][1] - t[i+1] * c).toFixed(1) +
+         ' ' + pts[i+1][0].toFixed(1) + ' ' + pts[i+1][1].toFixed(1);
+  }
+  return d;
+}
+
+// Sparkline de área. A primeira tentativa era uma linha de 1.8px em 40px de
+// altura: some no card e vira rabisco. Aqui o preenchimento é que carrega a
+// leitura — a forma se vê de longe — e a linha só define a borda de cima.
+function sparkArea(valores, opts){
+  const o = opts || {};
+  const n = o.n || 14;
+  const h = o.alt || 54;
+  const vals = (valores || []).filter(v => typeof v === 'number').slice(-n);
+  if(vals.length < 2) return '<div class="kpi-area" style="height:' + h + 'px"></div>';
+
+  const w = 300;
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const span = (max - min) || 1;
+  const topo = 6, base = h - 1;
+
+  const pts = vals.map((v, i) => [
+    (i / (vals.length - 1)) * w,
+    topo + (base - topo) - ((v - min) / span) * (base - topo)
+  ]);
+
+  const linha = caminhoSuave(pts);
+  const area = linha + ' L' + w + ' ' + h + ' L0 ' + h + ' Z';
+  const id = 'ar' + Math.random().toString(36).slice(2, 8);
+  const fim = pts[pts.length - 1];
+
+  return '<svg class="kpi-area" viewBox="0 0 ' + w + ' ' + h + '" height="' + h + '"' +
+    ' preserveAspectRatio="none" aria-hidden="true">' +
+    '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="var(--signal-500)" stop-opacity="0.26"/>' +
+      '<stop offset="100%" stop-color="var(--signal-500)" stop-opacity="0.02"/>' +
+    '</linearGradient></defs>' +
+    '<path d="' + area + '" fill="url(#' + id + ')"/>' +
+    '<path d="' + linha + '" fill="none" stroke="var(--signal-500)" stroke-width="2"' +
+      ' stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
+    '<circle cx="' + fim[0].toFixed(1) + '" cy="' + fim[1].toFixed(1) + '" r="3"' +
+      ' fill="var(--signal-500)" stroke="var(--surface)" stroke-width="1.5"' +
+      ' vector-effect="non-scaling-stroke"/>' +
+    '</svg>';
+}
+
+// Fração do dia já decorrida em Brasília
+function fracaoDoDia(){
+  const agora = new Date();
+  const p = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo', hour12: false, hour: '2-digit', minute: '2-digit'
+  }).formatToParts(agora).reduce((a, x) => (a[x.type] = x.value, a), {});
+  const h = (p.hour === '24' ? 0 : +p.hour) + (+p.minute) / 60;
+  return Math.max(0.04, h / 24);
+}
+
+// Delta contra o RITMO esperado, não contra o dia inteiro de ontem.
+// Comparar um dia pela metade com um dia fechado deixava tudo vermelho às 14h.
+function chipRitmo(atual, media7, chave){
+  const marca = chave ? ' data-chip="' + chave + '"' : '';
+  if(atual == null || !media7) return '<span class="kpi-delta flat"' + marca + '>—</span>';
+  const esperado = media7 * fracaoDoDia();
+  if(!esperado) return '<span class="kpi-delta flat"' + marca + '>—</span>';
+  const pct = ((atual - esperado) / esperado) * 100;
+  const classe = pct >= 5 ? 'up' : pct <= -5 ? 'down' : 'flat';
+  const seta = pct >= 5 ? '↑' : pct <= -5 ? '↓' : '→';
+  const n = Math.min(999, Math.round(Math.abs(pct)));
+  return '<span class="kpi-delta ' + classe + '"' + marca +
+    ' title="comparado ao ritmo esperado para esta hora">' + seta + ' ' + n + '%</span>';
+}
+
+function sparkline(valores, opts){
+  const o = opts || {};
+  const cor = o.cor || 'var(--signal-500)';
+  const alt = o.alt || 40;
+  const vals = (valores || []).filter(v => typeof v === 'number');
+  if(vals.length < 2) return `<div style="height:${alt}px"></div>`;
+
+  const w = 240, h = alt;
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const span = (max - min) || 1;
+  // Ocupa só a metade de baixo do espaço: a linha respira sem encostar no topo
+  const topo = h * 0.28;
+  const X = i => (i / (vals.length - 1)) * w;
+  const Y = v => topo + (h - topo - 2) - ((v - min) / span) * (h - topo - 4);
+
+  const pts = vals.map((v, i) => [X(i), Y(v)]);
+  const linha = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' ');
+  const area = linha + ` L ${w} ${h} L 0 ${h} Z`;
+  const id = 'sk' + Math.random().toString(36).slice(2, 8);
+  const fim = pts[pts.length - 1];
+
+  return `<svg class="kpi-spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="${cor}" stop-opacity="0.20"/>
+      <stop offset="100%" stop-color="${cor}" stop-opacity="0"/>
+    </linearGradient></defs>
+    <path d="${area}" fill="url(#${id})"/>
+    <path d="${linha}" fill="none" stroke="${cor}" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <circle cx="${fim[0].toFixed(1)}" cy="${fim[1].toFixed(1)}" r="2.6" fill="${cor}"
+            vector-effect="non-scaling-stroke"/>
+  </svg>`;
+}
+
+// Delta como chip: seta e percentual, sem frase. Compara o valor de hoje
+// (parcial) com a média dos dias fechados, não com o total de ontem — senão
+// ficaria vermelho o dia inteiro só porque o dia não acabou.
+function chipDelta(hoje, referencia, opts){
+  const o = opts || {};
+  const marca = o.chave ? ' data-chip="' + o.chave + '"' : '';
+  if(hoje == null || referencia == null || !referencia){
+    return '<span class="kpi-delta flat"' + marca + '>—</span>';
+  }
+  const pct = ((hoje - referencia) / referencia) * 100;
+  const classe = pct >= 3 ? 'up' : pct <= -3 ? 'down' : 'flat';
+  const seta = pct >= 3 ? '↑' : pct <= -3 ? '↓' : '→';
+  const n = Math.abs(pct) >= 100 ? Math.round(Math.abs(pct)) : Math.abs(pct).toFixed(0);
+  return '<span class="kpi-delta ' + classe + '"' + marca + '>' + seta + ' ' + n + '%</span>';
+}
+
+// Média dos últimos N dias fechados, para a métrica pedida
+function mediaDe(history, campo, n){
+  const vals = history.slice(-n).map(h => h[campo]).filter(v => typeof v === 'number');
+  if(!vals.length) return null;
+  return vals.reduce((a, b) => a + b, 0) / vals.length;
+}
+
+function serieDe(history, campo, n){
+  return history.slice(-(n || 21)).map(h => h[campo]).filter(v => typeof v === 'number');
+}
+
+// ── Insights calculados ─────────────────────────────────────────────────────
+// Tudo aqui sai dos dados que já temos. Nada é texto explicativo: são números
+// que respondem sozinhos "qual formato rende mais" e "que horário rende mais".
+
+function analisaFormatos(posts){
+  const grupos = { REEL: [], CARROSSEL: [], IMAGEM: [] };
+  posts.forEach(p => {
+    const k = p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM';
+    if(typeof p.interactions === 'number') grupos[k].push(p);
+  });
+  const linhas = Object.entries(grupos).map(([nome, lista]) => {
+    const total = lista.reduce((a, p) => a + (p.interactions || 0), 0);
+    return {
+      nome,
+      qtd: lista.length,
+      media: lista.length ? Math.round(total / lista.length) : 0,
+      alcance: lista.length ? Math.round(lista.reduce((a, p) => a + (p.reach || 0), 0) / lista.length) : 0
+    };
+  }).filter(l => l.qtd > 0);
+  linhas.sort((a, b) => b.media - a.media);
+  return linhas;
+}
+
+function analisaHoras(posts){
+  const balde = Array.from({ length: 24 }, () => ({ soma: 0, qtd: 0 }));
+  posts.forEach(p => {
+    if(!p.hora || typeof p.interactions !== 'number') return;
+    const h = parseInt(p.hora.slice(0, 2), 10);
+    if(isNaN(h)) return;
+    balde[h].soma += p.interactions;
+    balde[h].qtd++;
+  });
+  const medias = balde.map(b => b.qtd ? b.soma / b.qtd : 0);
+  const max = Math.max(...medias) || 1;
+  const melhor = medias.indexOf(max);
+  return { medias, max, melhor };
+}
+
+function lineChartSvg(dates, values) {
+  if(!values || values.length < 2) return '';
+
+  const w = 1000, h = 300;
+  const padL = 58, padR = 26, padT = 26, padB = 34;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  // Respiro de 12% pra linha não encostar no teto nem no chão do painel
+  const folga = (max - min) * 0.12 || Math.max(1, max * 0.001);
+  const lo = min - folga, hi = max + folga;
+  const span = hi - lo || 1;
+
+  const X = i => padL + (i / (values.length - 1)) * plotW;
+  const Y = v => padT + plotH - ((v - lo) / span) * plotH;
+
+  const pts = values.map((v, i) => ({ x: X(i), y: Y(v), v, d: dates[i] }));
+  const linha = pts.map((p, i) => (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ');
+  const area = linha + ` L ${pts[pts.length-1].x.toFixed(1)} ${padT + plotH} L ${pts[0].x.toFixed(1)} ${padT + plotH} Z`;
+
+  // Grade recessiva: quatro linhas, o suficiente pra ancorar a leitura
+  let grade = '', eixoY = '';
+  for(let i = 0; i <= 3; i++){
+    const v = lo + (span * i / 3);
+    const y = Y(v);
+    grade += `<line x1="${padL}" y1="${y.toFixed(1)}" x2="${w - padR}" y2="${y.toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`;
+    eixoY += `<text x="${padL - 12}" y="${(y + 4).toFixed(1)}" text-anchor="end" font-size="11" font-family="var(--font-mono)" fill="var(--ink-4)">${compacto(Math.round(v))}</text>`;
+  }
+
+  // No máximo 6 datas no eixo, senão os rótulos colidem
+  const passo = Math.max(1, Math.ceil(pts.length / 6));
+  let eixoX = '';
+  pts.forEach((p, i) => {
+    if(i % passo === 0 || i === pts.length - 1){
+      eixoX += `<text x="${p.x.toFixed(1)}" y="${h - 10}" text-anchor="middle" font-size="11" font-family="var(--font-mono)" fill="var(--ink-4)">${diaMes(p.d)}</text>`;
+    }
   });
 
-  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const ultimo = pts[pts.length - 1];
+  const primeiro = pts[0];
+  const iPico = values.indexOf(max);
+  const pico = pts[iPico];
 
-  const step = Math.ceil(points.length / 5);
-  const labels = points.filter((p, i) => i % step === 0 || i === points.length - 1).map(p =>
-    `<text x="${p.x}" y="${h - 15}" text-anchor="middle" font-size="11" fill="var(--text-2)" font-family="var(--font-mono)">${p.date.slice(-5)}</text>`
-  ).join('');
+  // Rótulo direto só onde carrega informação: começo, fim e o pico
+  function rotulo(p, texto, cor, ancora){
+    const dx = ancora === 'end' ? -10 : ancora === 'start' ? 10 : 0;
+    return `<text x="${(p.x + dx).toFixed(1)}" y="${(p.y - 14).toFixed(1)}" text-anchor="${ancora}"
+      font-size="12" font-weight="700" font-family="var(--font-mono)" fill="${cor}">${texto}</text>`;
+  }
 
-  const pointsCircles = points.map(p =>
-    `<circle cx="${p.x}" cy="${p.y}" r="3" fill="#3D5BFE"/><text x="${p.x}" y="${p.y - 12}" text-anchor="middle" font-size="10" fill="#3D5BFE" font-weight="bold" font-family="var(--font-mono)">${(p.v/1000).toFixed(0)}K</text>`
-  ).join('');
+  let rotulos = rotulo(primeiro, compacto(primeiro.v), 'var(--ink-3)', 'start');
+  if(iPico !== 0 && iPico !== pts.length - 1){
+    rotulos += rotulo(pico, compacto(pico.v), 'var(--peak)', 'middle');
+    rotulos += `<circle cx="${pico.x.toFixed(1)}" cy="${pico.y.toFixed(1)}" r="4" fill="var(--peak)" stroke="var(--surface)" stroke-width="2"/>`;
+  }
+  rotulos += rotulo(ultimo, compacto(ultimo.v), 'var(--signal-600)', 'end');
 
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:100%;">
+  return `
+  <svg viewBox="0 0 ${w} ${h}" width="100%" height="300" preserveAspectRatio="none" class="grafico" role="img"
+       aria-label="Evolução de seguidores de ${diaMes(primeiro.d)} a ${diaMes(ultimo.d)}">
     <defs>
-      <linearGradient id="areaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" style="stop-color:#5470FF;stop-opacity:0.25"/>
-        <stop offset="100%" style="stop-color:#5470FF;stop-opacity:0"/>
+      <linearGradient id="gradArea" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="var(--signal-500)" stop-opacity="0.18"/>
+        <stop offset="100%" stop-color="var(--signal-500)" stop-opacity="0"/>
       </linearGradient>
     </defs>
-    <path d="${pathD} L ${points[points.length-1].x} ${h-padding} L ${points[0].x} ${h-padding}" fill="url(#areaGrad)"/>
-    <path d="${pathD}" stroke="#3D5BFE" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    ${pointsCircles}
-    ${labels}
-  </svg>`;
+    ${grade}
+    <path d="${area}" fill="url(#gradArea)"/>
+    <path d="${linha}" fill="none" stroke="var(--signal-500)" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="grafico-linha"/>
+    ${eixoY}${eixoX}${rotulos}
+    <circle cx="${ultimo.x.toFixed(1)}" cy="${ultimo.y.toFixed(1)}" r="5"
+            fill="var(--signal-500)" stroke="var(--surface)" stroke-width="2.5"/>
+    <g class="crosshair" style="opacity:0">
+      <line y1="${padT}" y2="${padT + plotH}" stroke="var(--signal-400)" stroke-width="1" stroke-dasharray="3 3"/>
+      <circle r="6" fill="var(--signal-500)" stroke="var(--surface)" stroke-width="2.5"/>
+    </g>
+  </svg>
+  <div class="tooltip-grafico" role="status"></div>`;
+}
+
+// Crosshair + tooltip. A skill de dataviz trata isso como padrão, não extra:
+// um gráfico em HTML é interativo por natureza.
+function ligarHoverGrafico(el, dates, values){
+  const svg = el.querySelector('svg.grafico');
+  const tip = el.querySelector('.tooltip-grafico');
+  if(!svg || !tip || values.length < 2) return;
+
+  const w = 1000, padL = 58, padR = 26, padT = 26, padB = 34, h = 300;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  const min = Math.min(...values), max = Math.max(...values);
+  const folga = (max - min) * 0.12 || Math.max(1, max * 0.001);
+  const lo = min - folga, span = (max + folga) - lo || 1;
+
+  const cross = svg.querySelector('.crosshair');
+  const linha = cross.querySelector('line');
+  const bola = cross.querySelector('circle');
+
+  function mover(ev){
+    const r = svg.getBoundingClientRect();
+    const px = (ev.clientX - r.left) / r.width * w;
+    const frac = (px - padL) / plotW;
+    const i = Math.max(0, Math.min(values.length - 1, Math.round(frac * (values.length - 1))));
+
+    const x = padL + (i / (values.length - 1)) * plotW;
+    const y = padT + plotH - ((values[i] - lo) / span) * plotH;
+
+    linha.setAttribute('x1', x); linha.setAttribute('x2', x);
+    bola.setAttribute('cx', x); bola.setAttribute('cy', y);
+    cross.style.opacity = '1';
+
+    const ganho = i > 0 ? values[i] - values[i - 1] : null;
+    tip.innerHTML =
+      `<div class="tip-data">${diaMes(dates[i])}</div>` +
+      `<div class="tip-valor">${values[i].toLocaleString('pt-BR')}</div>` +
+      (ganho !== null
+        ? `<div class="tip-ganho">${ganho >= 0 ? '+' : ''}${ganho.toLocaleString('pt-BR')} no dia</div>`
+        : '<div class="tip-ganho">primeiro registro</div>');
+
+    // Vira o tooltip pro outro lado perto da borda pra não sair da caixa
+    const px2 = x / w * r.width;
+    tip.style.left = px2 + 'px';
+    tip.style.transform = px2 > r.width - 130 ? 'translate(-100%, -50%)' : 'translate(14px, -50%)';
+    tip.style.top = (y / h * r.height) + 'px';
+    tip.classList.add('visivel');
+  }
+
+  function sair(){
+    cross.style.opacity = '0';
+    tip.classList.remove('visivel');
+  }
+
+  svg.addEventListener('pointermove', mover);
+  svg.addEventListener('pointerleave', sair);
 }
 
 function barChartSvg(dates, values) {
@@ -804,6 +2291,24 @@ function renderDashboard(data) {
   const dailyGain = data.dailyGain || null;
   const ontem = data.ontem || null;
 
+  // Histórico só com dias fechados, base de toda comparação e sparkline
+  const hist = (data.historico || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+
+  // Ganhos diários derivados da série de seguidores
+  const ganhos = [];
+  for(let i = 1; i < hist.length; i++){
+    if(hist[i].followers != null && hist[i-1].followers != null){
+      ganhos.push({ date: hist[i].date, g: hist[i].followers - hist[i-1].followers });
+    }
+  }
+  const ult7 = ganhos.slice(-7).map(x => x.g);
+  const g7 = ult7.length ? ult7.reduce((a, b) => a + b, 0) / ult7.length : null;
+  const gMax = ganhos.length ? Math.max(...ganhos.map(x => x.g)) : null;
+  const mesAtual = new Date().toISOString().slice(0, 7);
+  const doMes = ganhos.filter(x => x.date.slice(0, 7) === mesAtual).map(x => x.g);
+  const gMes = doMes.length ? doMes.reduce((a, b) => a + b, 0) : null;
+  const vps = (views && followers_count) ? views / followers_count : null;
+
   let dailyGainPct = null;
   if(dailyGain !== null && followers_count) {
     dailyGainPct = ((dailyGain / followers_count) * 100).toFixed(2);
@@ -812,69 +2317,125 @@ function renderDashboard(data) {
   document.getElementById('brand-subtitle').textContent = `@${username} · atualizado ${fmtTime()}`;
 
   document.getElementById('app').innerHTML = `
-    <div class="hero-card">
-      <div class="hero-top">
-        <div>
-          <div class="hero-label">Seguidores</div>
-          <div class="hero-value">${formatNum(followers_count)}</div>
-        </div>
-        <div>
-          <div class="hero-label">Crescimento (hoje)</div>
-          <div class="hero-value">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + formatNum(dailyGain) : '—'}</div>
-          <div class="stat-delta delta-up">${dailyGainPct !== null ? '+' + dailyGainPct + '%' : 'sem dado'}</div>
-        </div>
+    <section class="view active" data-view="geral">
+    <div class="bento">
+      <div class="hero-tile col-8">
+        <div class="hero-label">Seguidores</div>
+        <div class="hero-value" data-metrica="followers" data-fmt="num">${formatNum(followers_count)}</div>
+        <div class="kpi-sub">${formatNum(media_count)} publicações no acervo · barras = ganho por dia</div>
+        ${sparkBars(ganhos.map(x => x.g), { n: 21, alt: 88 })}
       </div>
-      <div class="hero-chips">
-        <div class="chip">
-          <div class="chip-label">7 dias</div>
-          <div class="chip-value">+1.2K</div>
-        </div>
-        <div class="chip">
-          <div class="chip-label">30 dias</div>
-          <div class="chip-value">+5.2K</div>
-        </div>
-        <div class="chip">
-          <div class="chip-label">Tendência</div>
-          <div class="chip-value">↗ Subindo</div>
+      <div class="gain-tile col-4">
+        <div class="hero-label">Ganho hoje</div>
+        <div class="hero-value" data-metrica="dailyGain" data-fmt="sinal">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + formatNum(dailyGain) : '—'}</div>
+        <div class="gain-meta">
+          <div><span class="gain-meta-l">Média 7d</span><span class="gain-meta-v">${g7 != null ? '+' + formatNum(Math.round(g7)) : '—'}</span></div>
+          <div><span class="gain-meta-l">Melhor dia</span><span class="gain-meta-v">${gMax != null ? '+' + formatNum(gMax) : '—'}</span></div>
+          <div><span class="gain-meta-l">No mês</span><span class="gain-meta-v">${gMes != null ? '+' + formatNum(gMes) : '—'}</span></div>
         </div>
       </div>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-card-label">Visualizações (conta, hoje)</div>
-        <div class="stat-card-value">${formatNum(views)}</div>
-        ${delta(views, ontem && ontem.views)}
+    <div class="bento">
+      <div class="kpi col-3">
+        <div class="kpi-top"><span class="kpi-label">Visualizações</span>${chipRitmo(views, mediaDe(hist, 'views', 7), 'views')}</div>
+        <div class="kpi-value" data-metrica="views" data-fmt="num">${formatNum(views)}</div>
+        <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'views', 7) || 0))}</div>
+        ${sparkBars(serieDe(hist, 'views', 14))}
       </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Views dos reels de hoje</div>
-        <div class="stat-card-value">${formatNum(reelViews)}</div>
-        <div class="stat-card-delta delta-flat">${reelsToday ? 'em ' + reelsToday + (reelsToday > 1 ? ' reels publicados hoje' : ' reel publicado hoje') : 'nenhum reel ainda'}</div>
+      <div class="kpi col-3">
+        <div class="kpi-top"><span class="kpi-label">Alcance</span>${chipRitmo(reach, mediaDe(hist, 'reach', 7), 'reach')}</div>
+        <div class="kpi-value" data-metrica="reach" data-fmt="num">${formatNum(reach)}</div>
+        <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'reach', 7) || 0))}</div>
+        ${sparkBars(serieDe(hist, 'reach', 14))}
       </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Alcance (hoje)</div>
-        <div class="stat-card-value">${formatNum(reach)}</div>
-        ${delta(reach, ontem && ontem.reach)}
+      <div class="kpi col-3">
+        <div class="kpi-top"><span class="kpi-label">Interações</span>${chipRitmo(totalInteractions, mediaDe(hist, 'interactions', 7), 'interactions')}</div>
+        <div class="kpi-value" data-metrica="interactions" data-fmt="num">${formatNum(totalInteractions)}</div>
+        <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'interactions', 7) || 0))}</div>
+        ${sparkBars(serieDe(hist, 'interactions', 14))}
       </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Interações (hoje)</div>
-        <div class="stat-card-value">${formatNum(totalInteractions)}</div>
-        ${delta(totalInteractions, ontem && ontem.interactions)}
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Publicações (hoje)</div>
-        <div class="stat-card-value">${formatNum(postsToday)}</div>
-        <div class="stat-card-delta delta-flat">${formatNum(media_count)} no total</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-card-label">Taxa de Engajamento</div>
-        <div class="stat-card-value">${engagementRate !== null ? engagementRate.toFixed(1) : '—'}%</div>
-        ${engagementRate !== null && ontem && ontem.engagementRate != null
-          ? `<div class="stat-card-delta ${engagementRate >= ontem.engagementRate ? 'delta-up' : 'delta-down'}">${engagementRate >= ontem.engagementRate ? '↑' : '↓'} ${Math.abs(engagementRate - ontem.engagementRate).toFixed(1)} p.p. vs ontem</div>`
-          : '<div class="stat-card-delta delta-flat">sem comparativo</div>'}
+      <div class="kpi col-3">
+        <div class="kpi-top"><span class="kpi-label">Engajamento</span>${chipDelta(engagementRate, mediaDe(hist, 'engagementRate', 7), { chave: 'engagement' })}</div>
+        <div class="kpi-value" data-metrica="engagement" data-fmt="pct">${engagementRate !== null ? engagementRate.toFixed(1) + '%' : '—'}</div>
+        <div class="kpi-sub">média 7d ${(mediaDe(hist, 'engagementRate', 7) || 0).toFixed(1)}%</div>
+        ${sparkBars(serieDe(hist, 'engagementRate', 14))}
       </div>
     </div>
 
+    <div class="bento">
+      <div class="kpi col-4">
+        <div class="kpi-top"><span class="kpi-label">Publicações hoje</span>${chipRitmo(postsToday, mediaDe(hist, 'posts', 7), 'posts')}</div>
+        <div class="kpi-value" data-metrica="posts" data-fmt="num">${formatNum(postsToday)}</div>
+        <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'posts', 7) || 0))} por dia</div>
+        ${sparkBars(serieDe(hist, 'posts', 14))}
+      </div>
+      <div class="kpi col-4">
+        <div class="kpi-top"><span class="kpi-label">Views dos reels</span>${chipRitmo(reelViews, mediaDe(hist, 'reelViews', 7), 'reelViews')}</div>
+        <div class="kpi-value" data-metrica="reelViews" data-fmt="num">${formatNum(reelViews)}</div>
+        <div class="kpi-sub">${reelsToday || 0} reels publicados hoje</div>
+        ${sparkBars(serieDe(hist, 'reelViews', 14))}
+      </div>
+      <div class="kpi col-4">
+        <div class="kpi-top"><span class="kpi-label">Views por seguidor</span></div>
+        <div class="kpi-value" data-metrica="vps" data-fmt="dec2">${vps != null ? vps.toFixed(2).replace('.', ',') : '—'}</div>
+        <div class="kpi-sub">quantas vezes a base viu hoje</div>
+        ${sparkBars(hist.slice(-14).map(h => (h.views && h.followers) ? h.views / h.followers : null).filter(v => v != null))}
+      </div>
+    </div>
+
+    <div class="bento">
+      <div class="chart-section col-7" style="margin:0">
+        <div class="chart-title"><span>Seguidores nos últimos 30 dias</span></div>
+        <div class="chart-holder" id="chart-geral"></div>
+      </div>
+      <div class="chart-section col-5" style="margin:0">
+        <div class="chart-title"><span>Destaques de hoje</span><span id="destaques-sub" class="kpi-sub"></span></div>
+        <div id="destaques">
+          <div class="skeleton" style="height:40px;margin:8px 0"></div>
+          <div class="skeleton" style="height:40px;margin:8px 0"></div>
+          <div class="skeleton" style="height:40px;margin:8px 0"></div>
+        </div>
+      </div>
+    </div>
+    </section>
+
+    <section class="view" data-view="audiencia">
+    <div class="view-head">
+      <h2>Audiência</h2>
+      <p>Quem são os seguidores — o dado que sustenta proposta comercial</p>
+    </div>
+
+    <div class="bento" id="aud-strip"></div>
+
+    <div class="bento">
+      <div class="chart-section col-7" style="margin:0">
+        <div class="chart-title"><span>Faixa etária</span><span id="aud-idade-sub" class="kpi-sub"></span></div>
+        <div id="aud-idade" class="fmt-lista"></div>
+      </div>
+      <div class="chart-section col-5" style="margin:0">
+        <div class="chart-title"><span>Gênero</span></div>
+        <div id="aud-genero" class="fmt-lista"></div>
+      </div>
+    </div>
+
+    <div class="bento">
+      <div class="chart-section col-7" style="margin:0">
+        <div class="chart-title"><span>Principais cidades</span></div>
+        <div id="aud-cidade" class="fmt-lista"></div>
+      </div>
+      <div class="chart-section col-5" style="margin:0">
+        <div class="chart-title"><span>Países</span></div>
+        <div id="aud-pais" class="fmt-lista"></div>
+      </div>
+    </div>
+    </section>
+
+    <section class="view" data-view="crescimento">
+    <div class="view-head">
+      <h2>Crescimento</h2>
+      <p>Evolução dos seguidores dia a dia, a partir do histórico guardado</p>
+    </div>
     <div class="chart-section">
       <div class="chart-title">
         <span>Evolução de Seguidores</span>
@@ -885,23 +2446,67 @@ function renderDashboard(data) {
         </div>
       </div>
       <div class="chart-holder" id="chart-followers" style="min-height: 240px;">
-        <p style="color: var(--text-3); text-align: center; padding: 40px 0; font-family: var(--font-mono);">Carregando gráfico...</p>
+        <p class="vazio-msg">Carregando gráfico...</p>
+      </div>
+    </div>
+
+    </section>
+
+    <section class="view" data-view="insights">
+    <div class="view-head" style="display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <div>
+        <h2>Insights</h2>
+        <p>O que rende mais, e quando</p>
+        <p id="ins-cobertura" class="cobertura"></p>
+      </div>
+      <div class="chart-filters">
+        <button class="filter-btn top-btn active" data-periodo="hoje">Hoje</button>
+        <button class="filter-btn top-btn" data-periodo="7">7 dias</button>
+        <button class="filter-btn top-btn" data-periodo="30">30 dias</button>
+      </div>
+    </div>
+
+    <div class="bento strip-5" id="ins-strip"></div>
+
+    <div class="bento">
+      <div class="chart-section col-5" style="margin:0">
+        <div class="chart-title"><span>Rendimento por formato</span><span class="kpi-sub">média de interações por publicação</span></div>
+        <div id="ins-formatos" class="fmt-lista"></div>
+      </div>
+      <div class="chart-section col-7" style="margin:0">
+        <div class="chart-title"><span>Interações por horário</span><span id="ins-pico" class="kpi-sub"></span></div>
+        <div class="horas" id="ins-horas"></div>
+        <div class="horas-eixo" id="ins-horas-eixo"></div>
       </div>
     </div>
 
     <div class="chart-section">
       <div class="chart-title">
-        <span>Top Publicações</span>
-        <div class="chart-filters">
-          <button class="filter-btn top-btn active" data-periodo="hoje">Hoje</button>
-          <button class="filter-btn top-btn" data-periodo="7">7 dias</button>
-          <button class="filter-btn top-btn" data-periodo="30">30 dias</button>
-          <button class="filter-btn top-btn" data-periodo="all">Sempre</button>
-        </div>
+        <span>Ranking de publicações</span>
+        <span id="top-nota" class="kpi-sub"></span>
       </div>
-      <div id="top-nota" style="font-size: 11px; color: var(--text-3); font-family: var(--font-mono); margin: -6px 0 14px;"></div>
-      <div id="top-lista" style="display: flex; flex-direction: column; gap: 10px; padding-bottom: 8px;">
-        <div style="color: var(--text-3); text-align: center; padding: 30px 0; font-family: var(--font-mono); font-size: 12px;">Carregando ranking...</div>
+      <div id="top-lista" style="display: flex; flex-direction: column; gap: 8px;">
+        <div class="skeleton sk-linha"></div><div class="skeleton sk-linha"></div><div class="skeleton sk-linha"></div>
+      </div>
+    </div>
+    </section>
+
+    <section class="view" data-view="publicacoes">
+    <div class="view-head">
+      <h2>Publicações</h2>
+      <p>O que saiu no ar recentemente</p>
+    </div>
+    <div class="bento" id="st-strip"></div>
+
+    <div class="chart-section">
+      <div class="chart-title">
+        <span>Stories no ar</span>
+        <span id="st-sub" class="kpi-sub"></span>
+      </div>
+      <div id="st-lista" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(112px,1fr)); gap:12px;">
+        <div class="skeleton" style="aspect-ratio:9/16; border-radius:12px"></div>
+        <div class="skeleton" style="aspect-ratio:9/16; border-radius:12px"></div>
+        <div class="skeleton" style="aspect-ratio:9/16; border-radius:12px"></div>
       </div>
     </div>
 
@@ -909,7 +2514,7 @@ function renderDashboard(data) {
       <div class="chart-title">
         <span>Últimas Publicações</span>
         <div style="display: flex; align-items: center; gap: 14px;">
-          <span id="posts-resumo" style="font-size: 12px; font-weight: 500; color: var(--text-2); font-family: var(--font-mono);"></span>
+          <span id="posts-resumo" style="font-size: 12px; font-weight: 500; color: var(--ink-2); font-family: var(--font-mono);"></span>
           <div class="chart-filters">
             <button class="filter-btn tipo-btn active" data-tipo="todos">Todos</button>
             <button class="filter-btn tipo-btn" data-tipo="reels">Reels</button>
@@ -917,15 +2522,32 @@ function renderDashboard(data) {
           </div>
         </div>
       </div>
-      <div id="posts-preview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 20px 0;">
-        <div style="aspect-ratio: 1; background: linear-gradient(135deg, rgba(61, 91, 254, 0.1) 0%, rgba(84, 112, 255, 0.05) 100%); border: 1px solid rgba(61, 91, 254, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-3); font-family: var(--font-mono); font-size: 11px; text-align: center;">Carregando...</div>
+      <div id="posts-preview" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(178px, 1fr)); gap: 14px;">
+        <div style="aspect-ratio: 1; background: linear-gradient(135deg, rgba(61, 91, 254, 0.1) 0%, rgba(84, 112, 255, 0.05) 100%); border: 1px solid rgba(61, 91, 254, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--ink-3); font-family: var(--font-mono); font-size: 11px; text-align: center;">Carregando...</div>
       </div>
     </div>
+    </section>
   `;
 
-  document.getElementById('btn-tv').addEventListener('click', () => {
-    document.body.classList.toggle('tv-mode');
+  ligarNavegacao();
+  animarNumeros(document.getElementById('app'));
+
+  // Guarda o estado atual pro pulso saber de onde animar
+  window.__hist = hist;
+  if(window.__semearPulso) window.__semearPulso({
+    followers: followers_count, dailyGain, views, reach,
+    interactions: totalInteractions, engagement: engagementRate,
+    posts: postsToday, reelViews, vps
   });
+
+  document.getElementById('btn-tv').onclick = () => window.alphaTV.alternar();
+
+  // onclick (e não addEventListener) porque a sidebar é estática: se o render
+  // rodar de novo, o listener seria empilhado e o toggle se anularia.
+  document.getElementById('btn-collapse').onclick = () => {
+    document.body.classList.toggle('nav-collapsed');
+    try{ localStorage.setItem('alpha-nav', document.body.classList.contains('nav-collapsed') ? '1' : '0'); }catch(e){}
+  };
 
   document.getElementById('btn-refresh').addEventListener('click', () => {
     location.reload();
@@ -1018,14 +2640,26 @@ function renderDashboard(data) {
     function desenhar(days){
       const recorte = days === 'all' ? pontos : pontos.slice(-Number(days));
       if(recorte.length === 0){
-        chartEl.innerHTML = '<p style="color: var(--text-3); text-align: center; padding: 40px 0; font-family: var(--font-mono);">Sem dados nesse período</p>';
+        chartEl.innerHTML = '<p class="vazio-msg">Sem dados nesse período</p>';
         return;
       }
       if(recorte.length === 1){
-        chartEl.innerHTML = `<p style="color: var(--text-3); text-align: center; padding: 40px 0; font-family: var(--font-mono);">Só 1 dia registrado (${recorte[0].date}) — o gráfico aparece a partir de 2 dias</p>`;
+        chartEl.innerHTML = `<p class="vazio-msg">Só 1 dia registrado (${recorte[0].date}) — o gráfico aparece a partir de 2 dias</p>`;
         return;
       }
-      chartEl.innerHTML = lineChartSvg(recorte.map(h => h.date), recorte.map(h => h.followers));
+      const ds = recorte.map(h => h.date), vs = recorte.map(h => h.followers);
+      chartEl.innerHTML = lineChartSvg(ds, vs);
+      ligarHoverGrafico(chartEl, ds, vs);
+      // Mesmo gráfico na Visão Geral, sempre em 30 dias
+      const geralEl = document.getElementById('chart-geral');
+      if(geralEl){
+        const r30 = pontos.slice(-30);
+        const d30 = r30.map(h => h.date), v30 = r30.map(h => h.followers);
+        if(v30.length > 1){
+          geralEl.innerHTML = lineChartSvg(d30, v30);
+          ligarHoverGrafico(geralEl, d30, v30);
+        }
+      }
     }
 
     document.querySelectorAll('.dias-btn').forEach(btn => {
@@ -1042,30 +2676,57 @@ function renderDashboard(data) {
 
 // Load
 async function load(){
+  let data, history, posts;
   try{
-    const [data, history, posts] = await Promise.all([fetchAllData(), fetchHistory(), fetchPosts()]);
+    [data, history, posts] = await Promise.all([fetchAllData(), fetchHistory(), fetchPosts()]);
+    guardarEstado({ data, history });
+  }catch(e){
+    // Cai pro último retrato bom em vez de sumir com o painel
+    const guardado = lerEstado();
+    if(!guardado){
+      document.getElementById('app').innerHTML =
+        '<div class="loading" style="flex-direction:column;gap:10px">' +
+        '<div>Não foi possível carregar os dados</div>' +
+        '<div style="font-size:11px;opacity:.7">' + e.message + '</div></div>';
+      mostrarFaixa('critico', '<b>Sem conexão com a API.</b> Nada foi carregado ainda.', 'tentando de novo em 1 min');
+      setTimeout(() => location.reload(), 60000);
+      return;
+    }
+    data = guardado.data;
+    history = guardado.history || [];
+    posts = { posts: [], resumo: null };
+    document.body.classList.add('dado-velho');
+    mostrarFaixa('atencao',
+      '<b>Mostrando os últimos dados recebidos.</b> A conexão com o Instagram falhou agora há pouco.',
+      'há ' + minutosDesde(guardado.quando) + ' min');
+  }
 
-    // Calcula dailyGain comparando com dia anterior
+  try{
     if(history.length > 0) {
       const sorted = [...history].sort((a,b) => a.date.localeCompare(b.date));
       const yesterday = sorted[sorted.length - 1];
       if(yesterday && yesterday.followers) {
         data.dailyGain = (data.profile.followers_count - yesterday.followers);
       }
-      // Último dia fechado, usado como referência nos cards
       data.ontem = yesterday || null;
+      data.historico = sorted;
     }
 
     renderDashboard(data);
     renderPosts(posts.posts, posts.resumo);
 
-    // O ranking é mais lento (uma chamada por publicação), então não segura
-    // o resto do dashboard: entra assim que ficar pronto.
+    // Só avisa do token se não houver aviso mais urgente na tela
+    if(!document.body.classList.contains('dado-velho')) avisarToken(data.tokenStatus);
+
     Promise.all([fetchTopHoje(), fetchTopGuardado()])
       .then(([hoje, guardado]) => renderTop(hoje, guardado))
       .catch(() => {});
+
+    carregarAudiencia();
+    carregarStories();
   }catch(e){
-    document.getElementById('app').innerHTML = `<div class="loading" style="color:red;">Erro: ${e.message}</div>`;
+    document.getElementById('app').innerHTML =
+      '<div class="loading" style="color:var(--drop)">Erro ao montar o painel: ' + e.message + '</div>';
   }
 }
 
@@ -1079,6 +2740,9 @@ function renderPosts(posts, resumo){
       ? `${resumo.postsHoje} hoje · ${resumo.reelsHoje} reels · ${formatNum(resumo.viewsHoje)} views`
       : `${resumo.postsHoje} publicações hoje`;
   }
+
+  const badge = document.getElementById('badge-posts');
+  if(badge && resumo) badge.textContent = resumo.postsHoje || '';
 
   // Filtro por tipo. Reel e vídeo contam como "reels"; o resto é "posts".
   document.querySelectorAll('.tipo-btn').forEach(btn => {
@@ -1096,70 +2760,350 @@ function renderPosts(posts, resumo){
   desenharPosts(container, posts, 'todos');
 }
 
+// Troca a seção visível. As views vivem dentro de #app, que é reescrito a
+// cada carregamento, então isso roda de novo depois de cada render.
+
+// Anima os números do zero até o valor. Só no primeiro render: rodar isso a
+// cada atualização de 5 min viraria distração num telão que fica ligado o dia
+// inteiro.
+function animarNumeros(raiz){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const alvos = raiz.querySelectorAll('.hero-value, .stat-card-value');
+  alvos.forEach((el, idx) => {
+    const texto = el.textContent.trim();
+    // Só anima o que é número puro; '—' e '12,1%' com sinal ficam quietos
+    const limpo = texto.replace(/\./g, '').replace(',', '.');
+    const alvo = parseFloat(limpo.replace(/[^0-9.-]/g, ''));
+    if(!isFinite(alvo) || Math.abs(alvo) < 10) return;
+
+    const prefixo = texto.startsWith('+') ? '+' : '';
+    const sufixo = texto.endsWith('%') ? '%' : '';
+    const decimais = sufixo === '%' ? 1 : 0;
+
+    const dur = 900, atraso = idx * 45;
+    const t0 = performance.now() + atraso;
+    el.style.willChange = 'contents';
+
+    function passo(agora){
+      const p = Math.min(1, Math.max(0, (agora - t0) / dur));
+      // ease-out forte: chega perto do valor rápido e assenta
+      const e = 1 - Math.pow(1 - p, 4);
+      const v = alvo * e;
+      el.textContent = prefixo +
+        (decimais ? v.toFixed(1).replace('.', ',') : Math.round(v).toLocaleString('pt-BR')) +
+        sufixo;
+      if(p < 1) requestAnimationFrame(passo);
+      else { el.textContent = texto; el.style.willChange = ''; }
+    }
+    requestAnimationFrame(passo);
+  });
+}
+
+function ligarNavegacao(){
+  const itens = document.querySelectorAll('.nav-item');
+
+  function mostrar(nome){
+    document.querySelectorAll('.view').forEach(v => {
+      v.classList.toggle('active', v.dataset.view === nome);
+    });
+    itens.forEach(i => i.classList.toggle('active', i.dataset.view === nome));
+    const w = document.querySelector('.wrap');
+    if(w) w.scrollTop = 0;
+    // Guarda na URL pra poder deixar aberto direto numa seção no telão
+    if(location.hash.slice(1) !== nome) history.replaceState(null, '', '#' + nome);
+  }
+
+  itens.forEach(item => {
+    item.onclick = () => mostrar(item.dataset.view);
+  });
+
+  const inicial = location.hash.slice(1);
+  const valida = [...itens].some(i => i.dataset.view === inicial);
+  mostrar(valida ? inicial : 'geral');
+}
+
+
+// ── Audiência ───────────────────────────────────────────────────────────────
+// Barras proporcionais reusando o componente de formato: mesma linguagem
+// visual em todo o painel, e quem já leu uma sabe ler a outra.
+function barrasDe(itens, total, opts){
+  const o = opts || {};
+  if(!itens || !itens.length) return '<div class="vazio-msg">Sem dados</div>';
+  const teto = Math.max(...itens.map(i => i.valor), 1);
+  return itens.map(i => {
+    const pct = total ? (i.valor / total) * 100 : 0;
+    return '<div class="fmt-linha">' +
+      '<span class="fmt-nome" style="text-transform:none;letter-spacing:0.02em;font-size:11.5px">' +
+        i.chave + (i.uf ? ' <span style="color:var(--ink-4)">' + i.uf + '</span>' : '') +
+      '</span>' +
+      '<div class="fmt-barra"><div class="fmt-preenche" style="width:' +
+        ((i.valor / teto) * 100).toFixed(1) + '%;' + (o.cor ? 'background:' + o.cor : '') + '"></div></div>' +
+      '<span class="fmt-num">' + formatNum(i.valor) +
+        '<small>' + pct.toFixed(1).replace('.', ',') + '% da base</small></span>' +
+    '</div>';
+  }).join('');
+}
+
+async function carregarAudiencia(){
+  const alvo = document.getElementById('aud-idade');
+  if(!alvo) return;
+  try{
+    const res = await fetch(API_URL.replace('/api/data', '/api/audience'));
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const a = await res.json();
+    if(a.error) throw new Error(a.error);
+
+    const tot = a.totais || {};
+
+    // Faixa dominante e concentração geográfica: os dois números que a
+    // equipe comercial repete numa reunião.
+    const maiorIdade = [...a.idade].sort((x, y) => y.valor - x.valor)[0];
+    const fem = a.genero.find(g => g.chave === 'Feminino');
+    const cidade1 = a.cidade[0];
+    const brasil = a.pais.find(p => p.chave === 'BR');
+
+    const strip = document.getElementById('aud-strip');
+    if(strip) strip.innerHTML = [
+      kpiSimples('Faixa dominante', maiorIdade ? maiorIdade.chave : '—',
+        maiorIdade && tot.idade ? formatNum(maiorIdade.valor) + ' · ' + ((maiorIdade.valor / tot.idade) * 100).toFixed(0) + '% da base' : ''),
+      kpiSimples('Público feminino', fem && tot.genero ? ((fem.valor / tot.genero) * 100).toFixed(0) + '%' : '—',
+        fem ? formatNum(fem.valor) + ' seguidoras' : ''),
+      kpiSimples('Maior cidade', cidade1 ? cidade1.chave : '—',
+        cidade1 && tot.cidade ? formatNum(cidade1.valor) + ' · ' + ((cidade1.valor / tot.cidade) * 100).toFixed(0) + '% da base' : ''),
+      kpiSimples('No Brasil', brasil && tot.pais ? ((brasil.valor / tot.pais) * 100).toFixed(0) + '%' : '—',
+        brasil ? formatNum(brasil.valor) + ' seguidores' : '')
+    ].join('');
+
+    document.getElementById('aud-idade').innerHTML = barrasDe(a.idade, tot.idade);
+    const sub = document.getElementById('aud-idade-sub');
+    if(sub) sub.textContent = tot.idade ? formatNum(tot.idade) + ' seguidores classificados' : '';
+
+    document.getElementById('aud-genero').innerHTML = barrasDe(a.genero, tot.genero);
+    document.getElementById('aud-cidade').innerHTML = barrasDe(a.cidade, tot.cidade);
+    document.getElementById('aud-pais').innerHTML = barrasDe(a.pais, tot.pais);
+  }catch(e){
+    ['aud-idade','aud-genero','aud-cidade','aud-pais'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.innerHTML = '<div class="vazio-msg">Não foi possível carregar</div>';
+    });
+  }
+}
+
+// ── Stories ─────────────────────────────────────────────────────────────────
+async function carregarStories(){
+  const lista = document.getElementById('st-lista');
+  if(!lista) return;
+  try{
+    const res = await fetch(API_URL.replace('/api/data', '/api/stories'));
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const d = await res.json();
+    if(d.error) throw new Error(d.error);
+
+    const r = d.resumo || {};
+    const strip = document.getElementById('st-strip');
+    if(strip) strip.innerHTML = [
+      kpiSimples('Stories no ar', formatNum(d.ativos), 'expiram em 24h'),
+      kpiSimples('Views somadas', formatNum(r.views), 'todos os stories ativos'),
+      // Alcance de story não soma: a mesma pessoa vê vários seguidos
+      kpiSimples('Maior alcance', formatNum(r.alcanceMaximo), 'num story · média ' + formatNum(r.alcanceMedio)),
+      kpiSimples('Respostas', formatNum(r.replies), 'mensagens recebidas', false, (r.replies || 0) > 0)
+    ].join('');
+
+    const sub = document.getElementById('st-sub');
+    if(sub) sub.textContent = d.ativos ? 'a Meta só expõe os das últimas 24h' : '';
+
+    lista.innerHTML = d.stories.length ? d.stories.map(st =>
+      '<a class="post-card" href="' + st.permalink + '" target="_blank" rel="noopener">' +
+        '<div class="post-media" style="aspect-ratio:9/16">' +
+          (st.media_url ? '<img class="post-img" src="' + st.media_url + '" loading="lazy" alt="">' : '') +
+          '<span class="post-hora">' + st.hora + '</span>' +
+          (st.views != null ? '<span class="post-views">' + formatNum(st.views) + '</span>' : '') +
+        '</div>' +
+        '<div class="post-foot">' +
+          '<span title="alcance">◎ ' + formatNum(st.reach) + '</span>' +
+          '<span title="respostas">◗ ' + formatNum(st.replies) + '</span>' +
+        '</div>' +
+      '</a>'
+    ).join('') : '<div class="vazio-msg">Nenhum story no ar agora</div>';
+
+    const badge = document.getElementById('badge-stories');
+    if(badge) badge.textContent = d.ativos || '';
+  }catch(e){
+    lista.innerHTML = '<div class="vazio-msg">Não foi possível carregar os stories</div>';
+  }
+}
+
 function renderTop(hoje, guardado){
   const lista = document.getElementById('top-lista');
-  const nota = document.getElementById('top-nota');
   if(!lista) return;
 
   // O arquivo só tem dias fechados, então o de hoje entra sempre pelo ao vivo.
-  function juntar(guardados){
+  function semRepetir(listas){
     const porId = new Map();
-    [...guardados, ...hoje].forEach(p => porId.set(p.id, p));
-    return [...porId.values()].sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
+    listas.flat().forEach(p => { if(p && p.id) porId.set(p.id, p); });
+    return [...porId.values()];
   }
 
-  function recorte(periodo){
-    if(periodo === 'hoje') return hoje;
-    if(periodo === 'all') return juntar(guardado.allTime);
+  const porInteracoes = (a, b) => (b.interactions ?? -1) - (a.interactions ?? -1);
+
+  // UNIVERSO: tudo que existe no período. Base dos agregados — total de
+  // publicações, médias por formato, distribuição por horário. Precisa ser
+  // representativo, então nunca sai do hall da fama.
+  function universo(periodo){
+    if(periodo === 'hoje') return hoje.slice();
     const corte = new Date(Date.now() - Number(periodo) * 86400000).toISOString().slice(0, 10);
-    return juntar(guardado.recentes.filter(p => p.date >= corte));
+    return semRepetir([guardado.recentes.filter(p => p.date >= corte), hoje]);
   }
+
+  // RANKING: as melhores. Em "Sempre" o hall da fama entra, porque guarda
+  // recordes que já saíram da janela de 35 dias do arquivo.
+  function paraRanking(periodo){
+    if(periodo === 'hoje') return hoje.slice().sort(porInteracoes);
+    return universo(periodo).sort(porInteracoes);
+  }
+
+  // Top 3 de hoje na Visão Geral
+  const dEl = document.getElementById('destaques');
+  if(dEl){
+    const tres = hoje.slice(0, 3);
+    const sub = document.getElementById('destaques-sub');
+    if(sub) sub.textContent = hoje.length ? hoje.length + ' publicações' : '';
+    dEl.innerHTML = tres.length ? tres.map(p =>
+      '<a class="destaque" href="' + p.permalink + '" target="_blank" rel="noopener">' +
+        '<span class="destaque-thumb">' + (p.media_url ? '<img src="' + p.media_url + '" loading="lazy" alt="">' : '') + '</span>' +
+        '<span class="destaque-meta">' +
+          '<span class="destaque-cap">' + (p.caption || '(sem legenda)') + '</span>' +
+          '<span class="destaque-sub">' +
+            '<span class="rank-tag ' + (p.isVideo ? 'reel' : '') + '">' +
+              (p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM') +
+            '</span>' +
+            '<span>' + (p.hora || '') + '</span>' +
+          '</span>' +
+        '</span>' +
+        '<span class="destaque-num">' + formatNum(p.interactions) + '<small>interações</small></span>' +
+      '</a>'
+    ).join('') : '<div class="vazio-msg">Nenhuma publicação hoje ainda</div>';
+  }
+
+  const badge = document.getElementById('badge-insights');
+  if(badge) badge.textContent = hoje.length ? hoje.length : '';
 
   function desenhar(periodo){
-    const posts = recorte(periodo).slice(0, 10);
+    const todos = universo(periodo);          // agregados
+    const posts = paraRanking(periodo).slice(0, 20); // lista
 
-    if(nota){
-      const temFollows = posts.some(p => p.follows != null);
-      nota.textContent = temFollows
-        ? 'Ordenado por interações. O Instagram só informa seguidores ganhos em imagens e carrosséis — reels não reportam.'
-        : 'Ordenado por interações.';
+    // ── Cobertura real do período pedido ──
+    const cob = document.getElementById('ins-cobertura');
+    if(cob){
+      const datas = todos.map(p => p.date).filter(Boolean).sort();
+      if(!datas.length){
+        cob.textContent = '';
+        cob.className = 'cobertura';
+      }else{
+        const de = datas[0], ate = datas[datas.length - 1];
+        const dias = Math.round((new Date(ate) - new Date(de)) / 86400000) + 1;
+        const pedido = periodo === 'hoje' ? 1 : Number(periodo);
+        // Só avisa quando o histórico é mais curto que o filtro pedido
+        const curto = pedido && dias < pedido - 1;
+        cob.className = 'cobertura' + (curto ? ' parcial' : '');
+        cob.textContent = periodo === 'hoje'
+          ? diaMes(ate) + ' · ' + todos.length + ' publicações'
+          : (curto
+              ? 'histórico começa em ' + diaMes(de) + ' — ' + dias + ' dias disponíveis dos ' + pedido + ' pedidos'
+              : diaMes(de) + ' a ' + diaMes(ate) + ' · ' + dias + ' dias');
+      }
     }
 
+    // ── Faixa de KPIs: os números que respondem sozinhos ──
+    const strip = document.getElementById('ins-strip');
+    if(strip){
+      const inter = todos.reduce((a, p) => a + (p.interactions || 0), 0);
+      const alc = todos.reduce((a, p) => a + (p.reach || 0), 0);
+      const seg = todos.reduce((a, p) => a + (p.follows || 0), 0);
+      const temSeg = todos.some(p => p.follows != null);
+      const melhor = todos[0];
+      const fmts = analisaFormatos(todos);
+      const campeao = fmts[0];
+
+      strip.innerHTML = [
+        kpiSimples('Publicações', formatNum(todos.length), (todos.filter(p => p.isVideo).length) + ' reels'),
+        kpiSimples('Interações', formatNum(inter), todos.length ? 'média ' + formatNum(Math.round(inter / todos.length)) : '—'),
+        kpiSimples('Alcance somado', formatNum(alc), todos.length ? 'média ' + formatNum(Math.round(alc / todos.length)) : '—'),
+        campeao
+          ? kpiSimples('Formato campeão', campeao.nome, formatNum(campeao.media) + ' por publicação', true)
+          : kpiSimples('Formato campeão', '—', ''),
+        temSeg
+          ? kpiSimples('Seguidores ganhos', '+' + formatNum(seg), 'só imagens e carrosséis', false, true)
+          : ''
+      ].join('');
+    }
+
+    // ── Formatos: barra proporcional, o tamanho relativo se lê sem comparar ──
+    const fmtEl = document.getElementById('ins-formatos');
+    if(fmtEl){
+      const fmts = analisaFormatos(todos);
+      const teto = Math.max(...fmts.map(f => f.media), 1);
+      fmtEl.innerHTML = fmts.length ? fmts.map(f => {
+        const classe = f.nome.toLowerCase();
+        // Com menos de 3 publicações a média vira ruído: um post fora da curva
+        // inverte o ranking. Melhor marcar do que deixar decidir pauta em cima disso.
+        const fraco = f.qtd < 3;
+        return '<div class="fmt-linha">' +
+          '<span class="fmt-nome">' + f.nome + '</span>' +
+          '<div class="fmt-barra"><div class="fmt-preenche ' + classe + (fraco ? ' fraca' : '') +
+            '" style="width:' + ((f.media / teto) * 100).toFixed(1) + '%"></div></div>' +
+          '<span class="fmt-num">' + formatNum(f.media) +
+            '<small>' + (fraco ? '⚠ só ' : 'em ') + f.qtd + ' publicaç' + (f.qtd === 1 ? 'ão' : 'ões') + '</small>' +
+          '</span>' +
+        '</div>';
+      }).join('') : '<div class="vazio-msg">Sem dados no período</div>';
+    }
+
+    // ── Horas: 24 colunas, o pico em âmbar ──
+    const hEl = document.getElementById('ins-horas');
+    const hEixo = document.getElementById('ins-horas-eixo');
+    if(hEl){
+      const { medias, max, melhor } = analisaHoras(todos);
+      hEl.innerHTML = medias.map((m, h) =>
+        '<div class="hora-col' + (h === melhor && max > 0 ? ' pico' : '') + '" style="height:' +
+        Math.max(3, (m / max) * 100).toFixed(1) + '%" title="' + String(h).padStart(2, '0') + 'h · ' +
+        formatNum(Math.round(m)) + ' interações em média"></div>'
+      ).join('');
+      if(hEixo) hEixo.innerHTML = medias.map((_, h) => '<span>' + (h % 3 === 0 ? String(h).padStart(2, '0') : '') + '</span>').join('');
+      const pico = document.getElementById('ins-pico');
+      if(pico) pico.textContent = max > 0 ? 'pico às ' + String(melhor).padStart(2, '0') + 'h' : '';
+    }
+
+    // ── Nota do ranking: curta, e só quando há o que ressalvar ──
+    const nota = document.getElementById('top-nota');
+    if(nota) nota.textContent = posts.some(p => p.follows != null)
+      ? 'por interações · reels não reportam seguidores'
+      : 'por interações';
+
     if(posts.length === 0){
-      lista.innerHTML = `<div style="color: var(--text-3); text-align: center; padding: 30px 0; font-family: var(--font-mono); font-size: 12px;">${
-        periodo === 'hoje' ? 'Nenhuma publicação hoje ainda' : 'Sem dados nesse período ainda — o histórico começa a encher a cada noite'
-      }</div>`;
+      lista.innerHTML = '<div class="vazio-msg">' + (periodo === 'hoje'
+        ? 'Nenhuma publicação hoje ainda'
+        : 'Sem dados nesse período — o histórico enche a cada noite') + '</div>';
       return;
     }
 
+    const teto = Math.max(...posts.map(p => p.interactions || 0), 1);
     lista.innerHTML = posts.map((p, i) => `
-      <a href="${p.permalink}" target="_blank" style="text-decoration: none; display: flex; align-items: center; gap: 14px; padding: 10px 14px; border: 1px solid rgba(61, 91, 254, 0.15); border-radius: 12px; background: rgba(255,255,255,0.5); transition: all 0.2s ease;"
-         onmouseover="this.style.borderColor='var(--primary)'; this.style.background='rgba(255,255,255,0.9)'"
-         onmouseout="this.style.borderColor='rgba(61, 91, 254, 0.15)'; this.style.background='rgba(255,255,255,0.5)'">
-        <span style="font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: ${i < 3 ? 'var(--primary)' : 'var(--text-3)'}; min-width: 22px;">${i + 1}</span>
-        <div style="position: relative; width: 46px; height: 46px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: rgba(61,91,254,0.08);">
-          ${p.media_url ? `<img src="${p.media_url}" loading="lazy" style="width:100%; height:100%; object-fit: cover;">` : ''}
-        </div>
-        <div style="flex: 1; min-width: 0;">
-          <div style="font-size: 12px; color: var(--text-1); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${p.caption || '(sem legenda)'}</div>
-          <div style="font-size: 11px; color: var(--text-3); font-family: var(--font-mono); margin-top: 3px;">
-            ${p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM'} · ${p.date ? p.date.slice(8) + '/' + p.date.slice(5,7) : ''} ${p.hora || ''}
-          </div>
-        </div>
-        <div style="display: flex; gap: 18px; text-align: right; flex-shrink: 0;">
-          <div>
-            <div style="font-size: 15px; font-weight: 700; color: var(--text-1); font-family: var(--font-mono);">${formatNum(p.interactions)}</div>
-            <div style="font-size: 10px; color: var(--text-3);">interações</div>
-          </div>
-          <div style="min-width: 62px;">
-            <div style="font-size: 15px; font-weight: 700; color: var(--text-2); font-family: var(--font-mono);">${formatNum(p.reach)}</div>
-            <div style="font-size: 10px; color: var(--text-3);">alcance</div>
-          </div>
-          <div style="min-width: 54px;">
-            <div style="font-size: 15px; font-weight: 700; color: ${p.follows ? 'var(--success)' : 'var(--text-3)'}; font-family: var(--font-mono);">${p.follows != null ? '+' + p.follows : '—'}</div>
-            <div style="font-size: 10px; color: var(--text-3);">seguidores</div>
-          </div>
-        </div>
+      <a class="rank-linha" href="${p.permalink}" target="_blank" rel="noopener"
+         style="--peso: ${(((p.interactions || 0) / teto) * 100).toFixed(1)}%">
+        <span class="rank-pos">${i + 1}</span>
+        <span class="rank-thumb">${p.media_url ? `<img src="${p.media_url}" loading="lazy" alt="">` : ''}</span>
+        <span class="rank-meta">
+          <span class="rank-cap">${p.caption || '(sem legenda)'}</span>
+          <span class="rank-sub">
+            <span class="rank-tag ${p.isVideo ? 'reel' : ''}">${p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM'}</span>
+            <span>${diaMes(p.date)} ${p.hora || ''}</span>
+          </span>
+        </span>
+        <span class="rank-num"><span class="rank-num-v">${formatNum(p.interactions)}</span><span class="rank-num-l">interações</span></span>
+        <span class="rank-num esconde"><span class="rank-num-v">${formatNum(p.reach)}</span><span class="rank-num-l">alcance</span></span>
+        <span class="rank-num esconde"><span class="rank-num-v ${p.follows ? 'ganho' : 'vazio'}">${p.follows != null ? '+' + p.follows : '—'}</span><span class="rank-num-l">seguidores</span></span>
       </a>
     `).join('');
   }
@@ -1180,29 +3124,261 @@ function desenharPosts(container, posts, tipo){
     const msg = tipo === 'reels' ? 'Nenhum reel nas últimas publicações'
               : tipo === 'posts' ? 'Nenhum post nas últimas publicações'
               : 'Não foi possível carregar as publicações';
-    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--text-3); font-family: var(--font-mono); font-size: 12px;">${msg}</div>`;
+    container.innerHTML = `<div class="vazio-msg">${msg}</div>`;
     return;
   }
 
   container.innerHTML = posts.slice(0, 9).map(post => `
-    <a href="${post.permalink}" target="_blank" style="text-decoration: none; display: block;">
-      <div style="aspect-ratio: 1; background: linear-gradient(135deg, rgba(61, 91, 254, 0.1) 0%, rgba(84, 112, 255, 0.05) 100%); border: 1px solid rgba(61, 91, 254, 0.2); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: all 0.3s ease; cursor: pointer;">
-        <div style="position: relative; width: 100%; height: 70%;">
-          ${post.media_url
-            ? `<img src="${post.media_url}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; background: rgba(61, 91, 254, 0.1);">`
-            : '<div style="width: 100%; height: 100%; background: rgba(61, 91, 254, 0.1); display: flex; align-items: center; justify-content: center;"><span style="color: var(--text-3); font-size: 11px;">Sem prévia</span></div>'}
-          ${post.isReel ? '<span style="position: absolute; top: 8px; right: 8px; background: rgba(15,20,25,0.75); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 7px; border-radius: 6px;">REEL</span>' : ''}
-          ${post.isHoje ? `<span style="position: absolute; top: 8px; left: 8px; background: rgba(61,91,254,0.9); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 7px; border-radius: 6px;">${post.hora}</span>` : ''}
-          ${post.views != null ? `<span style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(15,20,25,0.8)); color: #fff; font-size: 13px; font-weight: 700; padding: 16px 8px 6px; text-align: center;">▶ ${formatNum(post.views)}</span>` : ''}
-        </div>
-        <div style="padding: 8px; display: flex; gap: 8px; justify-content: center; font-size: 11px; color: var(--text-2); border-top: 1px solid rgba(61, 91, 254, 0.1);">
-          <span>❤️ ${formatNum(post.like_count)}</span>
-          <span>💬 ${formatNum(post.comments_count)}</span>
-        </div>
+    <a class="post-card" href="${post.permalink}" target="_blank" rel="noopener">
+      <div class="post-media">
+        ${post.media_url ? `<img class="post-img" src="${post.media_url}" loading="lazy" alt="">` : ''}
+        ${post.isReel ? '<span class="post-badge">REEL</span>' : ''}
+        ${post.isHoje ? `<span class="post-hora">${post.hora}</span>` : ''}
+        ${post.views != null ? `<span class="post-views">▶ ${formatNum(post.views)}</span>` : ''}
+      </div>
+      <div class="post-foot">
+        <span>♥ ${formatNum(post.like_count)}</span>
+        <span>◗ ${formatNum(post.comments_count)}</span>
       </div>
     </a>
   `).join('');
 }
+
+
+
+
+// ── Faixa de aviso ──────────────────────────────────────────────────────────
+function mostrarFaixa(tipo, html, acao){
+  const el = document.getElementById('faixa-aviso');
+  if(!el) return;
+  if(!tipo){ el.className = 'faixa'; el.innerHTML = ''; return; }
+  const icones = {
+    atencao: '<path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',
+    critico: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+    info:    '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>'
+  };
+  el.className = 'faixa visivel ' + tipo;
+  el.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor">' + (icones[tipo] || '') + '</svg>' +
+    '<span>' + html + '</span>' +
+    (acao ? '<span class="faixa-acao">' + acao + '</span>' : '');
+}
+
+// Avisa com folga: 15 dias pra alguém se organizar, 5 pra ser inadiável.
+// Quando o token vencer eu provavelmente não vou estar por perto — então o
+// aviso precisa dizer o que fazer, não só que algo vai quebrar.
+function avisarToken(ts){
+  if(!ts) return false;
+  const d = ts.daysUntilExpiry;
+  if(ts.isExpired){
+    mostrarFaixa('critico',
+      '<b>O acesso ao Instagram expirou.</b> Os números pararam de atualizar. ' +
+      'É preciso gerar um novo token no Meta for Developers e atualizar a variável IG_TOKEN na Vercel.',
+      'venceu em ' + ts.expiryDate);
+    return true;
+  }
+  if(d <= 5){
+    mostrarFaixa('critico',
+      '<b>O acesso ao Instagram vence em ' + d + (d === 1 ? ' dia' : ' dias') + '.</b> ' +
+      'Quando vencer, o dashboard para de atualizar. Renove o token no Meta for Developers.',
+      'vence em ' + ts.expiryDate);
+    return true;
+  }
+  if(d <= 15){
+    mostrarFaixa('atencao',
+      '<b>O acesso ao Instagram vence em ' + d + ' dias</b> (' + ts.expiryDate + '). ' +
+      'Vale renovar antes que pare.',
+      'IG_TOKEN · Vercel');
+    return true;
+  }
+  return false;
+}
+
+// ── Último estado bom ───────────────────────────────────────────────────────
+// Um blip de rede de 3 segundos derrubava a tela inteira pra um texto vermelho
+// — no telão da redação. Guardar o último retrato bom deixa o painel de pé.
+const GUARDA = 'alpha-ultimo';
+
+function guardarEstado(data){
+  try{
+    localStorage.setItem(GUARDA, JSON.stringify({ quando: Date.now(), data }));
+  }catch(e){}
+}
+
+function lerEstado(){
+  try{
+    const cru = localStorage.getItem(GUARDA);
+    if(!cru) return null;
+    const o = JSON.parse(cru);
+    // Mais de 12h é retrato de outro dia: melhor não fingir que é de agora
+    if(Date.now() - o.quando > 12 * 3600000) return null;
+    return o;
+  }catch(e){ return null; }
+}
+
+function minutosDesde(ms){
+  return Math.max(1, Math.round((Date.now() - ms) / 60000));
+}
+
+// ── Pulso ao vivo ───────────────────────────────────────────────────────────
+// Num telão que fica ligado o dia inteiro, número parado parece tela travada.
+// A cada minuto relê a API e, quando um valor muda de fato, ele sobe (ou
+// desce) até o novo em vez de trocar seco.
+//
+// Só anima o que mudou: a API tem cache de 5 min, então quatro em cada cinco
+// leituras vêm iguais. Animar tudo toda vez viraria ruído — e a régua do Emil
+// é clara: se o usuário vê muitas vezes por dia, ou tem propósito ou não anima.
+// O propósito aqui é indicar estado: mostrar que o dado está vivo.
+(function pulsoAoVivo(){
+  const INTERVALO = 60000;
+  let anterior = {};
+  let parado = false;
+
+  function formata(v, fmt){
+    if(v == null) return '—';
+    if(fmt === 'pct')  return v.toFixed(1) + '%';
+    if(fmt === 'dec2') return v.toFixed(2).replace('.', ',');
+    if(fmt === 'sinal') return (v >= 0 ? '+' : '') + Math.round(v).toLocaleString('pt-BR');
+    return Math.round(v).toLocaleString('pt-BR');
+  }
+
+  function anima(el, de, para, fmt){
+    const dur = 800;
+    const t0 = performance.now();
+    el.classList.add('subindo');
+    function passo(agora){
+      const p = Math.min(1, (agora - t0) / dur);
+      const e = 1 - Math.pow(1 - p, 4);       // ease-out forte
+      el.textContent = formata(de + (para - de) * e, fmt);
+      if(p < 1) requestAnimationFrame(passo);
+      else{
+        el.textContent = formata(para, fmt);
+        setTimeout(() => el.classList.remove('subindo'), 700);
+      }
+    }
+    requestAnimationFrame(passo);
+  }
+
+  function aplica(valores){
+    Object.entries(valores).forEach(([chave, novo]) => {
+      if(novo == null) return;
+      const el = document.querySelector('[data-metrica="' + chave + '"]');
+      if(!el) return;
+      const velho = anterior[chave];
+      if(velho == null || velho === novo){
+        if(velho == null) el.textContent = formata(novo, el.dataset.fmt);
+        anterior[chave] = novo;
+        return;
+      }
+      // Direção da seta: pra cima em alta, pra baixo em queda
+      el.classList.toggle('caindo', novo < velho);
+      anima(el, velho, novo, el.dataset.fmt);
+      anterior[chave] = novo;
+    });
+  }
+
+  async function tick(){
+    if(parado || document.hidden) return;
+    try{
+      const d = await fetchAllData();
+      const hist = window.__hist || [];
+      const ultimo = hist.length ? hist[hist.length - 1] : null;
+      aplica({
+        followers: d.profile && d.profile.followers_count,
+        dailyGain: (ultimo && ultimo.followers && d.profile)
+          ? d.profile.followers_count - ultimo.followers : null,
+        views: d.views,
+        reach: d.reach,
+        interactions: d.totalInteractions,
+        engagement: d.engagementRate,
+        posts: d.postsToday,
+        reelViews: d.reelViews,
+        vps: (d.views && d.profile && d.profile.followers_count)
+          ? d.views / d.profile.followers_count : null
+      });
+      // Chips junto: o ritmo esperado muda a cada minuto que passa do dia
+      const m7 = c => mediaDe(hist, c, 7);
+      const novosChips = {
+        views:        chipRitmo(d.views, m7('views'), 'views'),
+        reach:        chipRitmo(d.reach, m7('reach'), 'reach'),
+        interactions: chipRitmo(d.totalInteractions, m7('interactions'), 'interactions'),
+        posts:        chipRitmo(d.postsToday, m7('posts'), 'posts'),
+        reelViews:    chipRitmo(d.reelViews, m7('reelViews'), 'reelViews'),
+        engagement:   chipDelta(d.engagementRate, m7('engagementRate'), { chave: 'engagement' })
+      };
+      Object.entries(novosChips).forEach(([k, html]) => {
+        const alvo = document.querySelector('[data-chip="' + k + '"]');
+        if(alvo) alvo.outerHTML = html;
+      });
+
+      const sub = document.getElementById('brand-subtitle');
+      if(sub && d.profile) sub.textContent = '@' + d.profile.username + ' · atualizado ' + fmtTime();
+      // Voltou a responder: tira a marca de dado velho
+      if(document.body.classList.contains('dado-velho')){
+        document.body.classList.remove('dado-velho');
+        mostrarFaixa(null);
+        avisarToken(d.tokenStatus);
+      }
+      guardarEstado({ data: d, history: window.__hist || [] });
+    }catch(e){
+      // Uma falha isolada não derruba o laço, mas marca a tela
+      document.body.classList.add('dado-velho');
+      mostrarFaixa('atencao', '<b>Reconectando ao Instagram.</b> Os números abaixo são os últimos recebidos.', 'nova tentativa em 1 min');
+    }
+  }
+
+  // Semeia com o que já está na tela pra primeira leitura não animar do zero
+  window.__semearPulso = function(valores){ anterior = Object.assign({}, valores); };
+
+  setInterval(tick, INTERVALO);
+  // Aba oculta não precisa consultar a API; ao voltar, atualiza na hora
+  document.addEventListener('visibilitychange', () => { if(!document.hidden) tick(); });
+})();
+
+// Modo TV: liga, desliga por botão ou Esc, e esconde o botão quando o mouse
+// para de se mexer — num telão ninguém quer chrome permanente na tela.
+(function modoTV(){
+  let ocioso;
+
+  function acorda(){
+    if(!document.body.classList.contains('tv-mode')) return;
+    document.body.classList.add('tv-ativo');
+    clearTimeout(ocioso);
+    ocioso = setTimeout(() => document.body.classList.remove('tv-ativo'), 2600);
+  }
+
+  function sair(){
+    document.body.classList.remove('tv-mode', 'tv-ativo');
+    clearTimeout(ocioso);
+    try{ localStorage.setItem('alpha-tv', '0'); }catch(e){}
+  }
+
+  function entrar(){
+    document.body.classList.add('tv-mode');
+    acorda();
+    try{ localStorage.setItem('alpha-tv', '1'); }catch(e){}
+  }
+
+  window.alphaTV = { entrar, sair, alternar(){
+    document.body.classList.contains('tv-mode') ? sair() : entrar();
+  }};
+
+  const btn = document.getElementById('btn-sair-tv');
+  if(btn) btn.onclick = sair;
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape' && document.body.classList.contains('tv-mode')) sair();
+  });
+
+  ['mousemove', 'pointerdown', 'keydown'].forEach(ev =>
+    document.addEventListener(ev, acorda, { passive: true }));
+
+  // Retoma o modo TV depois de um reload: o telão pode reiniciar sozinho
+  try{ if(localStorage.getItem('alpha-tv') === '1') entrar(); }catch(e){}
+})();
+
+// Restaura o menu recolhido antes de pintar, pra não dar salto na tela
+try{ if(localStorage.getItem('alpha-nav') === '1') document.body.classList.add('nav-collapsed'); }catch(e){}
 
 load();
 </script>
