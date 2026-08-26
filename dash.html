@@ -1387,27 +1387,6 @@ body.tv-mode .gain-tile { min-height: 260px; }
   .rank-num.esconde { display: none; }
 }
 
-/* ══ Mini-barras ═════════════════════════════════════════════════════════════
-   Linha fina de 40px sem eixo vira rabisco. Barra por dia lê na hora: dá pra
-   ver qual dia foi alto sem precisar seguir uma curva. */
-.spark-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  height: 34px;
-  margin-top: 12px;
-  margin-bottom: 14px;
-}
-
-.spark-bars i {
-  flex: 1;
-  background: var(--signal-200);
-  border-radius: 2px 2px 0 0;
-  min-height: 2px;
-  display: block;
-}
-
-.spark-bars i.hoje { background: var(--signal-500); }
 
 .kpi { padding-bottom: 0; }
 
@@ -1552,6 +1531,17 @@ body.tv-mode.tv-ativo .tv-sair {
   color: var(--ink-3);
   border: 1px solid var(--line);
 }
+
+
+
+/* Área sangra até as bordas do card e vira o rodapé do tile */
+.kpi-area {
+  display: block;
+  width: calc(100% + 36px);
+  margin: auto -18px 0;
+}
+
+.hero-tile .kpi-area { width: calc(100% + 52px); margin: auto -26px 0; }
 
 </style>
 </head>
@@ -1754,20 +1744,82 @@ function kpiSimples(rotulo, valor, sub, destaque, ganho){
 }
 
 
-// Mini-barras: uma barra por dia, a última destacada. Em 34px de altura isso
-// lê muito melhor que uma linha fina — dá pra apontar o dia alto sem seguir
-// uma curva. O número exato está no card; aqui é só a forma.
-function sparkBars(valores, n){
-  const vals = (valores || []).filter(v => typeof v === 'number').slice(-(n || 14));
-  if(vals.length < 2) return '<div class="spark-bars"></div>';
-  const max = Math.max(...vals), min = Math.min(...vals);
+
+// Interpolação monótona (Fritsch–Carlson). Uma spline comum inventa picos
+// entre os pontos — num gráfico de dado real isso é mentira. Esta mantém a
+// curva presa aos valores: se dois dias sobem, a curva não desce no meio.
+function caminhoSuave(pts){
+  const n = pts.length;
+  if(n < 2) return '';
+  if(n === 2) return 'M' + pts[0][0] + ' ' + pts[0][1] + ' L' + pts[1][0] + ' ' + pts[1][1];
+
+  const dx = [], dy = [], m = [];
+  for(let i = 0; i < n - 1; i++){
+    dx[i] = pts[i+1][0] - pts[i][0];
+    dy[i] = pts[i+1][1] - pts[i][1];
+    m[i] = dy[i] / (dx[i] || 1);
+  }
+
+  const t = [m[0]];
+  for(let i = 1; i < n - 1; i++){
+    if(m[i-1] * m[i] <= 0){
+      t[i] = 0; // ponto de virada: tangente zero trava o overshoot
+    }else{
+      t[i] = (m[i-1] + m[i]) / 2;
+      const lim = 3 * Math.min(Math.abs(m[i-1]), Math.abs(m[i]));
+      if(Math.abs(t[i]) > lim) t[i] = Math.sign(t[i]) * lim;
+    }
+  }
+  t[n-1] = m[n-2];
+
+  let d = 'M' + pts[0][0].toFixed(1) + ' ' + pts[0][1].toFixed(1);
+  for(let i = 0; i < n - 1; i++){
+    const c = dx[i] / 3;
+    d += ' C' + (pts[i][0] + c).toFixed(1) + ' ' + (pts[i][1] + t[i] * c).toFixed(1) +
+         ' ' + (pts[i+1][0] - c).toFixed(1) + ' ' + (pts[i+1][1] - t[i+1] * c).toFixed(1) +
+         ' ' + pts[i+1][0].toFixed(1) + ' ' + pts[i+1][1].toFixed(1);
+  }
+  return d;
+}
+
+// Sparkline de área. A primeira tentativa era uma linha de 1.8px em 40px de
+// altura: some no card e vira rabisco. Aqui o preenchimento é que carrega a
+// leitura — a forma se vê de longe — e a linha só define a borda de cima.
+function sparkArea(valores, opts){
+  const o = opts || {};
+  const n = o.n || 14;
+  const h = o.alt || 54;
+  const vals = (valores || []).filter(v => typeof v === 'number').slice(-n);
+  if(vals.length < 2) return '<div class="kpi-area" style="height:' + h + 'px"></div>';
+
+  const w = 300;
+  const min = Math.min(...vals), max = Math.max(...vals);
   const span = (max - min) || 1;
-  return '<div class="spark-bars">' + vals.map((v, i) => {
-    // Piso de 18% pra barra baixa ainda ser visível como barra
-    const alt = 18 + ((v - min) / span) * 82;
-    const ultima = i === vals.length - 1 ? ' class="hoje"' : '';
-    return '<i' + ultima + ' style="height:' + alt.toFixed(1) + '%"></i>';
-  }).join('') + '</div>';
+  const topo = 6, base = h - 1;
+
+  const pts = vals.map((v, i) => [
+    (i / (vals.length - 1)) * w,
+    topo + (base - topo) - ((v - min) / span) * (base - topo)
+  ]);
+
+  const linha = caminhoSuave(pts);
+  const area = linha + ' L' + w + ' ' + h + ' L0 ' + h + ' Z';
+  const id = 'ar' + Math.random().toString(36).slice(2, 8);
+  const fim = pts[pts.length - 1];
+
+  return '<svg class="kpi-area" viewBox="0 0 ' + w + ' ' + h + '" height="' + h + '"' +
+    ' preserveAspectRatio="none" aria-hidden="true">' +
+    '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="var(--signal-500)" stop-opacity="0.26"/>' +
+      '<stop offset="100%" stop-color="var(--signal-500)" stop-opacity="0.02"/>' +
+    '</linearGradient></defs>' +
+    '<path d="' + area + '" fill="url(#' + id + ')"/>' +
+    '<path d="' + linha + '" fill="none" stroke="var(--signal-500)" stroke-width="2"' +
+      ' stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
+    '<circle cx="' + fim[0].toFixed(1) + '" cy="' + fim[1].toFixed(1) + '" r="3"' +
+      ' fill="var(--signal-500)" stroke="var(--surface)" stroke-width="1.5"' +
+      ' vector-effect="non-scaling-stroke"/>' +
+    '</svg>';
 }
 
 // Fração do dia já decorrida em Brasília
@@ -2090,7 +2142,7 @@ function renderDashboard(data) {
         <div class="hero-label">Seguidores</div>
         <div class="hero-value">${formatNum(followers_count)}</div>
         <div class="kpi-sub">${formatNum(media_count)} publicações no acervo · barras = ganho por dia</div>
-        ${sparkBars(ganhos.map(x => x.g), 21)}
+        ${sparkArea(ganhos.map(x => x.g), { n: 21, alt: 92 })}
       </div>
       <div class="gain-tile col-4">
         <div class="hero-label">Ganho hoje</div>
@@ -2108,25 +2160,25 @@ function renderDashboard(data) {
         <div class="kpi-top"><span class="kpi-label">Visualizações</span>${chipRitmo(views, mediaDe(hist, 'views', 7))}</div>
         <div class="kpi-value">${formatNum(views)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'views', 7) || 0))}</div>
-        ${sparkBars(serieDe(hist, 'views', 14))}
+        ${sparkArea(serieDe(hist, 'views', 14))}
       </div>
       <div class="kpi col-3">
         <div class="kpi-top"><span class="kpi-label">Alcance</span>${chipRitmo(reach, mediaDe(hist, 'reach', 7))}</div>
         <div class="kpi-value">${formatNum(reach)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'reach', 7) || 0))}</div>
-        ${sparkBars(serieDe(hist, 'reach', 14))}
+        ${sparkArea(serieDe(hist, 'reach', 14))}
       </div>
       <div class="kpi col-3">
         <div class="kpi-top"><span class="kpi-label">Interações</span>${chipRitmo(totalInteractions, mediaDe(hist, 'interactions', 7))}</div>
         <div class="kpi-value">${formatNum(totalInteractions)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'interactions', 7) || 0))}</div>
-        ${sparkBars(serieDe(hist, 'interactions', 14))}
+        ${sparkArea(serieDe(hist, 'interactions', 14))}
       </div>
       <div class="kpi col-3">
         <div class="kpi-top"><span class="kpi-label">Engajamento</span>${chipDelta(engagementRate, mediaDe(hist, 'engagementRate', 7))}</div>
         <div class="kpi-value">${engagementRate !== null ? engagementRate.toFixed(1) + '%' : '—'}</div>
         <div class="kpi-sub">média 7d ${(mediaDe(hist, 'engagementRate', 7) || 0).toFixed(1)}%</div>
-        ${sparkBars(serieDe(hist, 'engagementRate', 14))}
+        ${sparkArea(serieDe(hist, 'engagementRate', 14))}
       </div>
     </div>
 
@@ -2135,19 +2187,19 @@ function renderDashboard(data) {
         <div class="kpi-top"><span class="kpi-label">Publicações hoje</span>${chipRitmo(postsToday, mediaDe(hist, 'posts', 7))}</div>
         <div class="kpi-value">${formatNum(postsToday)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'posts', 7) || 0))} por dia</div>
-        ${sparkBars(serieDe(hist, 'posts', 14))}
+        ${sparkArea(serieDe(hist, 'posts', 14))}
       </div>
       <div class="kpi col-4">
         <div class="kpi-top"><span class="kpi-label">Views dos reels</span>${chipRitmo(reelViews, mediaDe(hist, 'reelViews', 7))}</div>
         <div class="kpi-value">${formatNum(reelViews)}</div>
         <div class="kpi-sub">${reelsToday || 0} reels publicados hoje</div>
-        ${sparkBars(serieDe(hist, 'reelViews', 14))}
+        ${sparkArea(serieDe(hist, 'reelViews', 14))}
       </div>
       <div class="kpi col-4">
         <div class="kpi-top"><span class="kpi-label">Views por seguidor</span></div>
         <div class="kpi-value">${vps != null ? vps.toFixed(2).replace('.', ',') : '—'}</div>
         <div class="kpi-sub">quantas vezes a base viu hoje</div>
-        ${sparkBars(hist.slice(-14).map(h => (h.views && h.followers) ? h.views / h.followers : null).filter(v => v != null))}
+        ${sparkArea(hist.slice(-14).map(h => (h.views && h.followers) ? h.views / h.followers : null).filter(v => v != null))}
       </div>
     </div>
 
