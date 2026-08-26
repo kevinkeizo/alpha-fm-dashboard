@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 /* ==========================================================================
@@ -38,8 +37,8 @@
   --signal-700: #1D2C8C;
 
   /* Acentos: âmbar = pico, verde = ganho. Reservados, nunca decorativos. */
-  --peak: #E8873A;
-  --peak-soft: #FDF0E5;
+  --peak: #1D2C8C;
+  --peak-soft: #E4E9FF;
   --gain: #12855F;
   --gain-soft: #E6F4EF;
   --drop: #C4384B;
@@ -1230,15 +1229,6 @@ body.tv-mode .chart-section { padding: 26px 30px; }
 /* Barra de fundo proporcional: o tamanho relativo se lê sem comparar números */
 .rank-linha { position: relative; overflow: hidden; }
 
-.rank-fundo {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  background: var(--signal-100);
-  border-radius: 0 12px 12px 0;
-  z-index: 0;
-  transition: width 700ms var(--ease-out);
-}
-
 .rank-linha > * { position: relative; z-index: 1; }
 
 /* ============================ Distribuição por hora ============================ */
@@ -1292,10 +1282,183 @@ body.tv-mode .kpi { min-height: 158px; }
 body.tv-mode .hero-tile { min-height: 260px; }
 body.tv-mode .gain-tile { min-height: 260px; }
 
+
+
+/* ══ Fundo: aurora ═══════════════════════════════════════════════════════════
+   A malha wireframe competia com o conteúdo — linha dura atrás de texto vira
+   ruído. Três manchas desfocadas derivando devagar dão profundidade sem
+   disputar atenção. Só transform anima, então roda na GPU sem custo de layout. */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.aurora span:nth-child(1) {
+  width: 46vw; height: 46vw;
+  top: -14vw; left: -8vw;
+  background: radial-gradient(circle, rgba(61,91,254,0.30), transparent 68%);
+  animation: deriva1 34s var(--ease-in-out) infinite;
+}
+
+.aurora span:nth-child(2) {
+  width: 40vw; height: 40vw;
+  top: 18vw; right: -10vw;
+  background: radial-gradient(circle, rgba(124,144,255,0.26), transparent 68%);
+  animation: deriva2 42s var(--ease-in-out) infinite;
+}
+
+.aurora span:nth-child(3) {
+  width: 52vw; height: 52vw;
+  bottom: -22vw; left: 24vw;
+  background: radial-gradient(circle, rgba(29,44,140,0.16), transparent 70%);
+  animation: deriva3 50s var(--ease-in-out) infinite;
+}
+
+@keyframes deriva1 {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(6vw, 4vw, 0) scale(1.12); }
+}
+@keyframes deriva2 {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(-5vw, 6vw, 0) scale(0.92); }
+}
+@keyframes deriva3 {
+  0%, 100% { transform: translate3d(0,0,0) scale(1); }
+  50%      { transform: translate3d(4vw, -5vw, 0) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora span { animation: none; }
+}
+
+/* ══ Ranking: grade fixa ═════════════════════════════════════════════════════
+   Era flex, e a barra de fundo (que devia ser absoluta) entrava no fluxo e
+   empurrava tudo em cascata. Agora é grid de colunas fixas: alinha sempre. */
+.rank-linha {
+  display: grid;
+  grid-template-columns: 26px 44px minmax(0, 1fr) 86px 86px 78px;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  padding: 9px 16px;
+}
+
+/* Barra proporcional como pseudo-elemento: não existe no fluxo, não empurra */
+.rank-linha::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: var(--peso, 0%);
+  background: var(--signal-100);
+  z-index: 0;
+  transition: width 700ms var(--ease-out);
+}
+
+.rank-linha > * { position: relative; z-index: 1; }
+
+.rank-thumb { width: 44px; height: 44px; }
+
+.rank-meta { display: block; min-width: 0; }
+.rank-cap { display: block; }
+.rank-sub { display: flex; align-items: center; gap: 7px; }
+.rank-num { display: block; text-align: right; }
+.rank-num-v, .rank-num-l { display: block; }
+
+.rank-num { text-align: right; }
+
+.rank-num-v { font-size: 13.5px; }
+
+.rank-pos { text-align: center; min-width: 0; }
+
+@media (max-width: 1100px) {
+  .rank-linha { grid-template-columns: 24px 40px minmax(0, 1fr) 76px; }
+  .rank-num.esconde { display: none; }
+}
+
+/* ══ Mini-barras ═════════════════════════════════════════════════════════════
+   Linha fina de 40px sem eixo vira rabisco. Barra por dia lê na hora: dá pra
+   ver qual dia foi alto sem precisar seguir uma curva. */
+.spark-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 34px;
+  margin-top: 12px;
+  margin-bottom: 14px;
+}
+
+.spark-bars i {
+  flex: 1;
+  background: var(--signal-200);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
+  display: block;
+}
+
+.spark-bars i.hoje { background: var(--signal-500); }
+
+.kpi { padding-bottom: 0; }
+
+/* ══ Faixa de insights: 5 cards sem sobra ════════════════════════════════════ */
+.strip-5 { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 1280px) { .strip-5 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 700px)  { .strip-5 { grid-template-columns: 1fr; } }
+.strip-5 > * { grid-column: auto !important; }
+
+/* ══ Destaques do dia ════════════════════════════════════════════════════════ */
+.destaque {
+  display: grid;
+  grid-template-columns: 40px minmax(0,1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.destaque:last-child { border-bottom: none; }
+
+.destaque-thumb { width: 40px; height: 40px; border-radius: 8px; overflow: hidden; background: var(--bg-2); }
+.destaque-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.destaque-cap {
+  font-size: 12px;
+  color: var(--ink-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.destaque-sub { font-size: 10px; color: var(--ink-4); font-family: var(--font-mono); margin-top: 2px; }
+
+.destaque-num {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--signal-600);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ══ Horas: mais alto e com faixa de referência ══════════════════════════════ */
+.horas { height: 108px; }
+.hora-col.pico { background: var(--signal-600); }
+
 </style>
 </head>
 <body>
-<canvas id="canvas-bg"></canvas>
+<div class="aurora" aria-hidden="true"><span></span><span></span><span></span></div>
 
 <div class="shell">
   <aside class="sidebar">
@@ -1375,123 +1538,8 @@ body.tv-mode .gain-tile { min-height: 260px; }
 // Vive num telão 24/7, então tudo aqui é defensivo: pausa quando a aba some,
 // limita o pixel ratio, sobrevive a perda de contexto WebGL e desliga inteiro
 // se a pessoa pediu menos movimento.
-(function fundoDeOnda(){
-  const canvas = document.getElementById('canvas-bg');
-  if(!canvas || typeof THREE === 'undefined') return;
-
-  const semMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  let renderer;
-  try{
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'low-power' });
-  }catch(e){
-    return; // sem WebGL o dashboard segue normal, só sem fundo
-  }
-
-  // Acima de 1.5 o ganho visual some e o custo de GPU dobra
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x000000, 0);
-
-  const scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xF2F4FA, 6, 20);
-
-  const camera = new THREE.PerspectiveCamera(58, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.set(0, 2.4, 7.2);
-  camera.lookAt(0, -0.4, 0);
-
-  const LARG = 26, PROF = 26, SEG = 68;
-  const geo = new THREE.PlaneGeometry(LARG, PROF, SEG, SEG);
-  geo.rotateX(-Math.PI / 2);
-
-  const mat = new THREE.MeshBasicMaterial({
-    color: 0x3D5BFE,
-    wireframe: true,
-    transparent: true,
-    opacity: 0.14
-  });
-
-  const malha = new THREE.Mesh(geo, mat);
-  malha.position.y = -1.4;
-  scene.add(malha);
-
-  const base = Float32Array.from(geo.attributes.position.array);
-  const pos = geo.attributes.position;
-
-  // Amplitude cai com a distância do centro: a onda nasce no meio e se
-  // dissipa nas bordas, em vez de ondular uniforme como um lençol.
-  const peso = new Float32Array(pos.count);
-  for(let i = 0; i < pos.count; i++){
-    const x = base[i * 3], z = base[i * 3 + 2];
-    const d = Math.sqrt(x * x + z * z);
-    peso[i] = Math.max(0, 1 - d / 15);
-  }
-
-  function deformar(t){
-    for(let i = 0; i < pos.count; i++){
-      const x = base[i * 3], z = base[i * 3 + 2];
-      const onda =
-        Math.sin(x * 0.38 + t * 0.62) * 0.42 +
-        Math.sin(z * 0.29 - t * 0.44) * 0.34 +
-        Math.sin((x + z) * 0.19 + t * 0.31) * 0.26;
-      pos.array[i * 3 + 1] = onda * peso[i];
-    }
-    pos.needsUpdate = true;
-  }
-
-  deformar(0);
-
-  let rodando = true, frame = 0, t0 = performance.now();
-
-  function loop(agora){
-    if(!rodando) return;
-    frame = requestAnimationFrame(loop);
-    const t = (agora - t0) / 1000;
-    deformar(t);
-    // Deriva lenta da câmera: dá parallax sem que ninguém perceba o movimento
-    camera.position.x = Math.sin(t * 0.05) * 0.5;
-    camera.lookAt(0, -0.4, 0);
-    renderer.render(scene, camera);
-  }
-
-  function ligar(){
-    if(rodando || semMovimento) return;
-    rodando = true;
-    t0 = performance.now() - 1000; // retoma sem pulo
-    frame = requestAnimationFrame(loop);
-  }
-
-  function desligar(){
-    rodando = false;
-    cancelAnimationFrame(frame);
-  }
-
-  if(semMovimento){
-    rodando = false;
-    renderer.render(scene, camera); // fica estático, mas existe
-  }else{
-    frame = requestAnimationFrame(loop);
-  }
-
-  // Aba escondida não precisa de GPU
-  document.addEventListener('visibilitychange', () => {
-    document.hidden ? desligar() : ligar();
-  });
-
-  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); desligar(); });
-  canvas.addEventListener('webglcontextrestored', ligar);
-
-  let redim;
-  window.addEventListener('resize', () => {
-    clearTimeout(redim);
-    redim = setTimeout(() => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      if(!rodando) renderer.render(scene, camera);
-    }, 150);
-  });
-})();
+// Fundo agora é CSS (ver .aurora). Sem WebGL: um canvas 3D rodando 24/7 num
+// telão é risco de perda de contexto e calor de GPU sem contrapartida visual.
 
 const API_URL = 'https://alpha-fm-api-git-main-alpha-fm1.vercel.app/api/data';
 const LOGO_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAACXBIWXMAABcSAAAXEgFxLsqaAAAA20lEQVQYV5XRMQ7CMBBFUYrEVliQkJhYmZiZWBhYWViYuAEn4AZcgBtwAk7ACbgBFwCLhKBgYmKhhYSSloGEhsiwieVJblJ7b8+/99vd3/+Zx+NxvV6f7/d5WJYFj8cj7vf7P/v9Pns8nnhZFn6eJ8vLdR0+z1N+npdxXZflcRjSNE3par/ff1MU5e12o2maeJ5HnudRVRW0bRvO53N+PIe2bZNlmbhcLjQvS0ZRRJIkfP9Rvq4rKorCjxKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQi/fgDJ1jH8cPMxfwAAAAASUVORK5CYII=';
@@ -1594,12 +1642,53 @@ function diaMes(d){
 
 // Card da faixa de insights: rótulo, número, uma linha de contexto. Nada mais.
 function kpiSimples(rotulo, valor, sub, destaque, ganho){
-  return '<div class="kpi col-3" style="min-height:112px">' +
+  return '<div class="kpi" style="min-height:110px;padding-bottom:16px">' +
     '<div class="kpi-top"><span class="kpi-label">' + rotulo + '</span></div>' +
     '<div class="kpi-value" style="' + (destaque ? 'color:var(--peak);' : ganho ? 'color:var(--gain);' : '') +
       (String(valor).length > 8 ? 'font-size:24px;' : '') + '">' + valor + '</div>' +
     (sub ? '<div class="kpi-sub">' + sub + '</div>' : '') +
-    '<div style="margin-top:auto"></div></div>';
+    '</div>';
+}
+
+
+// Mini-barras: uma barra por dia, a última destacada. Em 34px de altura isso
+// lê muito melhor que uma linha fina — dá pra apontar o dia alto sem seguir
+// uma curva. O número exato está no card; aqui é só a forma.
+function sparkBars(valores, n){
+  const vals = (valores || []).filter(v => typeof v === 'number').slice(-(n || 14));
+  if(vals.length < 2) return '<div class="spark-bars"></div>';
+  const max = Math.max(...vals), min = Math.min(...vals);
+  const span = (max - min) || 1;
+  return '<div class="spark-bars">' + vals.map((v, i) => {
+    // Piso de 18% pra barra baixa ainda ser visível como barra
+    const alt = 18 + ((v - min) / span) * 82;
+    const ultima = i === vals.length - 1 ? ' class="hoje"' : '';
+    return '<i' + ultima + ' style="height:' + alt.toFixed(1) + '%"></i>';
+  }).join('') + '</div>';
+}
+
+// Fração do dia já decorrida em Brasília
+function fracaoDoDia(){
+  const agora = new Date();
+  const p = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Sao_Paulo', hour12: false, hour: '2-digit', minute: '2-digit'
+  }).formatToParts(agora).reduce((a, x) => (a[x.type] = x.value, a), {});
+  const h = (p.hour === '24' ? 0 : +p.hour) + (+p.minute) / 60;
+  return Math.max(0.04, h / 24);
+}
+
+// Delta contra o RITMO esperado, não contra o dia inteiro de ontem.
+// Comparar um dia pela metade com um dia fechado deixava tudo vermelho às 14h.
+function chipRitmo(atual, media7){
+  if(atual == null || !media7) return '<span class="kpi-delta flat">—</span>';
+  const esperado = media7 * fracaoDoDia();
+  if(!esperado) return '<span class="kpi-delta flat">—</span>';
+  const pct = ((atual - esperado) / esperado) * 100;
+  const classe = pct >= 5 ? 'up' : pct <= -5 ? 'down' : 'flat';
+  const seta = pct >= 5 ? '↑' : pct <= -5 ? '↓' : '→';
+  const n = Math.min(999, Math.round(Math.abs(pct)));
+  return '<span class="kpi-delta ' + classe + '" title="comparado ao ritmo esperado para esta hora">' +
+    seta + ' ' + n + '%</span>';
 }
 
 function sparkline(valores, opts){
@@ -1897,8 +1986,8 @@ function renderDashboard(data) {
       <div class="hero-tile col-8">
         <div class="hero-label">Seguidores</div>
         <div class="hero-value">${formatNum(followers_count)}</div>
-        <div class="kpi-sub">${formatNum(media_count)} publicações no acervo</div>
-        ${sparkline(serieDe(hist, 'followers', 30), { alt: 76 }).replace('kpi-spark', 'hero-spark')}
+        <div class="kpi-sub">${formatNum(media_count)} publicações no acervo · barras = ganho por dia</div>
+        ${sparkBars(ganhos.map(x => x.g), 21)}
       </div>
       <div class="gain-tile col-4">
         <div class="hero-label">Ganho hoje</div>
@@ -1913,49 +2002,64 @@ function renderDashboard(data) {
 
     <div class="bento">
       <div class="kpi col-3">
-        <div class="kpi-top"><span class="kpi-label">Visualizações</span>${chipDelta(views, mediaDe(hist, 'views', 7))}</div>
+        <div class="kpi-top"><span class="kpi-label">Visualizações</span>${chipRitmo(views, mediaDe(hist, 'views', 7))}</div>
         <div class="kpi-value">${formatNum(views)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'views', 7) || 0))}</div>
-        ${sparkline(serieDe(hist, 'views', 21))}
+        ${sparkBars(serieDe(hist, 'views', 14))}
       </div>
       <div class="kpi col-3">
-        <div class="kpi-top"><span class="kpi-label">Alcance</span>${chipDelta(reach, mediaDe(hist, 'reach', 7))}</div>
+        <div class="kpi-top"><span class="kpi-label">Alcance</span>${chipRitmo(reach, mediaDe(hist, 'reach', 7))}</div>
         <div class="kpi-value">${formatNum(reach)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'reach', 7) || 0))}</div>
-        ${sparkline(serieDe(hist, 'reach', 21))}
+        ${sparkBars(serieDe(hist, 'reach', 14))}
       </div>
       <div class="kpi col-3">
-        <div class="kpi-top"><span class="kpi-label">Interações</span>${chipDelta(totalInteractions, mediaDe(hist, 'interactions', 7))}</div>
+        <div class="kpi-top"><span class="kpi-label">Interações</span>${chipRitmo(totalInteractions, mediaDe(hist, 'interactions', 7))}</div>
         <div class="kpi-value">${formatNum(totalInteractions)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'interactions', 7) || 0))}</div>
-        ${sparkline(serieDe(hist, 'interactions', 21))}
+        ${sparkBars(serieDe(hist, 'interactions', 14))}
       </div>
       <div class="kpi col-3">
         <div class="kpi-top"><span class="kpi-label">Engajamento</span>${chipDelta(engagementRate, mediaDe(hist, 'engagementRate', 7))}</div>
         <div class="kpi-value">${engagementRate !== null ? engagementRate.toFixed(1) + '%' : '—'}</div>
         <div class="kpi-sub">média 7d ${(mediaDe(hist, 'engagementRate', 7) || 0).toFixed(1)}%</div>
-        ${sparkline(serieDe(hist, 'engagementRate', 21), { cor: 'var(--peak)' })}
+        ${sparkBars(serieDe(hist, 'engagementRate', 14))}
       </div>
     </div>
 
     <div class="bento">
       <div class="kpi col-4">
-        <div class="kpi-top"><span class="kpi-label">Publicações hoje</span>${chipDelta(postsToday, mediaDe(hist, 'posts', 7))}</div>
+        <div class="kpi-top"><span class="kpi-label">Publicações hoje</span>${chipRitmo(postsToday, mediaDe(hist, 'posts', 7))}</div>
         <div class="kpi-value">${formatNum(postsToday)}</div>
         <div class="kpi-sub">média 7d ${formatNum(Math.round(mediaDe(hist, 'posts', 7) || 0))} por dia</div>
-        ${sparkline(serieDe(hist, 'posts', 21))}
+        ${sparkBars(serieDe(hist, 'posts', 14))}
       </div>
       <div class="kpi col-4">
-        <div class="kpi-top"><span class="kpi-label">Views dos reels</span>${chipDelta(reelViews, mediaDe(hist, 'reelViews', 7))}</div>
+        <div class="kpi-top"><span class="kpi-label">Views dos reels</span>${chipRitmo(reelViews, mediaDe(hist, 'reelViews', 7))}</div>
         <div class="kpi-value">${formatNum(reelViews)}</div>
         <div class="kpi-sub">${reelsToday || 0} reels publicados hoje</div>
-        ${sparkline(serieDe(hist, 'reelViews', 21), { cor: 'var(--peak)' })}
+        ${sparkBars(serieDe(hist, 'reelViews', 14))}
       </div>
       <div class="kpi col-4">
         <div class="kpi-top"><span class="kpi-label">Views por seguidor</span></div>
         <div class="kpi-value">${vps != null ? vps.toFixed(2).replace('.', ',') : '—'}</div>
         <div class="kpi-sub">quantas vezes a base viu hoje</div>
-        ${sparkline(hist.slice(-21).map(h => (h.views && h.followers) ? h.views / h.followers : null).filter(v => v != null))}
+        ${sparkBars(hist.slice(-14).map(h => (h.views && h.followers) ? h.views / h.followers : null).filter(v => v != null))}
+      </div>
+    </div>
+
+    <div class="bento">
+      <div class="chart-section col-7" style="margin:0">
+        <div class="chart-title"><span>Seguidores nos últimos 30 dias</span></div>
+        <div class="chart-holder" id="chart-geral"></div>
+      </div>
+      <div class="chart-section col-5" style="margin:0">
+        <div class="chart-title"><span>Destaques de hoje</span><span id="destaques-sub" class="kpi-sub"></span></div>
+        <div id="destaques">
+          <div class="skeleton" style="height:40px;margin:8px 0"></div>
+          <div class="skeleton" style="height:40px;margin:8px 0"></div>
+          <div class="skeleton" style="height:40px;margin:8px 0"></div>
+        </div>
       </div>
     </div>
     </section>
@@ -1995,7 +2099,7 @@ function renderDashboard(data) {
       </div>
     </div>
 
-    <div class="bento" id="ins-strip"></div>
+    <div class="bento strip-5" id="ins-strip"></div>
 
     <div class="bento">
       <div class="chart-section col-5" style="margin:0">
@@ -2159,6 +2263,16 @@ function renderDashboard(data) {
       const ds = recorte.map(h => h.date), vs = recorte.map(h => h.followers);
       chartEl.innerHTML = lineChartSvg(ds, vs);
       ligarHoverGrafico(chartEl, ds, vs);
+      // Mesmo gráfico na Visão Geral, sempre em 30 dias
+      const geralEl = document.getElementById('chart-geral');
+      if(geralEl){
+        const r30 = pontos.slice(-30);
+        const d30 = r30.map(h => h.date), v30 = r30.map(h => h.followers);
+        if(v30.length > 1){
+          geralEl.innerHTML = lineChartSvg(d30, v30);
+          ligarHoverGrafico(geralEl, d30, v30);
+        }
+      }
     }
 
     document.querySelectorAll('.dias-btn').forEach(btn => {
@@ -2314,6 +2428,22 @@ function renderTop(hoje, guardado){
     return juntar(guardado.recentes.filter(p => p.date >= corte));
   }
 
+  // Top 3 de hoje na Visão Geral
+  const dEl = document.getElementById('destaques');
+  if(dEl){
+    const tres = hoje.slice(0, 3);
+    const sub = document.getElementById('destaques-sub');
+    if(sub) sub.textContent = hoje.length ? hoje.length + ' publicações' : '';
+    dEl.innerHTML = tres.length ? tres.map(p =>
+      '<a class="destaque" href="' + p.permalink + '" target="_blank" rel="noopener">' +
+        '<span class="destaque-thumb">' + (p.media_url ? '<img src="' + p.media_url + '" loading="lazy" alt="">' : '') + '</span>' +
+        '<span><span class="destaque-cap">' + (p.caption || '(sem legenda)') + '</span>' +
+        '<span class="destaque-sub">' + (p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM') + ' · ' + (p.hora || '') + '</span></span>' +
+        '<span class="destaque-num">' + formatNum(p.interactions) + '</span>' +
+      '</a>'
+    ).join('') : '<div class="vazio-msg">Nenhuma publicação hoje ainda</div>';
+  }
+
   const badge = document.getElementById('badge-insights');
   if(badge) badge.textContent = hoje.length ? hoje.length : '';
 
@@ -2390,22 +2520,20 @@ function renderTop(hoje, guardado){
 
     const teto = Math.max(...posts.map(p => p.interactions || 0), 1);
     lista.innerHTML = posts.map((p, i) => `
-      <a class="rank-linha" href="${p.permalink}" target="_blank" rel="noopener">
-        <span class="rank-fundo" style="width:${(((p.interactions || 0) / teto) * 100).toFixed(1)}%"></span>
+      <a class="rank-linha" href="${p.permalink}" target="_blank" rel="noopener"
+         style="--peso: ${(((p.interactions || 0) / teto) * 100).toFixed(1)}%">
         <span class="rank-pos">${i + 1}</span>
-        <div class="rank-thumb">${p.media_url ? `<img src="${p.media_url}" loading="lazy" alt="">` : ''}</div>
-        <div class="rank-meta">
-          <div class="rank-cap">${p.caption || '(sem legenda)'}</div>
-          <div class="rank-sub">
+        <span class="rank-thumb">${p.media_url ? `<img src="${p.media_url}" loading="lazy" alt="">` : ''}</span>
+        <span class="rank-meta">
+          <span class="rank-cap">${p.caption || '(sem legenda)'}</span>
+          <span class="rank-sub">
             <span class="rank-tag ${p.isVideo ? 'reel' : ''}">${p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM'}</span>
             <span>${diaMes(p.date)} ${p.hora || ''}</span>
-          </div>
-        </div>
-        <div class="rank-nums">
-          <div><div class="rank-num-v">${formatNum(p.interactions)}</div><div class="rank-num-l">interações</div></div>
-          <div style="min-width:64px"><div class="rank-num-v">${formatNum(p.reach)}</div><div class="rank-num-l">alcance</div></div>
-          <div style="min-width:54px"><div class="rank-num-v ${p.follows ? 'ganho' : 'vazio'}">${p.follows != null ? '+' + p.follows : '—'}</div><div class="rank-num-l">seguidores</div></div>
-        </div>
+          </span>
+        </span>
+        <span class="rank-num"><span class="rank-num-v">${formatNum(p.interactions)}</span><span class="rank-num-l">interações</span></span>
+        <span class="rank-num esconde"><span class="rank-num-v">${formatNum(p.reach)}</span><span class="rank-num-l">alcance</span></span>
+        <span class="rank-num esconde"><span class="rank-num-v ${p.follows ? 'ganho' : 'vazio'}">${p.follows != null ? '+' + p.follows : '—'}</span><span class="rank-num-l">seguidores</span></span>
       </a>
     `).join('');
   }
