@@ -3,18 +3,18 @@
     "date": "2026-08-11",
     "followers": 963404,
     "reach": 526880,
-    "views": 1169529,
+    "views": 1169532,
     "reelViews": null,
     "reels": 13,
     "posts": 29,
-    "interactions": 78317,
-    "engagementRate": 14.86429547525053
+    "interactions": 78316,
+    "engagementRate": 14.86410567871242
   },
   {
     "date": "2026-08-12",
     "followers": 963929,
     "reach": 682789,
-    "views": 1395239,
+    "views": 1395242,
     "reelViews": null,
     "reels": 15,
     "posts": 31,
@@ -25,7 +25,7 @@
     "date": "2026-08-13",
     "followers": 964893,
     "reach": 688686,
-    "views": 1304964,
+    "views": 1304968,
     "reelViews": null,
     "reels": 21,
     "posts": 37,
@@ -36,7 +36,7 @@
     "date": "2026-08-14",
     "followers": 965494,
     "reach": 491013,
-    "views": 1030573,
+    "views": 1030575,
     "reelViews": null,
     "reels": 14,
     "posts": 32,
@@ -47,12 +47,12 @@
     "date": "2026-08-15",
     "followers": 966184,
     "reach": 648793,
-    "views": 1211786,
+    "views": 1211787,
     "reelViews": null,
     "reels": 10,
     "posts": 17,
-    "interactions": 86462,
-    "engagementRate": 13.326592611202647
+    "interactions": 86461,
+    "engagementRate": 13.326438478836856
   },
   {
     "date": "2026-08-16",
@@ -62,19 +62,19 @@
     "reelViews": null,
     "reels": 16,
     "posts": 22,
-    "interactions": 118134,
-    "engagementRate": 15.910238746510116
+    "interactions": 118132,
+    "engagementRate": 15.909969387329076
   },
   {
     "date": "2026-08-17",
     "followers": 967369,
     "reach": 897218,
-    "views": 2023972,
+    "views": 2023974,
     "reelViews": null,
     "reels": 25,
     "posts": 46,
-    "interactions": 136120,
-    "engagementRate": 15.17134074438988
+    "interactions": 136119,
+    "engagementRate": 15.171229288757024
   },
   {
     "date": "2026-08-18",
@@ -84,25 +84,25 @@
     "reelViews": null,
     "reels": 16,
     "posts": 42,
-    "interactions": 129365,
-    "engagementRate": 14.860982353839916
+    "interactions": 129364,
+    "engagementRate": 14.860867477464126
   },
   {
     "date": "2026-08-19",
     "followers": 968203,
     "reach": 551924,
-    "views": 1209488,
+    "views": 1209490,
     "reelViews": null,
     "reels": 12,
     "posts": 32,
-    "interactions": 82419,
-    "engagementRate": 14.933034258339916
+    "interactions": 82416,
+    "engagementRate": 14.932490705242026
   },
   {
     "date": "2026-08-20",
     "followers": 968816,
     "reach": 552730,
-    "views": 1142122,
+    "views": 1142123,
     "reelViews": null,
     "reels": 13,
     "posts": 29,
@@ -113,18 +113,18 @@
     "date": "2026-08-21",
     "followers": 969399,
     "reach": 543935,
-    "views": 1032209,
+    "views": 1032216,
     "reelViews": null,
     "reels": 15,
     "posts": 31,
-    "interactions": 79663,
-    "engagementRate": 14.64568376736191
+    "interactions": 79662,
+    "engagementRate": 14.645499921865666
   },
   {
     "date": "2026-08-22",
     "followers": 970058,
     "reach": 1029457,
-    "views": 2093398,
+    "views": 2093406,
     "reelViews": null,
     "reels": 37,
     "posts": 42,
@@ -135,22 +135,33 @@
     "date": "2026-08-23",
     "followers": 970925,
     "reach": 1396823,
-    "views": 2767081,
+    "views": 2767113,
     "reelViews": 1797296,
     "reels": 35,
     "posts": 41,
-    "interactions": 142914,
-    "engagementRate": 10.231360737903085
+    "interactions": 142911,
+    "engagementRate": 10.231145964807281
   },
   {
     "date": "2026-08-24",
     "followers": 972038,
-    "reach": 1050417,
-    "views": 2065947,
+    "reach": 1064438,
+    "views": 2100732,
     "reelViews": 176835,
     "reels": 13,
     "posts": 31,
-    "interactions": 108674,
-    "engagementRate": 10.345796002920745
+    "interactions": 110717,
+    "engagementRate": 10.401451282272898
+  },
+  {
+    "date": "2026-08-25",
+    "followers": 972444,
+    "reach": 697592,
+    "views": 1508363,
+    "reelViews": 568927,
+    "reels": 15,
+    "posts": 37,
+    "interactions": 123554,
+    "engagementRate": 17.711498985080105
   }
 ]
