@@ -868,7 +868,14 @@ function renderDashboard(data) {
     <div class="chart-section">
       <div class="chart-title">
         <span>Últimas Publicações</span>
-        <span id="posts-resumo" style="font-size: 12px; font-weight: 500; color: var(--text-2); font-family: var(--font-mono);"></span>
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <span id="posts-resumo" style="font-size: 12px; font-weight: 500; color: var(--text-2); font-family: var(--font-mono);"></span>
+          <div class="chart-filters">
+            <button class="filter-btn tipo-btn active" data-tipo="todos">Todos</button>
+            <button class="filter-btn tipo-btn" data-tipo="reels">Reels</button>
+            <button class="filter-btn tipo-btn" data-tipo="posts">Posts</button>
+          </div>
+        </div>
       </div>
       <div id="posts-preview" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; padding: 20px 0;">
         <div style="aspect-ratio: 1; background: linear-gradient(135deg, rgba(61, 91, 254, 0.1) 0%, rgba(84, 112, 255, 0.05) 100%); border: 1px solid rgba(61, 91, 254, 0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--text-3); font-family: var(--font-mono); font-size: 11px; text-align: center;">Carregando...</div>
@@ -1027,15 +1034,28 @@ function renderPosts(posts, resumo){
       : `${resumo.postsHoje} publicações hoje`;
   }
 
-  if(posts.length === 0) {
-    container.innerHTML = `
-      <div style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
-        <div style="color: var(--text-3); font-family: var(--font-mono); font-size: 13px; margin-bottom: 12px;">📸 Conectando com Instagram...</div>
-        <div style="color: var(--text-2); font-size: 12px; line-height: 1.6;">
-          As publicações virão em breve<br>com token de autenticação real
-        </div>
-      </div>
-    `;
+  // Filtro por tipo. Reel e vídeo contam como "reels"; o resto é "posts".
+  document.querySelectorAll('.tipo-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const t = btn.dataset.tipo;
+      const recorte = t === 'reels' ? posts.filter(p => p.isVideo)
+                    : t === 'posts' ? posts.filter(p => !p.isVideo)
+                    : posts;
+      desenharPosts(container, recorte, t);
+    });
+  });
+
+  desenharPosts(container, posts, 'todos');
+}
+
+function desenharPosts(container, posts, tipo){
+  if(posts.length === 0){
+    const msg = tipo === 'reels' ? 'Nenhum reel nas últimas publicações'
+              : tipo === 'posts' ? 'Nenhum post nas últimas publicações'
+              : 'Não foi possível carregar as publicações';
+    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 40px 20px; color: var(--text-3); font-family: var(--font-mono); font-size: 12px;">${msg}</div>`;
     return;
   }
 
