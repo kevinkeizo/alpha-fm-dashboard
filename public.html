@@ -2569,8 +2569,8 @@ function renderDashboard(data) {
       <div class="gain-tile col-4">
         <div class="hero-label">${ganhoDias > 1 ? 'Ganho em ' + ganhoDias + ' dias' : 'Ganho hoje'}</div>
         <div class="hero-value" data-metrica="dailyGain" data-fmt="sinal">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + formatNum(dailyGain) : '—'}</div>
-        ${(ganhoDias > 1 || refEstimada)
-          ? '<div class="kpi-sub" style="margin-top:2px">desde ' + (ganhoRef ? diaMes(ganhoRef.date) : '') + (refEstimada ? ' · base estimada' : '') + '</div>'
+        ${ganhoDias > 1
+          ? '<div class="kpi-sub" style="margin-top:2px">desde ' + (ganhoRef ? diaMes(ganhoRef.date) : '') + '</div>'
           : ''}
         <div class="gain-meta">
           <div><span class="gain-meta-l">Média 7d</span><span class="gain-meta-v">${g7 != null ? '+' + formatNum(Math.round(g7)) : '—'}</span></div>
@@ -2962,7 +2962,7 @@ async function load(){
         // Quantos dias esse ganho abrange, pra não chamar de "hoje" o que é
         // acúmulo de mais de um dia
         const fim = new Date(ref.date + 'T00:00:00-03:00').getTime() + 86400000;
-        data.ganhoDias = Math.max(1, Math.round((Date.now() - fim) / 86400000) + 1);
+        data.ganhoDias = Math.max(1, Math.ceil((Date.now() - fim) / 86400000));
       }
 
       data.ontem = sorted[sorted.length - 1] || null;
