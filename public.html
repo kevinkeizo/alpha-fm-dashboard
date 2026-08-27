@@ -2527,6 +2527,10 @@ function renderDashboard(data) {
   const username = profile.username;
   const dailyGain = data.dailyGain || null;
   const ontem = data.ontem || null;
+  const ganhoRef = data.ganhoRef || null;
+  const ganhoDias = data.ganhoDias || 1;
+  // Estimativa entra na conta, mas a tela avisa que a base é aproximada
+  const refEstimada = !!(ganhoRef && ganhoRef.followersEstimado);
 
   // Histórico só com dias fechados, base de toda comparação e sparkline
   const hist = (data.historico || []).slice().sort((a, b) => a.date.localeCompare(b.date));
@@ -2563,8 +2567,11 @@ function renderDashboard(data) {
         ${sparkBars(ganhos.map(x => x.g), { n: 21, alt: 88 })}
       </div>
       <div class="gain-tile col-4">
-        <div class="hero-label">Ganho hoje</div>
+        <div class="hero-label">${ganhoDias > 1 ? 'Ganho em ' + ganhoDias + ' dias' : 'Ganho hoje'}</div>
         <div class="hero-value" data-metrica="dailyGain" data-fmt="sinal">${dailyGain !== null ? (dailyGain >= 0 ? '+' : '') + formatNum(dailyGain) : '—'}</div>
+        ${(ganhoDias > 1 || refEstimada)
+          ? '<div class="kpi-sub" style="margin-top:2px">desde ' + (ganhoRef ? diaMes(ganhoRef.date) : '') + (refEstimada ? ' · base estimada' : '') + '</div>'
+          : ''}
         <div class="gain-meta">
           <div><span class="gain-meta-l">Média 7d</span><span class="gain-meta-v">${g7 != null ? '+' + formatNum(Math.round(g7)) : '—'}</span></div>
           <div><span class="gain-meta-l">Melhor dia</span><span class="gain-meta-v">${gMax != null ? '+' + formatNum(gMax) : '—'}</span></div>
@@ -2944,11 +2951,21 @@ async function load(){
   try{
     if(history.length > 0) {
       const sorted = [...history].sort((a,b) => a.date.localeCompare(b.date));
-      const yesterday = sorted[sorted.length - 1];
-      if(yesterday && yesterday.followers) {
-        data.dailyGain = (data.profile.followers_count - yesterday.followers);
+
+      // A referência é o último dia COM contagem, não necessariamente o
+      // último dia. Quando o snapshot atrasa, aquele dia fica sem valor —
+      // e usar o último cegamente mostrava um risco no lugar do ganho.
+      const ref = [...sorted].reverse().find(h => h.followers != null) || null;
+      if(ref){
+        data.dailyGain = data.profile.followers_count - ref.followers;
+        data.ganhoRef = ref;
+        // Quantos dias esse ganho abrange, pra não chamar de "hoje" o que é
+        // acúmulo de mais de um dia
+        const fim = new Date(ref.date + 'T00:00:00-03:00').getTime() + 86400000;
+        data.ganhoDias = Math.max(1, Math.round((Date.now() - fim) / 86400000) + 1);
       }
-      data.ontem = yesterday || null;
+
+      data.ontem = sorted[sorted.length - 1] || null;
       data.historico = sorted;
     }
 
