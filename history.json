@@ -173,6 +173,10 @@
     "reels": 20,
     "posts": 44,
     "interactions": 128902,
-    "engagementRate": 16.252931534484933
+    "engagementRate": 16.252931534484933,
+    "followersRef": {
+      "valor": 973531,
+      "quando": "2026-08-27T15:06:37.000Z"
+    }
   }
 ]

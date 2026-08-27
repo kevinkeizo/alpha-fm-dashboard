@@ -170,6 +170,47 @@ async function fetchMediaDoDia(dayStartSec){
   return todas;
 }
 
+
+// Um dia sem followers abre buraco na série: o painel perde o ganho diário e
+// o gráfico corta. Como seguidor só anda pra frente e devagar, interpolar
+// entre duas medições reais dá um número muito melhor que deixar vazio —
+// desde que fique marcado como estimativa, nunca passando por medido.
+function fimDoDiaMs(dateKey){
+  return new Date(dateKey + 'T00:00:00-03:00').getTime() + 86400000;
+}
+
+function preencherLacunas(history){
+  // Âncoras: (instante, valor) de tudo que foi realmente medido
+  const ancoras = [];
+  history.forEach(h => {
+    if(h.followers != null && !h.followersEstimado){
+      ancoras.push({ t: fimDoDiaMs(h.date), v: h.followers });
+    }
+    if(h.followersRef && h.followersRef.valor != null){
+      ancoras.push({ t: Date.parse(h.followersRef.quando), v: h.followersRef.valor });
+    }
+  });
+  ancoras.sort((a, b) => a.t - b.t);
+  if(ancoras.length < 2) return 0;
+
+  let preenchidos = 0;
+  history.forEach(h => {
+    if(h.followers != null) return;
+    const alvo = fimDoDiaMs(h.date);
+    const antes = [...ancoras].reverse().find(a => a.t <= alvo);
+    const depois = ancoras.find(a => a.t >= alvo);
+    if(!antes || !depois || antes.t === depois.t) return;
+
+    const p = (alvo - antes.t) / (depois.t - antes.t);
+    h.followers = Math.round(antes.v + (depois.v - antes.v) * p);
+    h.followersEstimado = true;
+    preenchidos++;
+    console.log('  ' + h.date + ': seguidores estimados em ' + h.followers.toLocaleString('pt-BR') +
+      ' (entre ' + antes.v.toLocaleString('pt-BR') + ' e ' + depois.v.toLocaleString('pt-BR') + ')');
+  });
+  return preenchidos;
+}
+
 async function main(){
   const now = new Date();
 
@@ -239,12 +280,21 @@ async function main(){
   const followersConfiavel = horasDepoisDoDia <= 6;
   if(!followersConfiavel){
     console.warn('Execução ' + horasDepoisDoDia.toFixed(1) + 'h depois do fim do dia ' +
-      todayKey + '; preservando o valor de seguidores já gravado.');
+      todayKey + '; a contagem de agora não vale como fechamento daquele dia.');
   }
+
+  // Mesmo recusando o valor como fechamento, guarda a leitura com a hora em
+  // que foi feita. Ela é uma medição real, só de outro momento — serve de
+  // âncora pra estimar o dia que ficou sem valor.
+  const ancora = followersConfiavel ? null : {
+    valor: profile.followers_count ?? null,
+    quando: now.toISOString()
+  };
 
   const entry = {
     date: todayKey,
     followers: followersConfiavel ? (profile.followers_count ?? null) : null,
+    followersRef: ancora,
     reach: reach ?? null,
     views: views ?? null,
     reelViews: reelViews ?? null,
@@ -266,6 +316,8 @@ async function main(){
     // Se followers_count veio null, usa o anterior
     if(entry.followers === null && prev.followers !== null){
       entry.followers = prev.followers;
+      // Se o que havia era estimativa, continua sendo
+      if(prev.followersEstimado) entry.followersEstimado = true;
     }
     // Idem pras visualizações: não sobrescreve valor bom com null
     if(entry.views === null && prev.views != null){
@@ -277,6 +329,9 @@ async function main(){
   }
 
   history.sort((a, b) => a.date.localeCompare(b.date));
+
+  const lacunas = preencherLacunas(history);
+  if(lacunas) console.log('Lacunas de seguidores preenchidas:', lacunas);
 
   // Recupera dias antigos: as métricas de janela (alcance, visualizações,
   // interações) eram buscadas sem since/until e caíam sob a data errada, e
