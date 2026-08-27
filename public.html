@@ -1888,6 +1888,59 @@ body.dado-velho .hero-value { opacity: 0.55; }
 /* Sair: aparece junto das ações da barra lateral */
 body.sem-login #btn-sair { display: none; }
 
+
+
+/* ══ Esqueletos ══════════════════════════════════════════════════════════════
+   Cada um tem a forma do conteúdo que vai substituir. É a diferença entre
+   esqueleto e spinner: a página não pula quando o dado chega, porque o espaço
+   já estava reservado no tamanho certo. */
+
+.sk-kpi { min-height: 110px; border-radius: 13px; }
+.sk-hero { min-height: 210px; border-radius: 16px; }
+.sk-linha { height: 66px; border-radius: 12px; }
+
+/* Linha de barra: rótulo, trilho e número, na mesma grade do conteúdo real */
+.sk-barra {
+  display: grid;
+  grid-template-columns: 92px 1fr 116px;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.aud-lista .sk-barra { grid-template-columns: minmax(0, 148px) 1fr 108px; }
+
+.sk-barra span { display: block; height: 12px; border-radius: 4px; }
+.sk-barra .sk-trilho { height: 26px; border-radius: 6px; }
+.sk-barra .sk-valor { height: 14px; margin-left: auto; width: 62px; }
+
+/* 24 colunas de alturas variadas: dá a silhueta do gráfico de horário */
+.sk-horas {
+  display: grid;
+  grid-template-columns: repeat(24, 1fr);
+  gap: 2px;
+  align-items: end;
+  height: 108px;
+}
+
+.sk-horas i { display: block; border-radius: 3px 3px 0 0; }
+
+.sk-grafico { height: 300px; border-radius: 12px; }
+.sk-texto { height: 11px; border-radius: 4px; width: 190px; }
+
+/* Entra suave quando o conteúdo real chega, pra não trocar seco */
+.chegou { animation: revela 320ms var(--ease-out); }
+
+@keyframes revela {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chegou { animation: none; }
+  .skeleton { animation: none; background: var(--bg-2); }
+}
+
 </style>
 </head>
 <body>
@@ -2631,7 +2684,7 @@ function renderDashboard(data) {
     <div class="bento">
       <div class="chart-section col-7" style="margin:0">
         <div class="chart-title"><span>Seguidores nos últimos 30 dias</span></div>
-        <div class="chart-holder" id="chart-geral"></div>
+        <div class="chart-holder" id="chart-geral"><div class="skeleton sk-grafico"></div></div>
       </div>
       <div class="chart-section col-5" style="margin:0">
         <div class="chart-title"><span>Destaques de hoje</span><span id="destaques-sub" class="kpi-sub"></span></div>
@@ -2650,27 +2703,27 @@ function renderDashboard(data) {
       <p>Quem são os seguidores — o dado que sustenta proposta comercial</p>
     </div>
 
-    <div class="bento strip-4" id="aud-strip"></div>
+    <div class="bento strip-4" id="aud-strip">${skKpis(4)}</div>
 
     <div class="bento">
       <div class="chart-section col-7" style="margin:0">
         <div class="chart-title"><span>Faixa etária</span><span id="aud-idade-sub" class="kpi-sub"></span></div>
-        <div id="aud-idade" class="fmt-lista aud-lista"></div>
+        <div id="aud-idade" class="fmt-lista aud-lista">${skBarras(7)}</div>
       </div>
       <div class="chart-section col-5" style="margin:0">
         <div class="chart-title"><span>Gênero</span></div>
-        <div id="aud-genero" class="fmt-lista aud-lista"></div>
+        <div id="aud-genero" class="fmt-lista aud-lista">${skBarras(3)}</div>
       </div>
     </div>
 
     <div class="bento">
       <div class="chart-section col-7" style="margin:0">
         <div class="chart-title"><span>Principais cidades</span></div>
-        <div id="aud-cidade" class="fmt-lista aud-lista"></div>
+        <div id="aud-cidade" class="fmt-lista aud-lista">${skBarras(6)}</div>
       </div>
       <div class="chart-section col-5" style="margin:0">
         <div class="chart-title"><span>Países</span></div>
-        <div id="aud-pais" class="fmt-lista aud-lista"></div>
+        <div id="aud-pais" class="fmt-lista aud-lista">${skBarras(6)}</div>
       </div>
     </div>
     </section>
@@ -2690,7 +2743,7 @@ function renderDashboard(data) {
         </div>
       </div>
       <div class="chart-holder" id="chart-followers" style="min-height: 240px;">
-        <p class="vazio-msg">Carregando gráfico...</p>
+        <div class="skeleton sk-grafico"></div>
       </div>
     </div>
 
@@ -2701,7 +2754,7 @@ function renderDashboard(data) {
       <div>
         <h2>Insights</h2>
         <p>O que rende mais, e quando</p>
-        <p id="ins-cobertura" class="cobertura"></p>
+        <p id="ins-cobertura" class="cobertura"><span class="skeleton sk-texto" style="display:inline-block"></span></p>
       </div>
       <div class="chart-filters">
         <button class="filter-btn top-btn active" data-periodo="hoje">Hoje</button>
@@ -2710,16 +2763,16 @@ function renderDashboard(data) {
       </div>
     </div>
 
-    <div class="bento strip-5" id="ins-strip"></div>
+    <div class="bento strip-5" id="ins-strip">${skKpis(5)}</div>
 
     <div class="bento">
       <div class="chart-section col-5" style="margin:0">
         <div class="chart-title"><span>Rendimento por formato</span><span class="kpi-sub">média de interações por publicação</span></div>
-        <div id="ins-formatos" class="fmt-lista"></div>
+        <div id="ins-formatos" class="fmt-lista">${skBarras(3)}</div>
       </div>
       <div class="chart-section col-7" style="margin:0">
         <div class="chart-title"><span>Interações por horário</span><span id="ins-pico" class="kpi-sub"></span></div>
-        <div class="horas" id="ins-horas"></div>
+        <div class="horas sk-horas" id="ins-horas">${skHoras()}</div>
         <div class="horas-eixo" id="ins-horas-eixo"></div>
       </div>
     </div>
@@ -2740,7 +2793,7 @@ function renderDashboard(data) {
       <h2>Publicações</h2>
       <p>O que saiu no ar recentemente</p>
     </div>
-    <div class="bento strip-4" id="st-strip"></div>
+    <div class="bento strip-4" id="st-strip">${skKpis(4)}</div>
 
     <div class="chart-section">
       <div class="chart-title">
@@ -3081,6 +3134,33 @@ function ligarNavegacao(){
 }
 
 
+
+// ── Esqueletos ──────────────────────────────────────────────────────────────
+// Reservam o espaço com a forma do conteúdo real, então nada pula de lugar
+// quando o dado chega. Alturas variadas evitam o efeito de "tabela cinza".
+function skKpis(n){
+  return Array.from({ length: n }, () => '<div class="skeleton sk-kpi"></div>').join('');
+}
+
+function skBarras(n){
+  // Larguras decrescentes imitam um ranking, que é o que quase sempre vem
+  return Array.from({ length: n }, (_, i) => {
+    const w = 88 - i * (60 / Math.max(1, n));
+    return '<div class="sk-barra">' +
+      '<span class="skeleton" style="width:' + (58 + (i % 3) * 12) + '%"></span>' +
+      '<span class="skeleton sk-trilho" style="width:' + w.toFixed(0) + '%"></span>' +
+      '<span class="skeleton sk-valor"></span>' +
+    '</div>';
+  }).join('');
+}
+
+function skHoras(){
+  // Alturas fixas, não aleatórias: o esqueleto precisa ser igual a cada
+  // carregamento, senão pisca diferente e chama atenção pra si
+  const alturas = [8,6,5,4,4,5,7,12,26,45,58,52,64,72,88,96,74,68,54,42,36,30,22,14];
+  return alturas.map(a => '<i class="skeleton" style="height:' + a + '%"></i>').join('');
+}
+
 // ── Audiência ───────────────────────────────────────────────────────────────
 // Barras proporcionais reusando o componente de formato: mesma linguagem
 // visual em todo o painel, e quem já leu uma sabe ler a outra.
@@ -3121,6 +3201,7 @@ async function carregarAudiencia(){
     const brasil = a.pais.find(p => p.chave === 'BR');
 
     const strip = document.getElementById('aud-strip');
+    if(strip) strip.classList.add('chegou');
     if(strip) strip.innerHTML = [
       kpiSimples('Faixa etária', maiorIdade ? maiorIdade.chave : '—',
         maiorIdade && tot.idade ? formatNum(maiorIdade.valor) + ' · ' + ((maiorIdade.valor / tot.idade) * 100).toFixed(0) + '% da base' : ''),
@@ -3132,6 +3213,10 @@ async function carregarAudiencia(){
         brasil ? formatNum(brasil.valor) + ' seguidores' : '')
     ].join('');
 
+    ['aud-idade','aud-genero','aud-cidade','aud-pais','aud-strip'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.classList.add('chegou');
+    });
     document.getElementById('aud-idade').innerHTML = barrasDe(a.idade, tot.idade);
     const sub = document.getElementById('aud-idade-sub');
     if(sub) sub.textContent = tot.idade ? formatNum(tot.idade) + ' seguidores classificados' : '';
@@ -3159,6 +3244,7 @@ async function carregarStories(){
 
     const r = d.resumo || {};
     const strip = document.getElementById('st-strip');
+    if(strip) strip.classList.add('chegou');
     if(strip) strip.innerHTML = [
       kpiSimples('Stories no ar', formatNum(d.ativos), 'expiram em 24h'),
       kpiSimples('Views', formatNum(r.views), 'somadas dos ativos'),
@@ -3283,6 +3369,7 @@ function renderTop(hoje, guardado){
       const fmts = analisaFormatos(todos);
       const campeao = fmts[0];
 
+      strip.classList.add('chegou');
       strip.innerHTML = [
         kpiSimples('Publicações', formatNum(todos.length), (todos.filter(p => p.isVideo).length) + ' reels'),
         kpiSimples('Interações', formatNum(inter), todos.length ? 'média ' + formatNum(Math.round(inter / todos.length)) : '—'),
@@ -3301,6 +3388,7 @@ function renderTop(hoje, guardado){
     if(fmtEl){
       const fmts = analisaFormatos(todos);
       const teto = Math.max(...fmts.map(f => f.media), 1);
+      fmtEl.classList.add('chegou');
       fmtEl.innerHTML = fmts.length ? fmts.map(f => {
         const classe = f.nome.toLowerCase();
         // Com menos de 3 publicações a média vira ruído: um post fora da curva
@@ -3322,6 +3410,8 @@ function renderTop(hoje, guardado){
     const hEixo = document.getElementById('ins-horas-eixo');
     if(hEl){
       const { medias, max, melhor } = analisaHoras(todos);
+      hEl.classList.remove('sk-horas');
+      hEl.classList.add('chegou');
       hEl.innerHTML = medias.map((m, h) =>
         '<div class="hora-col' + (h === melhor && max > 0 ? ' pico' : '') + '" style="height:' +
         Math.max(3, (m / max) * 100).toFixed(1) + '%" title="' + String(h).padStart(2, '0') + 'h · ' +
