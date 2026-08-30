@@ -4142,7 +4142,40 @@ function montarRelatorio(ym){
   corpo.innerHTML = html;
 }
 
-function abrirRelatorio(){
+
+// O relatório depende de duas fontes que chegam depois do painel: o ranking
+// de publicações (/api/top faz uma chamada por post, é o mais lento) e a
+// demografia. Abrir antes delas montava um relatório mudo — sem publicações,
+// sem formatos, e com a análise reduzida a duas linhas.
+//
+// Em vez de confiar que já carregou, busca o que faltar.
+async function garantirDadosRelatorio(){
+  const pendentes = [];
+
+  if(!_relTop || !_relTop.length){
+    pendentes.push(
+      Promise.all([fetchTopHoje(), fetchTopGuardado()]).then(([hoje, guardado]) => {
+        const porId = new Map();
+        [...(guardado.recentes || []), ...(guardado.allTime || []), ...(hoje || [])]
+          .forEach(p => { if(p && p.id) porId.set(p.id, p); });
+        _relTop = [...porId.values()];
+      })
+    );
+  }
+
+  if(!_relAudiencia){
+    pendentes.push(
+      fetch(comToken(API_URL.replace('/api/data', '/api/audience')))
+        .then(r => r.ok ? r.json() : null)
+        .then(a => { if(a && !a.error) _relAudiencia = a; })
+    );
+  }
+
+  // Uma fonte que falha não pode impedir o resto do relatório de sair
+  if(pendentes.length) await Promise.all(pendentes.map(p => p.catch(() => {})));
+}
+
+async function abrirRelatorio(){
   const fundo = document.getElementById('rel-fundo');
   const sel = document.getElementById('rel-mes');
   if(!fundo || !sel) return;
@@ -4155,9 +4188,23 @@ function abrirRelatorio(){
 
   sel.innerHTML = meses.map(m => '<option value="' + m + '">' + nomeMes(m) + '</option>').join('');
   sel.onchange = () => montarRelatorio(sel.value);
-  montarRelatorio(meses[0]);
+
+  // Abre já, com esqueleto: esperar de tela branca parece travado
   fundo.hidden = false;
   document.body.style.overflow = 'hidden';
+
+  const corpo = document.getElementById('rel-corpo');
+  if(corpo && (!_relTop || !_relTop.length)){
+    corpo.innerHTML =
+      '<div class="skeleton" style="height:62px;border-radius:10px;margin-bottom:26px"></div>' +
+      '<div class="skeleton" style="height:118px;border-radius:12px;margin-bottom:26px"></div>' +
+      '<div class="rel-grade" style="margin-bottom:22px">' + skKpis(4) + '</div>' +
+      '<div class="skeleton" style="height:132px;border-radius:10px;margin-bottom:26px"></div>' +
+      '<div class="rel-grade">' + skKpis(4) + '</div>';
+  }
+
+  await garantirDadosRelatorio();
+  montarRelatorio(sel.value);
 }
 
 function fecharRelatorio(){
@@ -4349,6 +4396,10 @@ function renderTop(hoje, guardado){
   }
 
   _relTop = semRepetir([guardado.recentes, guardado.allTime, hoje]);
+  // Se o relatório estiver aberto esperando, completa sozinho
+  const relAberto = document.getElementById('rel-fundo');
+  const relMes = document.getElementById('rel-mes');
+  if(relAberto && !relAberto.hidden && relMes && relMes.value) montarRelatorio(relMes.value);
 
   const badge = document.getElementById('badge-insights');
   if(badge) badge.textContent = hoje.length ? hoje.length : '';
