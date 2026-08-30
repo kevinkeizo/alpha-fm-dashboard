@@ -2239,6 +2239,207 @@ body.sem-login #btn-sair { display: none; }
   .rel-secao { page-break-inside: avoid; }
 }
 
+
+
+/* ══ Relatório v2 ════════════════════════════════════════════════════════════ */
+.rel-corpo { padding: 44px 50px 48px; }
+
+.rel-cab {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 22px;
+  border-bottom: 2px solid var(--ink-1);
+  margin-bottom: 30px;
+}
+
+.rel-logo { width: 54px; height: 54px; border-radius: 13px; flex-shrink: 0; }
+
+.rel-cab-tit { flex: 1; min-width: 0; }
+
+.rel-cab h1 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.rel-cab .periodo {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  margin-top: 3px;
+}
+
+.rel-cab .emissao {
+  font-size: 10px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  text-align: right;
+  line-height: 1.6;
+  flex-shrink: 0;
+}
+
+/* ── Destaques: a análise, em cima de tudo ── */
+.rel-destaques {
+  background: var(--signal-100);
+  border: 1px solid var(--signal-200);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin-bottom: 30px;
+}
+
+.rel-destaques h2 {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--signal-600);
+  margin-bottom: 13px;
+}
+
+.rel-destaques ul { list-style: none; margin: 0; padding: 0; }
+
+.rel-destaques li {
+  display: flex;
+  gap: 10px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-1);
+  padding: 5px 0;
+}
+
+.rel-destaques li::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--signal-500);
+  flex-shrink: 0;
+  margin-top: 8px;
+}
+
+.rel-destaques b { font-weight: 700; }
+
+.rel-secao { margin-bottom: 28px; page-break-inside: avoid; }
+
+.rel-secao h2 {
+  font-family: var(--font-display);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+
+.rel-grade { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+.rel-num .v {
+  font-family: var(--font-display);
+  font-size: 25px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.rel-num .l {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+  font-weight: 600;
+  margin-top: 5px;
+}
+
+.rel-num .s {
+  font-size: 10px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  margin-top: 3px;
+}
+
+.rel-num.destaque .v { color: var(--gain); }
+
+/* ── Gráfico do relatório ── */
+.rel-gr { margin-top: 20px; }
+.rel-gr svg { display: block; width: 100%; height: 132px; }
+
+/* ── Tabelas ── */
+.rel-tabela { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+
+.rel-tabela th {
+  text-align: left;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink-3);
+  font-weight: 600;
+  padding: 0 10px 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.rel-tabela td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.rel-tabela .num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.rel-tabela .cap { max-width: 290px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rel-tabela tr:last-child td { border-bottom: none; }
+.rel-tabela .pos { color: var(--ink-4); width: 18px; }
+
+.rel-tag {
+  display: inline-block;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: var(--signal-100);
+  color: var(--signal-600);
+}
+
+/* Barra dentro da tabela de formatos */
+.rel-barra-cel { width: 130px; }
+.rel-barra-tr { height: 8px; background: var(--bg-2); border-radius: 4px; overflow: hidden; }
+.rel-barra-pr { height: 100%; background: var(--signal-500); border-radius: 4px; }
+
+/* ── Projeção ── */
+.rel-proj {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 16px 18px;
+  background: var(--bg-2);
+  border-radius: 11px;
+}
+
+.rel-proj-data {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.rel-proj-tr { flex: 1; height: 9px; background: #fff; border-radius: 5px; overflow: hidden; }
+.rel-proj-pr { height: 100%; background: linear-gradient(90deg, var(--signal-600), var(--signal-400)); }
+
+.rel-rodape {
+  margin-top: 32px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 9.5px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  line-height: 1.7;
+}
+
+@media print {
+  .rel-destaques { background: #F4F6FF !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rel-corpo { padding: 0; }
+}
+
 </style>
 </head>
 <body>
@@ -3593,6 +3794,145 @@ function cardProjecao(hist){
 let _relAudiencia = null;   // preenchido por carregarAudiencia
 let _relTop = null;         // preenchido por renderTop
 
+
+// ── Análise automática ──────────────────────────────────────────────────────
+// Cada linha é derivada dos dados e quantificada. Nada de frase genérica:
+// se não dá pra afirmar com número, não entra. E onde a amostra é pequena
+// demais pra sustentar a conclusão, a linha simplesmente não aparece —
+// alguém pode mudar a pauta com base nisso.
+function analiseDoMes(hist, posts, proj){
+  const L = [];
+  const pct = (a, b) => b ? ((a - b) / b) * 100 : 0;
+  const comSeg = hist.filter(h => h.followers != null);
+
+  // 1. Crescimento e aceleração
+  if(comSeg.length >= 6){
+    const ganhos = [];
+    for(let i = 1; i < comSeg.length; i++) ganhos.push(comSeg[i].followers - comSeg[i-1].followers);
+    const total = comSeg[comSeg.length-1].followers - comSeg[0].followers;
+    const medio = ganhos.reduce((a, b) => a + b, 0) / ganhos.length;
+
+    const meio = Math.floor(ganhos.length / 2);
+    const p1 = ganhos.slice(0, meio).reduce((a, b) => a + b, 0) / meio;
+    const p2 = ganhos.slice(meio).reduce((a, b) => a + b, 0) / (ganhos.length - meio);
+    const var2 = pct(p2, p1);
+
+    let txt = 'A base cresceu <b>' + formatNum(total) + '</b> seguidores, média de <b>' +
+      formatNum(Math.round(medio)) + ' por dia</b>.';
+    // Só chama de aceleração o que sai do ruído
+    if(Math.abs(var2) >= 10){
+      txt += ' O ritmo ' + (var2 > 0 ? '<b>acelerou ' : '<b>desacelerou ') +
+        Math.abs(var2).toFixed(0) + '%</b> na segunda metade do período (' +
+        formatNum(Math.round(p1)) + ' → ' + formatNum(Math.round(p2)) + ' por dia).';
+    }
+    L.push(txt);
+  }
+
+  // 2. Formato campeão — só com amostra que sustente
+  const fmts = posts.length ? analisaFormatos(posts) : [];
+  const solidos = fmts.filter(f => f.qtd >= 5);
+  if(solidos.length >= 2){
+    const [a, b] = solidos;
+    L.push('<b>' + a.nome + '</b> foi o formato mais eficiente: média de <b>' +
+      formatNum(a.media) + ' interações</b> por publicação, <b>' +
+      pct(a.media, b.media).toFixed(0) + '% acima</b> de ' + b.nome.toLowerCase() +
+      ' (' + formatNum(b.media) + '). Foram ' + a.qtd + ' publicações no período.');
+  }
+
+  // 3. Melhor horário
+  if(posts.length >= 20){
+    const h = analisaHoras(posts);
+    const geral = posts.reduce((a, p) => a + (p.interactions || 0), 0) / posts.length;
+    if(h.max > 0 && geral > 0 && pct(h.max, geral) >= 15){
+      L.push('O horário de melhor desempenho foi <b>' + String(h.melhor).padStart(2,'0') +
+        'h</b>, com média de <b>' + formatNum(Math.round(h.max)) + ' interações</b> — ' +
+        pct(h.max, geral).toFixed(0) + '% acima da média das publicações.');
+    }
+  }
+
+  // 4. Publicação destaque
+  if(posts.length){
+    const top = [...posts].sort((x, y) => (y.interactions ?? -1) - (x.interactions ?? -1))[0];
+    const media = posts.reduce((a, p) => a + (p.interactions || 0), 0) / posts.length;
+    if(top && top.interactions && media && pct(top.interactions, media) >= 100){
+      L.push('A publicação de maior desempenho fez <b>' + formatNum(top.interactions) +
+        ' interações</b>, <b>' + (top.interactions / media).toFixed(1).replace('.', ',') +
+        'x a média</b> do período — ' + (top.isVideo ? 'um reel' : 'um post') +
+        ' de ' + diaMes(top.date) + '.');
+    }
+  }
+
+  // 5. Conversão em seguidores, onde a API informa
+  const comFollows = posts.filter(p => p.follows != null && p.follows > 0);
+  if(comFollows.length >= 3){
+    const soma = comFollows.reduce((a, p) => a + p.follows, 0);
+    const melhor = [...comFollows].sort((a, b) => b.follows - a.follows)[0];
+    L.push('Entre imagens e carrosséis — os únicos que o Instagram informa — <b>' +
+      formatNum(soma) + ' seguidores</b> vieram de publicação identificada, sendo <b>' +
+      melhor.follows + '</b> de uma só, em ' + diaMes(melhor.date) + '.');
+  }
+
+  // 6. Projeção
+  if(proj && !proj.atingida && proj.dias <= 400){
+    L.push('No ritmo atual, a marca de <b>1 milhão</b> deve ser alcançada por volta de <b>' +
+      dataLonga(proj.data) + '</b> — faltam ' + formatNum(proj.falta) + ' seguidores.');
+  }
+
+  return L;
+}
+
+// Gráfico estático para o relatório: sem interação, pensado pro papel
+function relGrafico(pontos){
+  if(!pontos || pontos.length < 2) return '';
+  const w = 700, h = 132, pl = 54, pr = 14, pt = 14, pb = 22;
+  const vals = pontos.map(p => p.v);
+  const min = Math.min(...vals), max = Math.max(...vals);
+  const span = (max - min) || 1;
+  const X = i => pl + (i / (pontos.length - 1)) * (w - pl - pr);
+  const Y = v => pt + (h - pt - pb) - ((v - min) / span) * (h - pt - pb);
+
+  const linha = pontos.map((p, i) => (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(p.v).toFixed(1)).join(' ');
+  const area = linha + ' L' + X(pontos.length-1).toFixed(1) + ' ' + (h - pb) + ' L' + pl + ' ' + (h - pb) + ' Z';
+
+  let grade = '', eixo = '';
+  for(let i = 0; i <= 2; i++){
+    const v = min + span * i / 2, y = Y(v);
+    grade += '<line x1="' + pl + '" y1="' + y.toFixed(1) + '" x2="' + (w-pr) + '" y2="' + y.toFixed(1) +
+      '" stroke="#E4E7F0" stroke-width="1"/>';
+    eixo += '<text x="' + (pl-8) + '" y="' + (y+3.5).toFixed(1) + '" text-anchor="end" font-size="9" ' +
+      'font-family="monospace" fill="#A8ACBE">' + compacto(Math.round(v)) + '</text>';
+  }
+
+  const passo = Math.max(1, Math.ceil(pontos.length / 7));
+  let datas = '';
+  pontos.forEach((p, i) => {
+    if(i % passo === 0 || i === pontos.length - 1){
+      datas += '<text x="' + X(i).toFixed(1) + '" y="' + (h-6) + '" text-anchor="middle" font-size="9" ' +
+        'font-family="monospace" fill="#A8ACBE">' + diaMes(p.d) + '</text>';
+    }
+  });
+
+  return '<div class="rel-gr"><svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+    '<defs><linearGradient id="relgrad" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#3D5BFE" stop-opacity="0.16"/>' +
+      '<stop offset="100%" stop-color="#3D5BFE" stop-opacity="0"/></linearGradient></defs>' +
+    grade +
+    '<path d="' + area + '" fill="url(#relgrad)"/>' +
+    '<path d="' + linha + '" fill="none" stroke="#3D5BFE" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"/>' +
+    eixo + datas +
+  '</svg></div>';
+}
+
+const REL_LOGO = '<svg class="rel-logo" viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">' +
+  '<defs><linearGradient id="relLogoG" x1="0%" y1="0%" x2="100%" y2="100%">' +
+  '<stop offset="0%" stop-color="#3D5BFE"/><stop offset="100%" stop-color="#2D3F9E"/>' +
+  '</linearGradient></defs><rect width="240" height="240" rx="40" fill="url(#relLogoG)"/>' +
+  '<text x="120" y="110" font-family="Manrope, sans-serif" font-size="100" font-weight="700" ' +
+  'fill="white" text-anchor="middle" letter-spacing="-3" dominant-baseline="middle">alpha</text>' +
+  '<text x="120" y="165" font-family="Manrope, sans-serif" font-size="28" font-weight="600" ' +
+  'fill="white" text-anchor="middle" letter-spacing="2">FM 101.7</text></svg>';
+
 function mesesDisponiveis(hist){
   const set = new Set(hist.map(h => h.date.slice(0, 7)));
   return [...set].sort().reverse();
@@ -3624,14 +3964,15 @@ function montarRelatorio(ym){
   const dias = hist.length;
   const temEstimado = hist.some(h => h.followersEstimado);
 
-  // Publicações do mês, a partir do ranking guardado
-  const posts = (_relTop || []).filter(p => p.date && p.date.slice(0, 7) === ym)
+  const posts = (_relTop || [])
+    .filter(p => p.date && p.date.slice(0, 7) === ym)
     .sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
 
   const fmts = posts.length ? analisaFormatos(posts) : [];
   const horas = posts.length ? analisaHoras(posts) : null;
+  const proj = projecao(window.__hist || []);
 
-  const linhaNum = (v, l, sub, destaque) =>
+  const num = (v, l, sub, destaque) =>
     '<div class="rel-num' + (destaque ? ' destaque' : '') + '">' +
       '<div class="v">' + v + '</div><div class="l">' + l + '</div>' +
       (sub ? '<div class="s">' + sub + '</div>' : '') +
@@ -3639,47 +3980,57 @@ function montarRelatorio(ym){
 
   let html = '';
 
-  // ── Cabeçalho ──
-  html += '<div class="rel-cab">' +
-    '<div><h1>Relatório · Instagram</h1>' +
-    '<div class="periodo">Alpha FM 101.7 · ' + nomeMes(ym) + '</div></div>' +
+  // ── Cabeçalho com a marca ──
+  html += '<div class="rel-cab">' + REL_LOGO +
+    '<div class="rel-cab-tit">' +
+      '<h1>Relatório de Instagram</h1>' +
+      '<div class="periodo">Alpha FM 101.7 · ' + nomeMes(ym) + '</div>' +
+    '</div>' +
     '<div class="emissao">emitido em ' + new Date().toLocaleDateString('pt-BR') + '<br>' +
       diaMes(hist[0].date) + ' a ' + diaMes(hist[hist.length-1].date) + ' · ' + dias + ' dias</div>' +
   '</div>';
 
+  // ── Destaques: a leitura antes dos números ──
+  const analise = analiseDoMes(hist, posts, proj);
+  if(analise.length){
+    html += '<div class="rel-destaques"><h2>Destaques do período</h2><ul>' +
+      analise.map(t => '<li><span>' + t + '</span></li>').join('') +
+    '</ul></div>';
+  }
+
   // ── Crescimento ──
   html += '<div class="rel-secao"><h2>Crescimento</h2><div class="rel-grade">' +
-    linhaNum(fim ? formatNum(fim.followers) : '—', 'Seguidores', inicio ? 'de ' + formatNum(inicio.followers) : '') +
-    linhaNum((ganho != null ? (ganho >= 0 ? '+' : '') + formatNum(ganho) : '—'), 'Ganho no período',
-      (ganho != null && dias > 1 ? formatNum(Math.round(ganho / (dias - 1))) + '/dia' : ''), true) +
-    linhaNum(pctCresc != null ? pctCresc.toFixed(2).replace('.', ',') + '%' : '—', 'Crescimento', '') +
-    linhaNum(formatNum(soma('posts')), 'Publicações', formatNum(Math.round(soma('posts') / dias)) + '/dia') +
-  '</div></div>';
+    num(fim ? formatNum(fim.followers) : '—', 'Seguidores ao fim', inicio ? 'de ' + formatNum(inicio.followers) : '') +
+    num((ganho != null ? (ganho >= 0 ? '+' : '') + formatNum(ganho) : '—'), 'Ganho no período',
+      (ganho != null && dias > 1 ? formatNum(Math.round(ganho / (dias - 1))) + ' por dia' : ''), true) +
+    num(pctCresc != null ? pctCresc.toFixed(2).replace('.', ',') + '%' : '—', 'Crescimento', 'sobre a base inicial') +
+    num(formatNum(soma('posts')), 'Publicações', formatNum(Math.round(soma('posts') / dias)) + ' por dia') +
+  '</div>' +
+  relGrafico(comSeg.map(h => ({ d: h.date, v: h.followers }))) +
+  '</div>';
 
   // ── Alcance e engajamento ──
-  const engMedia = (() => {
-    const vs = hist.map(h => h.engagementRate).filter(v => typeof v === 'number');
-    return vs.length ? vs.reduce((a, b) => a + b, 0) / vs.length : null;
-  })();
+  const engs = hist.map(h => h.engagementRate).filter(v => typeof v === 'number');
+  const engMedia = engs.length ? engs.reduce((a, b) => a + b, 0) / engs.length : null;
 
   html += '<div class="rel-secao"><h2>Alcance e engajamento</h2><div class="rel-grade">' +
-    linhaNum(formatNum(soma('views')), 'Visualizações', formatNum(Math.round(soma('views') / dias)) + '/dia') +
-    linhaNum(formatNum(soma('reach')), 'Alcance somado', formatNum(Math.round(soma('reach') / dias)) + '/dia') +
-    linhaNum(formatNum(soma('interactions')), 'Interações', formatNum(Math.round(soma('interactions') / dias)) + '/dia') +
-    linhaNum(engMedia != null ? engMedia.toFixed(1).replace('.', ',') + '%' : '—', 'Engajamento médio', '') +
+    num(formatNum(soma('views')), 'Visualizações', formatNum(Math.round(soma('views') / dias)) + ' por dia') +
+    num(formatNum(soma('reach')), 'Alcance somado', formatNum(Math.round(soma('reach') / dias)) + ' por dia') +
+    num(formatNum(soma('interactions')), 'Interações', formatNum(Math.round(soma('interactions') / dias)) + ' por dia') +
+    num(engMedia != null ? engMedia.toFixed(1).replace('.', ',') + '%' : '—', 'Engajamento médio', 'interações por alcance') +
   '</div></div>';
 
   // ── Melhores publicações ──
   if(posts.length){
     html += '<div class="rel-secao"><h2>Melhores publicações</h2><table class="rel-tabela">' +
-      '<tr><th style="width:20px"></th><th>Publicação</th><th class="num">Interações</th>' +
+      '<tr><th class="pos"></th><th>Publicação</th><th class="num">Interações</th>' +
       '<th class="num">Alcance</th><th class="num">Seguidores</th></tr>' +
       posts.slice(0, 8).map((p, i) =>
-        '<tr><td class="num" style="color:var(--ink-4)">' + (i+1) + '</td>' +
+        '<tr><td class="num pos">' + (i+1) + '</td>' +
         '<td><div class="cap">' + (p.caption || '(sem legenda)') + '</div>' +
-        '<div style="margin-top:3px"><span class="rel-tag">' +
+        '<div style="margin-top:4px"><span class="rel-tag">' +
           (p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM') +
-        '</span> <span style="font-size:10px;color:var(--ink-4);font-family:var(--font-mono)">' +
+        '</span> <span style="font-size:9.5px;color:#A8ACBE;font-family:monospace">' +
           diaMes(p.date) + ' ' + (p.hora || '') + '</span></div></td>' +
         '<td class="num">' + formatNum(p.interactions) + '</td>' +
         '<td class="num">' + formatNum(p.reach) + '</td>' +
@@ -3688,19 +4039,24 @@ function montarRelatorio(ym){
     '</table></div>';
   }
 
-  // ── Formato e horário ──
+  // ── Formato, com barra pra comparar de relance ──
   if(fmts.length){
+    const teto = Math.max(...fmts.map(f => f.media), 1);
     html += '<div class="rel-secao"><h2>Rendimento por formato</h2><table class="rel-tabela">' +
-      '<tr><th>Formato</th><th class="num">Média de interações</th><th class="num">Alcance médio</th><th class="num">Publicações</th></tr>' +
-      fmts.map(f => '<tr><td><span class="rel-tag">' + f.nome + '</span></td>' +
+      '<tr><th>Formato</th><th class="rel-barra-cel"></th><th class="num">Interações (média)</th>' +
+      '<th class="num">Alcance (média)</th><th class="num">Publicações</th></tr>' +
+      fmts.map(f => '<tr>' +
+        '<td><span class="rel-tag">' + f.nome + '</span></td>' +
+        '<td class="rel-barra-cel"><div class="rel-barra-tr"><div class="rel-barra-pr" style="width:' +
+          ((f.media / teto) * 100).toFixed(1) + '%"></div></div></td>' +
         '<td class="num">' + formatNum(f.media) + '</td>' +
         '<td class="num">' + formatNum(f.alcance) + '</td>' +
-        '<td class="num">' + f.qtd + (f.qtd < 3 ? ' ⚠' : '') + '</td></tr>').join('') +
+        '<td class="num">' + f.qtd + (f.qtd < 5 ? ' ⚠' : '') + '</td></tr>').join('') +
     '</table>' +
     (horas && horas.max > 0
-      ? '<div style="margin-top:12px;font-size:11.5px;color:var(--ink-2)">Melhor horário: <b>' +
-        String(horas.melhor).padStart(2,'0') + 'h</b> · média de ' +
-        formatNum(Math.round(horas.max)) + ' interações por publicação</div>'
+      ? '<div style="margin-top:14px;font-size:11.5px;color:#454B63">Melhor horário do período: <b>' +
+        String(horas.melhor).padStart(2,'0') + 'h</b>, com média de ' +
+        formatNum(Math.round(horas.max)) + ' interações por publicação.</div>'
       : '') +
     '</div>';
   }
@@ -3713,25 +4069,40 @@ function montarRelatorio(ym){
     const cidade1 = (a.cidade||[])[0];
     const br = (a.pais||[]).find(p => p.chave === 'BR');
     html += '<div class="rel-secao"><h2>Perfil da audiência</h2><div class="rel-grade">' +
-      linhaNum(maiorIdade ? maiorIdade.chave : '—', 'Faixa dominante',
+      num(maiorIdade ? maiorIdade.chave + ' anos' : '—', 'Faixa dominante',
         maiorIdade && tot.idade ? ((maiorIdade.valor/tot.idade)*100).toFixed(0) + '% da base' : '') +
-      linhaNum(fem && tot.genero ? ((fem.valor/tot.genero)*100).toFixed(0) + '%' : '—', 'Feminino',
-        fem ? formatNum(fem.valor) : '') +
-      linhaNum(cidade1 ? cidade1.chave : '—', 'Maior cidade',
+      num(fem && tot.genero ? ((fem.valor/tot.genero)*100).toFixed(0) + '%' : '—', 'Feminino',
+        fem ? formatNum(fem.valor) + ' seguidoras' : '') +
+      num(cidade1 ? cidade1.chave : '—', 'Maior cidade',
         cidade1 && tot.cidade ? ((cidade1.valor/tot.cidade)*100).toFixed(0) + '% da base' : '') +
-      linhaNum(br && tot.pais ? ((br.valor/tot.pais)*100).toFixed(0) + '%' : '—', 'No Brasil',
-        br ? formatNum(br.valor) : '') +
-    '</div><div class="s" style="font-size:10px;color:var(--ink-4);font-family:var(--font-mono);margin-top:10px">' +
-      'retrato atual da base, não do mês</div></div>';
+      num(br && tot.pais ? ((br.valor/tot.pais)*100).toFixed(0) + '%' : '—', 'No Brasil',
+        br ? formatNum(br.valor) + ' seguidores' : '') +
+    '</div></div>';
   }
 
-  // ── Rodapé com as ressalvas ──
+  // ── Projeção ──
+  if(proj && !proj.atingida){
+    html += '<div class="rel-secao"><h2>Projeção para 1 milhão</h2><div class="rel-proj">' +
+      '<div><div class="rel-proj-data">' + dataLonga(proj.data) + '</div>' +
+      '<div style="font-size:10.5px;color:#7B8098;font-family:monospace;margin-top:3px">' +
+        'entre ' + dataCurta(proj.dataOtimista) + ' e ' + dataCurta(proj.dataPessimista) +
+        ' · ' + proj.dias + ' dias</div></div>' +
+      '<div class="rel-proj-tr"><div class="rel-proj-pr" style="width:' + proj.pct.toFixed(2) + '%"></div></div>' +
+      '<div style="font-family:monospace;font-size:12px;white-space:nowrap">' +
+        proj.pct.toFixed(1).replace('.', ',') + '%</div>' +
+    '</div></div>';
+  }
+
+  // ── Ressalvas ──
   const notas = [];
   notas.push('Período coberto: ' + diaMes(hist[0].date) + ' a ' + diaMes(hist[hist.length-1].date) + ' (' + dias + ' dias).');
   if(temEstimado) notas.push('Alguns dias têm a contagem de seguidores estimada por interpolação, quando a captura automática atrasou.');
-  if(posts.length) notas.push('O ranking cobre as publicações de melhor desempenho de cada dia, não todas.');
-  notas.push('Alcance somado repete quem viu em mais de um dia; não é público único do mês.');
-  notas.push('O Instagram não informa seguidores ganhos em reels — a coluna aparece só para imagens e carrosséis.');
+  if(posts.length) notas.push('O ranking cobre as publicações de melhor desempenho de cada dia, não todas as do período.');
+  if(fmts.some(f => f.qtd < 5)) notas.push('Formatos marcados com ⚠ têm menos de 5 publicações; a média deles ainda oscila muito.');
+  notas.push('Alcance somado repete quem viu em mais de um dia — não é público único do período.');
+  notas.push('O Instagram não informa seguidores ganhos em reels; a coluna aparece apenas para imagens e carrosséis.');
+  if(_relAudiencia) notas.push('O perfil da audiência é o retrato atual da base, não do período.');
+  if(proj) notas.push('A projeção é uma regressão linear sobre ' + proj.baseDias + ' dias e assume que o ritmo se mantém.');
   html += '<div class="rel-rodape">' + notas.map(n => '· ' + n).join('<br>') + '</div>';
 
   corpo.innerHTML = html;
