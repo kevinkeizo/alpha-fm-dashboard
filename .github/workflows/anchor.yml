@@ -1,0 +1,49 @@
+name: Âncora de seguidores
+
+on:
+  schedule:
+    # De 3 em 3 horas, no minuto 17. O topo da hora é o horário mais disputado
+    # no agendador do GitHub e é onde os atrasos ficam piores.
+    # 03:17 UTC = 00:17 em Brasília, logo depois da virada do dia.
+    - cron: '17 */3 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+# Mesmo grupo do snapshot: os dois escrevem no repositório, e serializar
+# evita push concorrente. cancel-in-progress false para não perder âncora.
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+
+jobs:
+  ancora:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Lê a contagem de seguidores
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          IG_USER_ID: ${{ vars.IG_USER_ID }}
+        run: node scripts/anchor.mjs
+
+      - name: Commita a âncora
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add anchors.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Âncora de seguidores"
+          # Outro job pode ter empurrado no intervalo; rebase e tenta de novo
+          for tentativa in 1 2 3; do
+            if git push; then exit 0; fi
+            git pull --rebase --autostash origin main
+          done
+          echo "Não foi possível empurrar a âncora após 3 tentativas"
+          exit 1

@@ -171,6 +171,32 @@ async function fetchMediaDoDia(dayStartSec){
 }
 
 
+
+// Uma âncora a menos de 90 min da virada vale como medição: em ~700
+// seguidores/dia isso é uma margem de ~45, abaixo do ruído do próprio número.
+// Passou disso, é interpolação — e aí fica marcado como estimativa.
+const TOLERANCIA_ANCORA_MIN = 90;
+
+async function lerAncoras(){
+  try{
+    const fs2 = await import('node:fs/promises');
+    const cru = await fs2.readFile(new URL('../anchors.json', import.meta.url), 'utf8');
+    const a = JSON.parse(cru);
+    return Array.isArray(a) ? a.filter(x => x && typeof x.v === 'number' && x.t) : [];
+  }catch(e){ return []; }
+}
+
+// Âncora mais próxima de `alvoMs`, se estiver dentro da tolerância
+function ancoraNaVirada(ancoras, alvoMs){
+  let melhor = null, menorDist = Infinity;
+  ancoras.forEach(a => {
+    const d = Math.abs(Date.parse(a.t) - alvoMs);
+    if(d < menorDist){ menorDist = d; melhor = a; }
+  });
+  if(!melhor || menorDist > TOLERANCIA_ANCORA_MIN * 60000) return null;
+  return { valor: melhor.v, distMin: Math.round(menorDist / 60000) };
+}
+
 // Um dia sem followers abre buraco na série: o painel perde o ganho diário e
 // o gráfico corta. Como seguidor só anda pra frente e devagar, interpolar
 // entre duas medições reais dá um número muito melhor que deixar vazio —
@@ -179,9 +205,9 @@ function fimDoDiaMs(dateKey){
   return new Date(dateKey + 'T00:00:00-03:00').getTime() + 86400000;
 }
 
-function preencherLacunas(history){
+function preencherLacunas(history, extras){
   // Âncoras: (instante, valor) de tudo que foi realmente medido
-  const ancoras = [];
+  const ancoras = (extras || []).map(a => ({ t: Date.parse(a.t), v: a.v }));
   history.forEach(h => {
     if(h.followers != null && !h.followersEstimado){
       ancoras.push({ t: fimDoDiaMs(h.date), v: h.followers });
@@ -276,25 +302,42 @@ async function main(){
   // followers_count é instantâneo, não uma janela: só vale como fechamento do
   // dia alvo se a execução for logo depois da meia-noite. Num disparo manual
   // às 14h ele seria a contagem de hoje gravada sob a data de ontem.
+  const ancoras = await lerAncoras();
+  const naVirada = ancoraNaVirada(ancoras, until * 1000);
+
   const horasDepoisDoDia = (now.getTime() / 1000 - until) / 3600;
-  const followersConfiavel = horasDepoisDoDia <= 6;
-  if(!followersConfiavel){
-    console.warn('Execução ' + horasDepoisDoDia.toFixed(1) + 'h depois do fim do dia ' +
-      todayKey + '; a contagem de agora não vale como fechamento daquele dia.');
+  const rodouPerto = horasDepoisDoDia <= 6;
+
+  // Ordem de preferência: âncora colada na virada > leitura da própria
+  // execução, se ela rodou perto > nada (aí interpola depois).
+  let followersDoDia = null;
+  if(naVirada){
+    followersDoDia = naVirada.valor;
+    console.log('Fechamento de ' + todayKey + ' pela âncora de ' + naVirada.distMin +
+      ' min da virada: ' + naVirada.valor.toLocaleString('pt-BR'));
+  }else if(rodouPerto){
+    followersDoDia = profile.followers_count ?? null;
+    console.log('Fechamento de ' + todayKey + ' pela leitura desta execução (' +
+      horasDepoisDoDia.toFixed(1) + 'h depois da virada).');
+  }else{
+    console.warn('Sem âncora perto da virada e execução ' + horasDepoisDoDia.toFixed(1) +
+      'h atrasada; o fechamento de ' + todayKey + ' vai ser interpolado.');
   }
+
+  const followersConfiavel = followersDoDia !== null;
 
   // Mesmo recusando o valor como fechamento, guarda a leitura com a hora em
   // que foi feita. Ela é uma medição real, só de outro momento — serve de
   // âncora pra estimar o dia que ficou sem valor.
-  const ancora = followersConfiavel ? null : {
+  const ancoraFallback = followersConfiavel ? null : {
     valor: profile.followers_count ?? null,
     quando: now.toISOString()
   };
 
   const entry = {
     date: todayKey,
-    followers: followersConfiavel ? (profile.followers_count ?? null) : null,
-    followersRef: ancora,
+    followers: followersDoDia,
+    followersRef: ancoraFallback,
     reach: reach ?? null,
     views: views ?? null,
     reelViews: reelViews ?? null,
@@ -330,7 +373,7 @@ async function main(){
 
   history.sort((a, b) => a.date.localeCompare(b.date));
 
-  const lacunas = preencherLacunas(history);
+  const lacunas = preencherLacunas(history, ancoras);
   if(lacunas) console.log('Lacunas de seguidores preenchidas:', lacunas);
 
   // Recupera dias antigos: as métricas de janela (alcance, visualizações,
