@@ -2265,7 +2265,7 @@ body.sem-login #btn-sair { display: none; }
   margin-top: 3px;
 }
 
-.rel-num.destaque .rel-v { color: var(--gain); }
+.rel-num.rel-num-ganho .rel-v { color: var(--gain); }
 
 /* ── Gráfico do relatório ── */
 .rel-gr { margin-top: 20px; }
@@ -4001,7 +4001,7 @@ function montarRelatorio(ym){
   const proj = projecao(window.__hist || []);
 
   const num = (v, l, sub, destaque) =>
-    '<div class="rel-num' + (destaque ? ' destaque' : '') + '">' +
+    '<div class="rel-num' + (destaque ? ' rel-num-ganho' : '') + '">' +
       '<div class="rel-v">' + v + '</div><div class="rel-l">' + l + '</div>' +
       (sub ? '<div class="rel-s">' + sub + '</div>' : '') +
     '</div>';
