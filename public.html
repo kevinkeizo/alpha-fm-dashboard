@@ -2127,104 +2127,6 @@ body.sem-login #btn-sair { display: none; }
   .rel-btn.principal:hover { background: var(--signal-600); color: #fff; }
 }
 
-.rel-corpo { padding: 40px 46px 46px; color: var(--ink-1); }
-
-.rel-cab {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--ink-1);
-  margin-bottom: 26px;
-}
-
-.rel-cab h1 {
-  font-family: var(--font-display);
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-
-.rel-cab .periodo { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
-.rel-cab .emissao { font-size: 10.5px; color: var(--ink-4); font-family: var(--font-mono); text-align: right; }
-
-.rel-secao { margin-bottom: 30px; page-break-inside: avoid; }
-
-.rel-secao h2 {
-  font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 16px;
-}
-
-.rel-grade {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.rel-num { }
-.rel-num .v {
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.1;
-}
-.rel-num .l {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--ink-3);
-  font-weight: 600;
-  margin-top: 4px;
-}
-.rel-num .s { font-size: 10.5px; color: var(--ink-4); font-family: var(--font-mono); margin-top: 2px; }
-.rel-num.destaque .v { color: var(--gain); }
-
-.rel-tabela { width: 100%; border-collapse: collapse; font-size: 12px; }
-.rel-tabela th {
-  text-align: left;
-  font-size: 9.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
-  color: var(--ink-3);
-  font-weight: 600;
-  padding: 0 8px 7px 0;
-  border-bottom: 1px solid var(--line);
-}
-.rel-tabela td { padding: 8px 8px 8px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
-.rel-tabela .num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.rel-tabela .cap { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.rel-tabela tr:last-child td { border-bottom: none; }
-
-.rel-tag {
-  font-size: 8.5px;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  padding: 2px 5px;
-  border-radius: 4px;
-  background: var(--signal-100);
-  color: var(--signal-600);
-}
-
-.rel-rodape {
-  margin-top: 30px;
-  padding-top: 14px;
-  border-top: 1px solid var(--line);
-  font-size: 10px;
-  color: var(--ink-4);
-  font-family: var(--font-mono);
-  line-height: 1.6;
-}
-
 /* ══ Impressão ═══════════════════════════════════════════════════════════════ */
 @media print {
   @page { size: A4; margin: 14mm; }
@@ -2338,7 +2240,7 @@ body.sem-login #btn-sair { display: none; }
 
 .rel-grade { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
-.rel-num .v {
+.rel-num .rel-v {
   font-family: var(--font-display);
   font-size: 25px;
   font-weight: 600;
@@ -2347,7 +2249,7 @@ body.sem-login #btn-sair { display: none; }
   line-height: 1.1;
 }
 
-.rel-num .l {
+.rel-num .rel-l {
   font-size: 9.5px;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -2356,14 +2258,14 @@ body.sem-login #btn-sair { display: none; }
   margin-top: 5px;
 }
 
-.rel-num .s {
+.rel-num .rel-s {
   font-size: 10px;
   color: var(--ink-4);
   font-family: var(--font-mono);
   margin-top: 3px;
 }
 
-.rel-num.destaque .v { color: var(--gain); }
+.rel-num.destaque .rel-v { color: var(--gain); }
 
 /* ── Gráfico do relatório ── */
 .rel-gr { margin-top: 20px; }
@@ -2385,7 +2287,7 @@ body.sem-login #btn-sair { display: none; }
 
 .rel-tabela td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--line); vertical-align: middle; }
 .rel-tabela .num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
-.rel-tabela .cap { max-width: 290px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rel-tabela .cap { max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rel-tabela tr:last-child td { border-bottom: none; }
 .rel-tabela .pos { color: var(--ink-4); width: 18px; }
 
@@ -2438,6 +2340,112 @@ body.sem-login #btn-sair { display: none; }
 @media print {
   .rel-destaques { background: #F4F6FF !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .rel-corpo { padding: 0; }
+}
+
+
+
+/* ══ Publicações clicáveis no relatório ══════════════════════════════════════
+   Salvo em PDF, o link continua funcionando — quem recebe o relatório abre a
+   publicação direto, sem precisar caçar no perfil. */
+.rel-post { display: flex; align-items: center; gap: 11px; min-width: 0; }
+
+.rel-thumb {
+  width: 42px; height: 42px;
+  border-radius: 7px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+
+.rel-post-txt { min-width: 0; flex: 1; }
+
+.rel-link {
+  color: var(--ink-1);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.rel-link:hover { color: var(--signal-600); border-bottom-color: var(--signal-200); }
+
+.rel-abrir {
+  font-size: 8.5px;
+  font-family: var(--font-mono);
+  color: var(--signal-500);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Destaque com a publicação em evidência, dentro do bloco de análise */
+.rel-mencao {
+  display: flex;
+  gap: 13px;
+  align-items: center;
+  margin-top: 14px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--signal-200);
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+.rel-mencao img {
+  width: 54px; height: 54px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-2);
+}
+
+.rel-mencao-txt { min-width: 0; flex: 1; }
+
+.rel-mencao-cap {
+  font-size: 12px;
+  color: var(--ink-1);
+  font-weight: 500;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rel-mencao-meta {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rel-mencao-n {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 600;
+  color: var(--signal-600);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  flex-shrink: 0;
+  line-height: 1.1;
+}
+
+.rel-mencao-n small {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 500;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+@media print {
+  /* Miniatura vinda do CDN da Meta pode não imprimir; reserva o espaço */
+  .rel-thumb, .rel-mencao img { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rel-mencao { background: #fff !important; }
 }
 
 </style>
@@ -3850,15 +3858,15 @@ function analiseDoMes(hist, posts, proj){
     }
   }
 
-  // 4. Publicação destaque
+  // 4. Publicação destaque — vira cartão com link, montado fora daqui
   if(posts.length){
     const top = [...posts].sort((x, y) => (y.interactions ?? -1) - (x.interactions ?? -1))[0];
     const media = posts.reduce((a, p) => a + (p.interactions || 0), 0) / posts.length;
     if(top && top.interactions && media && pct(top.interactions, media) >= 100){
       L.push('A publicação de maior desempenho fez <b>' + formatNum(top.interactions) +
         ' interações</b>, <b>' + (top.interactions / media).toFixed(1).replace('.', ',') +
-        'x a média</b> do período — ' + (top.isVideo ? 'um reel' : 'um post') +
-        ' de ' + diaMes(top.date) + '.');
+        'x a média</b> do período.');
+      L.destaquePost = top;
     }
   }
 
@@ -3879,6 +3887,26 @@ function analiseDoMes(hist, posts, proj){
   }
 
   return L;
+}
+
+
+// Cartão da publicação destaque: miniatura, legenda e link. Salvo em PDF o
+// link sobrevive, então quem recebe o relatório abre a publicação direto.
+function mencaoPost(p){
+  if(!p || !p.permalink) return '';
+  const tipo = p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM';
+  return '<a class="rel-mencao" href="' + p.permalink + '" target="_blank" rel="noopener">' +
+    (p.media_url ? '<img src="' + p.media_url + '" alt="" loading="lazy">' : '<img alt="">') +
+    '<div class="rel-mencao-txt">' +
+      '<div class="rel-mencao-cap">' + (p.caption || '(sem legenda)') + '</div>' +
+      '<div class="rel-mencao-meta">' +
+        '<span class="rel-tag">' + tipo + '</span>' +
+        '<span>' + diaMes(p.date) + ' · ' + (p.hora || '') + '</span>' +
+        '<span class="rel-abrir">abrir no Instagram ↗</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="rel-mencao-n">' + formatNum(p.interactions) + '<small>interações</small></div>' +
+  '</a>';
 }
 
 // Gráfico estático para o relatório: sem interação, pensado pro papel
@@ -3974,8 +4002,8 @@ function montarRelatorio(ym){
 
   const num = (v, l, sub, destaque) =>
     '<div class="rel-num' + (destaque ? ' destaque' : '') + '">' +
-      '<div class="v">' + v + '</div><div class="l">' + l + '</div>' +
-      (sub ? '<div class="s">' + sub + '</div>' : '') +
+      '<div class="rel-v">' + v + '</div><div class="rel-l">' + l + '</div>' +
+      (sub ? '<div class="rel-s">' + sub + '</div>' : '') +
     '</div>';
 
   let html = '';
@@ -3995,7 +4023,7 @@ function montarRelatorio(ym){
   if(analise.length){
     html += '<div class="rel-destaques"><h2>Destaques do período</h2><ul>' +
       analise.map(t => '<li><span>' + t + '</span></li>').join('') +
-    '</ul></div>';
+    '</ul>' + mencaoPost(analise.destaquePost) + '</div>';
   }
 
   // ── Crescimento ──
@@ -4027,11 +4055,17 @@ function montarRelatorio(ym){
       '<th class="num">Alcance</th><th class="num">Seguidores</th></tr>' +
       posts.slice(0, 8).map((p, i) =>
         '<tr><td class="num pos">' + (i+1) + '</td>' +
-        '<td><div class="cap">' + (p.caption || '(sem legenda)') + '</div>' +
-        '<div style="margin-top:4px"><span class="rel-tag">' +
-          (p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM') +
-        '</span> <span style="font-size:9.5px;color:#A8ACBE;font-family:monospace">' +
-          diaMes(p.date) + ' ' + (p.hora || '') + '</span></div></td>' +
+        '<td><div class="rel-post">' +
+          (p.media_url ? '<img class="rel-thumb" src="' + p.media_url + '" alt="" loading="lazy">' : '') +
+          '<div class="rel-post-txt">' +
+            '<div class="cap"><a class="rel-link" href="' + p.permalink + '" target="_blank" rel="noopener">' +
+              (p.caption || '(sem legenda)') + '</a></div>' +
+            '<div style="margin-top:4px"><span class="rel-tag">' +
+              (p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM') +
+            '</span> <span style="font-size:9.5px;color:#A8ACBE;font-family:monospace">' +
+              diaMes(p.date) + ' ' + (p.hora || '') + '</span></div>' +
+          '</div>' +
+        '</div></td>' +
         '<td class="num">' + formatNum(p.interactions) + '</td>' +
         '<td class="num">' + formatNum(p.reach) + '</td>' +
         '<td class="num">' + (p.follows != null ? '+' + p.follows : '—') + '</td></tr>'
