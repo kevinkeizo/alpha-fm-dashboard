@@ -2448,6 +2448,33 @@ body.sem-login #btn-sair { display: none; }
   .rel-mencao { background: #fff !important; }
 }
 
+
+
+/* ══ Endereços na impressão ══════════════════════════════════════════════════
+   "Salvar como PDF" do Chrome preserva a âncora clicável, mas isso se perde
+   no papel e em conversões. Então o endereço também aparece como texto: no
+   PDF ele é clicável E legível; impresso, ainda dá pra digitar. */
+@media print {
+  .rel-link[data-url]::after {
+    content: ' · ' attr(data-url);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 8px;
+    color: #7B8098;
+    margin-top: 2px;
+    white-space: nowrap;
+  }
+
+  /* Legenda pode ocupar duas linhas no papel; espaço não é escasso lá */
+  .rel-tabela .cap { max-width: none; white-space: normal; }
+
+  .rel-mencao { border-color: #C9D3FF !important; }
+  .rel-abrir { color: #2B41C7 !important; }
+}
+
+/* Na tela o endereço só polui a tabela — lá o clique resolve */
+.rel-abrir { font-size: 9px; }
+
 </style>
 </head>
 <body>
@@ -3892,6 +3919,18 @@ function analiseDoMes(hist, posts, proj){
 
 // Cartão da publicação destaque: miniatura, legenda e link. Salvo em PDF o
 // link sobrevive, então quem recebe o relatório abre a publicação direto.
+
+// Permalink do Instagram vira algo que cabe na página e alguém consegue
+// digitar: "instagram.com/reel/DcEDfK6ARyL". O https:// e a barra final não
+// ajudam ninguém no papel.
+function urlCurta(permalink){
+  if(!permalink) return '';
+  return permalink
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(/\/$/, '');
+}
+
 function mencaoPost(p){
   if(!p || !p.permalink) return '';
   const tipo = p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM';
@@ -3902,7 +3941,7 @@ function mencaoPost(p){
       '<div class="rel-mencao-meta">' +
         '<span class="rel-tag">' + tipo + '</span>' +
         '<span>' + diaMes(p.date) + ' · ' + (p.hora || '') + '</span>' +
-        '<span class="rel-abrir">abrir no Instagram ↗</span>' +
+        '<span class="rel-abrir">' + urlCurta(p.permalink) + ' ↗</span>' +
       '</div>' +
     '</div>' +
     '<div class="rel-mencao-n">' + formatNum(p.interactions) + '<small>interações</small></div>' +
@@ -4058,8 +4097,8 @@ function montarRelatorio(ym){
         '<td><div class="rel-post">' +
           (p.media_url ? '<img class="rel-thumb" src="' + p.media_url + '" alt="" loading="lazy">' : '') +
           '<div class="rel-post-txt">' +
-            '<div class="cap"><a class="rel-link" href="' + p.permalink + '" target="_blank" rel="noopener">' +
-              (p.caption || '(sem legenda)') + '</a></div>' +
+            '<div class="cap"><a class="rel-link" href="' + p.permalink + '" target="_blank" rel="noopener"' +
+              ' data-url="' + urlCurta(p.permalink) + '">' + (p.caption || '(sem legenda)') + '</a></div>' +
             '<div style="margin-top:4px"><span class="rel-tag">' +
               (p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM') +
             '</span> <span style="font-size:9.5px;color:#A8ACBE;font-family:monospace">' +
