@@ -237,6 +237,64 @@ function preencherLacunas(history, extras){
   return preenchidos;
 }
 
+
+// ── Demografia da base ──────────────────────────────────────────────────────
+// A Meta só devolve o retrato ATUAL, sem histórico. Sem guardar, o relatório
+// de agosto gerado em dezembro mostraria a audiência de dezembro. Uma leitura
+// por dia sobrescreve o registro do mês corrente; quando o mês vira, a última
+// gravação fica congelada como o perfil daquele mês.
+const ORDEM_IDADE = ['13-17', '18-24', '25-34', '35-44', '45-54', '55-64', '65+'];
+
+async function demografiaPor(breakdown){
+  const r = await fetchGraph('/' + IG_USER_ID + '/insights', {
+    metric: 'follower_demographics',
+    period: 'lifetime',
+    metric_type: 'total_value',
+    timeframe: 'this_month',
+    breakdown
+  });
+  const linha = (r.data || [])[0];
+  const b = linha && linha.total_value && linha.total_value.breakdowns
+    ? linha.total_value.breakdowns[0] : null;
+  if(!b) return [];
+  return (b.results || [])
+    .map(x => ({ chave: x.dimension_values[0], valor: x.value }))
+    .filter(x => typeof x.valor === 'number')
+    .sort((a, c) => c.valor - a.valor);
+}
+
+async function capturarDemografia(ym){
+  const [idade, genero, cidade, pais] = await Promise.all([
+    demografiaPor('age').catch(() => []),
+    demografiaPor('gender').catch(() => []),
+    demografiaPor('city').catch(() => []),
+    demografiaPor('country').catch(() => [])
+  ]);
+
+  // Sem nenhuma dimensão não vale gravar registro vazio por cima de um bom
+  if(!idade.length && !genero.length && !cidade.length && !pais.length) return null;
+
+  idade.sort((a, b) => ORDEM_IDADE.indexOf(a.chave) - ORDEM_IDADE.indexOf(b.chave));
+  const total = g => g.reduce((a, x) => a + x.valor, 0);
+
+  return {
+    mes: ym,
+    capturadoEm: new Date().toISOString(),
+    idade,
+    genero: genero.map(g => ({
+      chave: g.chave === 'F' ? 'Feminino' : g.chave === 'M' ? 'Masculino' : 'Não informado',
+      valor: g.valor
+    })),
+    cidade: cidade.slice(0, 8).map(c => ({
+      chave: c.chave.replace(/,\s*[^,]*\(state\)$/, ''),
+      uf: (c.chave.match(/,\s*(.+?)\s*\(state\)$/) || [])[1] || null,
+      valor: c.valor
+    })),
+    pais: pais.slice(0, 8),
+    totais: { idade: total(idade), genero: total(genero), cidade: total(cidade), pais: total(pais) }
+  };
+}
+
 async function main(){
   const now = new Date();
 
@@ -446,6 +504,29 @@ async function main(){
     console.log('Top do dia:', topDoDia.length, 'publicações |',
       atualizado.recentes.length, 'em', JANELA_TOP, 'dias |', atualizado.allTime.length, 'no all-time');
   }catch(e){ console.warn('Ranking do dia falhou:', e.message); }
+
+  // Por último, e isolado: se a demografia falhar, tudo acima já está gravado.
+  try{
+    const ym = todayKey.slice(0, 7);
+    const registro = await capturarDemografia(ym);
+    if(registro){
+      const demoPath = new URL('../demografia.json', import.meta.url);
+      let lista = [];
+      try{ lista = JSON.parse(await fs.readFile(demoPath, 'utf8')); }catch(e){}
+      if(!Array.isArray(lista)) lista = [];
+      // Sobrescreve o mês corrente; meses passados ficam como estão
+      lista = lista.filter(d => d && d.mes !== ym);
+      lista.push(registro);
+      lista.sort((a, b) => a.mes.localeCompare(b.mes));
+      await fs.writeFile(demoPath, JSON.stringify(lista, null, 2) + String.fromCharCode(10));
+      const maior = [...registro.idade].sort((a, b) => b.valor - a.valor)[0];
+      console.log('Demografia de ' + ym + ': ' + registro.totais.idade.toLocaleString('pt-BR') +
+        ' classificados, faixa dominante ' + (maior ? maior.chave : '—') +
+        ' (' + lista.length + ' meses guardados).');
+    }else{
+      console.warn('Demografia veio vazia; registro anterior preservado.');
+    }
+  }catch(e){ console.warn('Demografia falhou:', e.message); }
 }
 
 // Só executa quando chamado direto. O backfill importa as funções daqui e

@@ -3995,6 +3995,24 @@ const REL_LOGO = '<svg class="rel-logo" viewBox="0 0 240 240" xmlns="http://www.
 // Publicações de um mês específico. Os meses ficam em arquivos próprios,
 // buscados só quando alguém gera aquele relatório — o top-posts.json que o
 // painel baixa a cada carregamento guarda apenas a janela recente.
+
+// Demografia daquele mês, se já tiver sido capturada. Sem registro, cai pro
+// retrato atual — que é o que existia antes — mas a tela passa a dizer qual
+// dos dois está mostrando.
+let _demoHistorico = null;
+
+async function demografiaDoMes(ym){
+  if(_demoHistorico === null){
+    try{
+      const r = await fetch("https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/demografia.json");
+      _demoHistorico = r.ok ? await r.json() : [];
+    }catch(e){ _demoHistorico = []; }
+  }
+  const doMes = (_demoHistorico || []).find(d => d && d.mes === ym);
+  if(doMes) return { dados: doMes, doPeriodo: true };
+  return _relAudiencia ? { dados: _relAudiencia, doPeriodo: false } : null;
+}
+
 const _cacheMes = {};
 
 async function postsDoMes(ym){
@@ -4165,13 +4183,15 @@ async function montarRelatorio(ym){
   }
 
   // ── Audiência ──
-  if(_relAudiencia){
-    const a = _relAudiencia, tot = a.totais || {};
+  const demo = await demografiaDoMes(ym);
+  if(demo){
+    const a = demo.dados, tot = a.totais || {};
     const maiorIdade = [...(a.idade||[])].sort((x,y)=>y.valor-x.valor)[0];
     const fem = (a.genero||[]).find(g => g.chave === 'Feminino');
     const cidade1 = (a.cidade||[])[0];
     const br = (a.pais||[]).find(p => p.chave === 'BR');
-    html += '<div class="rel-secao"><h2>Perfil da audiência</h2><div class="rel-grade">' +
+    html += '<div class="rel-secao"><h2>Perfil da audiência' +
+      (demo.doPeriodo ? '' : ' · retrato atual') + '</h2><div class="rel-grade">' +
       num(maiorIdade ? maiorIdade.chave + ' anos' : '—', 'Faixa dominante',
         maiorIdade && tot.idade ? ((maiorIdade.valor/tot.idade)*100).toFixed(0) + '% da base' : '') +
       num(fem && tot.genero ? ((fem.valor/tot.genero)*100).toFixed(0) + '%' : '—', 'Feminino',
@@ -4204,7 +4224,8 @@ async function montarRelatorio(ym){
   if(posts.length) notas.push('O ranking cobre as publicações de melhor desempenho de cada dia, não todas as do período.');
   if(fmts.some(f => f.qtd < 5)) notas.push('Formatos marcados com ⚠ têm menos de 5 publicações; a média deles ainda oscila muito.');
   notas.push('Alcance somado repete quem viu em mais de um dia — não é público único do período.');
-  if(_relAudiencia) notas.push('O perfil da audiência é o retrato atual da base, não do período.');
+  if(demo && !demo.doPeriodo) notas.push('O perfil da audiência é o retrato atual da base, não do período — a captura mensal começou depois deste mês.');
+  if(demo && demo.doPeriodo && demo.dados.capturadoEm) notas.push('Perfil da audiência capturado em ' + new Date(demo.dados.capturadoEm).toLocaleDateString('pt-BR') + '.');
   if(proj) notas.push('A projeção é uma regressão linear sobre ' + proj.baseDias + ' dias e assume que o ritmo se mantém.');
   html += '<div class="rel-rodape">' + notas.map(n => '· ' + n).join('<br>') + '</div>';
 
