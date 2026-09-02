@@ -418,6 +418,24 @@ async function main(){
     const topDoDia = comMetricas.slice(0, TOP_POR_DIA);
 
     const topPath = new URL('../top-posts.json', import.meta.url);
+
+    // Arquivo do mês: o top-posts.json mantém só a janela recente (o painel
+    // baixa ele a cada carregamento e já está em centenas de KB). Os meses
+    // fechados vão pra arquivos próprios, buscados só quando alguém gera o
+    // relatório daquele mês — assim agosto continua disponível em dezembro.
+    try{
+      const ym = todayKey.slice(0, 7);
+      const mesPath = new URL('../meses/' + ym + '.json', import.meta.url);
+      let doMes = { mes: ym, posts: [] };
+      try{ doMes = JSON.parse(await fs.readFile(mesPath, 'utf8')); }catch(e){}
+      const porId = new Map();
+      [...(doMes.posts || []), ...topDoDia].forEach(p => { if(p && p.id) porId.set(p.id, p); });
+      const lista = [...porId.values()].sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
+      await fs.mkdir(new URL('../meses/', import.meta.url), { recursive: true });
+      await fs.writeFile(mesPath, JSON.stringify(
+        { mes: ym, posts: lista, atualizado: new Date().toISOString() }, null, 2) + String.fromCharCode(10));
+      console.log('Arquivo de', ym + ':', lista.length, 'publicações.');
+    }catch(e){ console.warn('Arquivo do mês falhou:', e.message); }
     let top = { recentes: [], allTime: [] };
     try{ top = JSON.parse(await fs.readFile(topPath, 'utf8')); }catch(e){}
 

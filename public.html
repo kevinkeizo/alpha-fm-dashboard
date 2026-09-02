@@ -3384,6 +3384,7 @@ function renderDashboard(data) {
 
   // Guarda o estado atual pro pulso saber de onde animar
   window.__hist = hist;
+  window.__followersAoVivo = followers_count;
   if(window.__semearPulso) window.__semearPulso({
     followers: followers_count, dailyGain, views, reach,
     interactions: totalInteractions, engagement: engagementRate,
@@ -3897,16 +3898,6 @@ function analiseDoMes(hist, posts, proj){
     }
   }
 
-  // 5. Conversão em seguidores, onde a API informa
-  const comFollows = posts.filter(p => p.follows != null && p.follows > 0);
-  if(comFollows.length >= 3){
-    const soma = comFollows.reduce((a, p) => a + p.follows, 0);
-    const melhor = [...comFollows].sort((a, b) => b.follows - a.follows)[0];
-    L.push('Entre imagens e carrosséis — os únicos que o Instagram informa — <b>' +
-      formatNum(soma) + ' seguidores</b> vieram de publicação identificada, sendo <b>' +
-      melhor.follows + '</b> de uma só, em ' + diaMes(melhor.date) + '.');
-  }
-
   // 6. Projeção
   if(proj && !proj.atingida && proj.dias <= 400){
     L.push('No ritmo atual, a marca de <b>1 milhão</b> deve ser alcançada por volta de <b>' +
@@ -4000,8 +3991,34 @@ const REL_LOGO = '<svg class="rel-logo" viewBox="0 0 240 240" xmlns="http://www.
   '<text x="120" y="165" font-family="Manrope, sans-serif" font-size="28" font-weight="600" ' +
   'fill="white" text-anchor="middle" letter-spacing="2">FM 101.7</text></svg>';
 
+
+// Publicações de um mês específico. Os meses ficam em arquivos próprios,
+// buscados só quando alguém gera aquele relatório — o top-posts.json que o
+// painel baixa a cada carregamento guarda apenas a janela recente.
+const _cacheMes = {};
+
+async function postsDoMes(ym){
+  if(_cacheMes[ym]) return _cacheMes[ym];
+  try{
+    const r = await fetch("https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/meses/" + ym + ".json");
+    if(r.ok){
+      const j = await r.json();
+      if(j && Array.isArray(j.posts) && j.posts.length){
+        _cacheMes[ym] = j.posts;
+        return j.posts;
+      }
+    }
+  }catch(e){ /* cai pro que estiver em memória */ }
+  // Mês sem arquivo (o corrente, antes do primeiro snapshot) usa o recente
+  const daMemoria = (_relTop || []).filter(p => p.date && p.date.slice(0, 7) === ym);
+  if(daMemoria.length) _cacheMes[ym] = daMemoria;
+  return daMemoria;
+}
+
 function mesesDisponiveis(hist){
   const set = new Set(hist.map(h => h.date.slice(0, 7)));
+  // Publicações podem existir num mês que o histórico de seguidores não cobre
+  (_relTop || []).forEach(p => { if(p.date) set.add(p.date.slice(0, 7)); });
   return [...set].sort().reverse();
 }
 
@@ -4012,7 +4029,7 @@ function nomeMes(ym){
   return nomes[+m - 1] + ' de ' + a;
 }
 
-function montarRelatorio(ym){
+async function montarRelatorio(ym){
   const hist = (window.__hist || []).filter(h => h.date.slice(0, 7) === ym);
   const corpo = document.getElementById('rel-corpo');
   if(!corpo) return;
@@ -4023,16 +4040,28 @@ function montarRelatorio(ym){
   }
 
   const comSeg = hist.filter(h => h.followers != null);
-  const inicio = comSeg[0], fim = comSeg[comSeg.length - 1];
-  const ganho = (inicio && fim) ? fim.followers - inicio.followers : null;
-  const pctCresc = (ganho != null && inicio.followers) ? (ganho / inicio.followers) * 100 : null;
+  const fim = comSeg[comSeg.length - 1];
+
+  // Base do mês: o fechamento do mês anterior. Sem isso o dia 1º não conta e
+  // um mês com poucos dias registrados aparece zerado.
+  const todos = (window.__hist || []).filter(h => h.followers != null);
+  const anteriores = todos.filter(h => h.date.slice(0, 7) < ym);
+  const base = anteriores.length ? anteriores[anteriores.length - 1] : comSeg[0];
+  const baseParcial = !anteriores.length;   // mês mais antigo: não há o que comparar
+
+  const ganho = (base && fim) ? fim.followers - base.followers : null;
+  const pctCresc = (ganho != null && base && base.followers) ? (ganho / base.followers) * 100 : null;
+  const inicio = base;
 
   const soma = c => hist.reduce((a, h) => a + (h[c] || 0), 0);
   const dias = hist.length;
+  const diasDesdeBase = (base && fim)
+    ? Math.max(1, Math.round((Date.parse(fim.date) - Date.parse(base.date)) / 86400000))
+    : dias;
   const temEstimado = hist.some(h => h.followersEstimado);
 
-  const posts = (_relTop || [])
-    .filter(p => p.date && p.date.slice(0, 7) === ym)
+  const posts = (await postsDoMes(ym))
+    .slice()
     .sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
 
   const fmts = posts.length ? analisaFormatos(posts) : [];
@@ -4067,9 +4096,11 @@ function montarRelatorio(ym){
 
   // ── Crescimento ──
   html += '<div class="rel-secao"><h2>Crescimento</h2><div class="rel-grade">' +
-    num(fim ? formatNum(fim.followers) : '—', 'Seguidores ao fim', inicio ? 'de ' + formatNum(inicio.followers) : '') +
+    num(fim ? formatNum(fim.followers) : '—', 'Seguidores ao fim',
+      inicio ? (baseParcial ? 'de ' + formatNum(inicio.followers) + ' em ' + diaMes(inicio.date)
+                            : 'de ' + formatNum(inicio.followers) + ' no fim de ' + diaMes(inicio.date)) : '') +
     num((ganho != null ? (ganho >= 0 ? '+' : '') + formatNum(ganho) : '—'), 'Ganho no período',
-      (ganho != null && dias > 1 ? formatNum(Math.round(ganho / (dias - 1))) + ' por dia' : ''), true) +
+      (ganho != null && diasDesdeBase > 0 ? formatNum(Math.round(ganho / diasDesdeBase)) + ' por dia' : ''), true) +
     num(pctCresc != null ? pctCresc.toFixed(2).replace('.', ',') + '%' : '—', 'Crescimento', 'sobre a base inicial') +
     num(formatNum(soma('posts')), 'Publicações', formatNum(Math.round(soma('posts') / dias)) + ' por dia') +
   '</div>' +
@@ -4091,7 +4122,7 @@ function montarRelatorio(ym){
   if(posts.length){
     html += '<div class="rel-secao"><h2>Melhores publicações</h2><table class="rel-tabela">' +
       '<tr><th class="pos"></th><th>Publicação</th><th class="num">Interações</th>' +
-      '<th class="num">Alcance</th><th class="num">Seguidores</th></tr>' +
+      '<th class="num">Alcance</th></tr>' +
       posts.slice(0, 8).map((p, i) =>
         '<tr><td class="num pos">' + (i+1) + '</td>' +
         '<td><div class="rel-post">' +
@@ -4106,8 +4137,7 @@ function montarRelatorio(ym){
           '</div>' +
         '</div></td>' +
         '<td class="num">' + formatNum(p.interactions) + '</td>' +
-        '<td class="num">' + formatNum(p.reach) + '</td>' +
-        '<td class="num">' + (p.follows != null ? '+' + p.follows : '—') + '</td></tr>'
+        '<td class="num">' + formatNum(p.reach) + '</td></tr>'
       ).join('') +
     '</table></div>';
   }
@@ -4169,11 +4199,11 @@ function montarRelatorio(ym){
   // ── Ressalvas ──
   const notas = [];
   notas.push('Período coberto: ' + diaMes(hist[0].date) + ' a ' + diaMes(hist[hist.length-1].date) + ' (' + dias + ' dias).');
+  if(baseParcial) notas.push('Este é o mês mais antigo do histórico: o crescimento é contado a partir de ' + diaMes(inicio.date) + ', não do dia 1º.');
   if(temEstimado) notas.push('Alguns dias têm a contagem de seguidores estimada por interpolação, quando a captura automática atrasou.');
   if(posts.length) notas.push('O ranking cobre as publicações de melhor desempenho de cada dia, não todas as do período.');
   if(fmts.some(f => f.qtd < 5)) notas.push('Formatos marcados com ⚠ têm menos de 5 publicações; a média deles ainda oscila muito.');
   notas.push('Alcance somado repete quem viu em mais de um dia — não é público único do período.');
-  notas.push('O Instagram não informa seguidores ganhos em reels; a coluna aparece apenas para imagens e carrosséis.');
   if(_relAudiencia) notas.push('O perfil da audiência é o retrato atual da base, não do período.');
   if(proj) notas.push('A projeção é uma regressão linear sobre ' + proj.baseDias + ' dias e assume que o ritmo se mantém.');
   html += '<div class="rel-rodape">' + notas.map(n => '· ' + n).join('<br>') + '</div>';
@@ -4226,7 +4256,7 @@ async function abrirRelatorio(){
   }
 
   sel.innerHTML = meses.map(m => '<option value="' + m + '">' + nomeMes(m) + '</option>').join('');
-  sel.onchange = () => montarRelatorio(sel.value);
+  sel.onchange = () => { montarRelatorio(sel.value); };
 
   // Abre já, com esqueleto: esperar de tela branca parece travado
   fundo.hidden = false;
@@ -4284,6 +4314,34 @@ function barrasDe(itens, total, opts){
         '<small>' + pct.toFixed(1).replace('.', ',') + '% da base</small></span>' +
     '</div>';
   }).join('');
+}
+
+
+// Ganho de seguidores no período, tirado do histórico — não da soma de
+// 'follows' por publicação. Aquela só existe pra imagem e carrossel, e numa
+// conta que é quase toda reel ela mostrava uma fração do que de fato entrou.
+function ganhoDoPeriodo(periodo){
+  const hist = (window.__hist || []).filter(h => h.followers != null);
+  if(!hist.length) return null;
+
+  const ultimo = hist[hist.length - 1];
+  const atual = (window.__followersAoVivo != null) ? window.__followersAoVivo : ultimo.followers;
+
+  if(periodo === 'hoje'){
+    // Do fechamento do último dia registrado até a contagem de agora
+    return { valor: atual - ultimo.followers, desde: ultimo.date, rotulo: 'hoje' };
+  }
+
+  const corte = new Date(Date.now() - Number(periodo) * 86400000).toISOString().slice(0, 10);
+  const base = hist.find(h => h.date >= corte) || hist[0];
+  if(!base) return null;
+  return {
+    valor: atual - base.followers,
+    desde: base.date,
+    rotulo: periodo + ' dias',
+    // Avisa quando o histórico não alcança o período pedido
+    curto: base.date > corte
+  };
 }
 
 async function carregarAudiencia(){
@@ -4474,8 +4532,6 @@ function renderTop(hoje, guardado){
     if(strip){
       const inter = todos.reduce((a, p) => a + (p.interactions || 0), 0);
       const alc = todos.reduce((a, p) => a + (p.reach || 0), 0);
-      const seg = todos.reduce((a, p) => a + (p.follows || 0), 0);
-      const temSeg = todos.some(p => p.follows != null);
       const melhor = todos[0];
       const fmts = analisaFormatos(todos);
       const campeao = fmts[0];
@@ -4488,9 +4544,15 @@ function renderTop(hoje, guardado){
         campeao
           ? kpiSimples('Formato campeão', campeao.nome, formatNum(campeao.media) + ' por publicação', true)
           : kpiSimples('Formato campeão', '—', ''),
-        temSeg
-          ? kpiSimples('Seguidores ganhos', '+' + formatNum(seg), 'só imagens e carrosséis', false, true)
-          : ''
+        (function(){
+          const g = ganhoDoPeriodo(periodo);
+          if(!g) return '';
+          const sub = periodo === 'hoje'
+            ? 'desde o fecho de ' + diaMes(g.desde)
+            : (g.curto ? 'histórico desde ' + diaMes(g.desde) : 'nos últimos ' + periodo + ' dias');
+          return kpiSimples('Seguidores ganhos',
+            (g.valor >= 0 ? '+' : '') + formatNum(g.valor), sub, false, g.valor > 0);
+        })()
       ].join('');
     }
 
@@ -4853,7 +4915,7 @@ async function iniciar(){
       const hist = window.__hist || [];
       const ultimo = hist.length ? hist[hist.length - 1] : null;
       aplica({
-        followers: d.profile && d.profile.followers_count,
+        followers: (window.__followersAoVivo = d.profile && d.profile.followers_count),
         dailyGain: (ultimo && ultimo.followers && d.profile)
           ? d.profile.followers_count - ultimo.followers : null,
         views: d.views,
