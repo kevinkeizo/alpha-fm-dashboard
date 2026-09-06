@@ -47,7 +47,7 @@
     "date": "2026-08-15",
     "followers": 966184,
     "reach": 648793,
-    "views": 1211793,
+    "views": 1211795,
     "reelViews": null,
     "reels": 10,
     "posts": 17,
@@ -84,8 +84,8 @@
     "reelViews": null,
     "reels": 16,
     "posts": 42,
-    "interactions": 129359,
-    "engagementRate": 14.860293095585186
+    "interactions": 129358,
+    "engagementRate": 14.860178219209397
   },
   {
     "date": "2026-08-19",
@@ -95,8 +95,8 @@
     "reelViews": null,
     "reels": 12,
     "posts": 32,
-    "interactions": 82408,
-    "engagementRate": 14.931041230314317
+    "interactions": 82407,
+    "engagementRate": 14.930860045948355
   },
   {
     "date": "2026-08-20",
@@ -117,8 +117,8 @@
     "reelViews": null,
     "reels": 15,
     "posts": 31,
-    "interactions": 79657,
-    "engagementRate": 14.644580694384441
+    "interactions": 79656,
+    "engagementRate": 14.644396848888194
   },
   {
     "date": "2026-08-22",
@@ -150,14 +150,14 @@
     "reelViews": 176835,
     "reels": 13,
     "posts": 31,
-    "interactions": 110707,
-    "engagementRate": 10.400511819382622
+    "interactions": 110705,
+    "engagementRate": 10.400323926804568
   },
   {
     "date": "2026-08-25",
     "followers": 972444,
     "reach": 740111,
-    "views": 1568318,
+    "views": 1568321,
     "reelViews": 568927,
     "reels": 15,
     "posts": 37,
@@ -188,12 +188,12 @@
       "quando": "2026-08-28T16:30:24.237Z"
     },
     "reach": 770780,
-    "views": 1534636,
+    "views": 1534637,
     "reelViews": 238638,
     "reels": 19,
     "posts": 37,
-    "interactions": 106947,
-    "engagementRate": 13.875165416850463,
+    "interactions": 106946,
+    "engagementRate": 13.875035678144219,
     "followersEstimado": true
   },
   {
@@ -220,12 +220,12 @@
       "quando": "2026-08-30T09:52:42.252Z"
     },
     "reach": 811945,
-    "views": 1611146,
+    "views": 1611152,
     "reelViews": 458439,
     "reels": 11,
     "posts": 17,
-    "interactions": 120967,
-    "engagementRate": 14.898422922734914,
+    "interactions": 120966,
+    "engagementRate": 14.898299761683365,
     "followersEstimado": true
   },
   {
@@ -252,12 +252,12 @@
       "quando": "2026-09-01T09:19:39.874Z"
     },
     "reach": 605193,
-    "views": 1356806,
+    "views": 1356814,
     "reelViews": 316993,
     "reels": 15,
     "posts": 31,
-    "interactions": 96222,
-    "engagementRate": 15.899390772860889,
+    "interactions": 96221,
+    "engagementRate": 15.899225536316514,
     "followersEstimado": true
   },
   {
@@ -268,31 +268,31 @@
       "quando": "2026-09-02T18:56:02.402Z"
     },
     "reach": 628805,
-    "views": 1355319,
+    "views": 1355320,
     "reelViews": 467008,
     "reels": 18,
     "posts": 34,
-    "interactions": 90211,
-    "engagementRate": 14.346419001121175
+    "interactions": 90210,
+    "engagementRate": 14.34625996930686
   },
   {
     "date": "2026-09-02",
     "followers": 978805,
     "followersRef": null,
     "reach": 425383,
-    "views": 999175,
+    "views": 999184,
     "reelViews": 149506,
     "reels": 13,
     "posts": 32,
-    "interactions": 66604,
-    "engagementRate": 15.657419313888896
+    "interactions": 66602,
+    "engagementRate": 15.656949149354817
   },
   {
     "date": "2026-09-03",
     "followers": 979253,
     "followersRef": null,
     "reach": 418951,
-    "views": 888161,
+    "views": 888177,
     "reelViews": 158411,
     "reels": 14,
     "posts": 27,
@@ -304,11 +304,23 @@
     "followers": 979599,
     "followersRef": null,
     "reach": 480527,
-    "views": 1067538,
+    "views": 1068517,
     "reelViews": 229708,
     "reels": 18,
     "posts": 37,
-    "interactions": 74218,
-    "engagementRate": 15.445125872219458
+    "interactions": 74217,
+    "engagementRate": 15.44491776736791
+  },
+  {
+    "date": "2026-09-05",
+    "followers": 980627,
+    "followersRef": null,
+    "reach": 991609,
+    "views": 2267110,
+    "reelViews": 1440286,
+    "reels": 33,
+    "posts": 38,
+    "interactions": 162142,
+    "engagementRate": 16.351404636303222
   }
 ]
