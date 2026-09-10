@@ -13,7 +13,7 @@ const TZ = 'America/Sao_Paulo';
 const TOP_POR_DIA = 10;
 const JANELA_TOP = 35;
 
-const DIAS = Math.min(Math.max(parseInt(process.argv[2], 10) || 7, 1), 30);
+const DIAS = Math.min(Math.max(parseInt(process.argv[2], 10) || 7, 1), 75);
 
 if(!TOKEN || !IG_USER_ID){
   console.error('Faltam IG_TOKEN e/ou IG_USER_ID.');

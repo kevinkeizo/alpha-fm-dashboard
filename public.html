@@ -4264,9 +4264,10 @@ function analiseDaSelecao(posts){
         : 'entre ' + diaMes(datas[0]) + ' e ' + diaMes(datas[datas.length-1]))
     : '';
 
-  L.push('As <b>' + posts.length + '</b> publicações selecionadas somaram <b>' +
-    formatNum(inter) + ' interações</b> e <b>' + formatNum(alc) +
-    ' de alcance</b> ' + periodo + '.');
+  const vis = posts.reduce((a, p) => a + (p.views || 0), 0);
+  L.push('As <b>' + posts.length + '</b> publicações selecionadas alcançaram <b>' +
+    formatNum(alc) + ' contas</b>, somaram <b>' + formatNum(vis) +
+    ' visualizações</b> e <b>' + formatNum(inter) + ' interações</b> ' + periodo + '.');
 
   // Comparação com o desempenho geral do acervo — é o que dá régua ao número
   // Régua: o mês que está carregado no Buscador
@@ -4342,19 +4343,22 @@ function montarRelatorioSelecao(){
     '</ul>' + mencaoPost(analise.destaquePost) + '</div>';
   }
 
-  html += '<div class="rel-secao"><h2>Desempenho somado</h2><div class="rel-grade">' +
-    num(formatNum(soma('interactions')), 'Interações',
-      formatNum(Math.round(soma('interactions') / posts.length)) + ' por publicação', true) +
+  // Alcance e visualizações vêm primeiro: é o que a redação leva pra uma
+  // conversa de campanha. Interação é consequência, entra depois.
+  html += '<div class="rel-secao"><h2>Entrega da seleção</h2><div class="rel-grade">' +
     num(formatNum(soma('reach')), 'Alcance somado',
-      formatNum(Math.round(soma('reach') / posts.length)) + ' por publicação') +
+      formatNum(Math.round(soma('reach') / posts.length)) + ' por publicação', true) +
     num(formatNum(soma('views')), 'Visualizações',
-      posts.filter(p => p.isVideo).length + ' de vídeo') +
+      formatNum(Math.round(soma('views') / posts.length)) + ' por publicação', true) +
+    num(formatNum(soma('interactions')), 'Interações',
+      formatNum(Math.round(soma('interactions') / posts.length)) + ' por publicação') +
     num(formatNum(posts.length), 'Publicações',
       fmts.map(f => f.qtd + ' ' + f.nome.toLowerCase()).join(' · ')) +
   '</div></div>';
 
   html += '<div class="rel-secao"><h2>Publicações selecionadas</h2><table class="rel-tabela">' +
-    '<tr><th class="pos"></th><th>Publicação</th><th class="num">Interações</th><th class="num">Alcance</th></tr>' +
+    '<tr><th class="pos"></th><th>Publicação</th><th class="num">Alcance</th>' +
+    '<th class="num">Visualizações</th><th class="num">Interações</th></tr>' +
     posts.map((p, i) =>
       '<tr><td class="num pos">' + (i+1) + '</td>' +
       '<td><div class="rel-post">' +
@@ -4368,8 +4372,9 @@ function montarRelatorioSelecao(){
             diaMes(p.date) + ' ' + (p.hora || '') + '</span></div>' +
         '</div>' +
       '</div></td>' +
-      '<td class="num">' + formatNum(p.interactions) + '</td>' +
-      '<td class="num">' + formatNum(p.reach) + '</td></tr>'
+      '<td class="num">' + formatNum(p.reach) + '</td>' +
+      '<td class="num">' + formatNum(p.views) + '</td>' +
+      '<td class="num">' + formatNum(p.interactions) + '</td></tr>'
     ).join('') +
   '</table></div>';
 
