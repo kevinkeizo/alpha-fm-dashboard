@@ -2648,6 +2648,75 @@ body.sem-login #btn-sair { display: none; }
   .busca-abrir:hover { background: var(--signal-100); }
 }
 
+
+
+/* ══ Filtros do buscador ═════════════════════════════════════════════════════ */
+.busca-filtros {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.busca-periodo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.busca-periodo-rot {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.busca-periodo input {
+  border: none;
+  background: transparent;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-1);
+  padding: 5px 2px;
+  cursor: pointer;
+}
+
+.busca-periodo input:focus { outline: none; color: var(--signal-600); }
+
+.busca-periodo-sep { font-size: 11px; color: var(--ink-4); }
+
+.busca-periodo-x {
+  border: none;
+  background: var(--bg-2);
+  color: var(--ink-3);
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 10px;
+  line-height: 1;
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.busca-periodo-x[hidden] { display: none; }
+
+@media (hover: hover) and (pointer: fine) {
+  .busca-periodo-x:hover { background: var(--signal-100); color: var(--signal-600); }
+}
+
+/* Recorte ativo fica visível: filtro esquecido gera relatório errado */
+.busca-periodo.ativo {
+  border-color: var(--signal-500);
+  background: var(--signal-100);
+}
+
+.busca-periodo.ativo .busca-periodo-rot { color: var(--signal-600); }
+
 </style>
 </head>
 <body>
@@ -3432,17 +3501,27 @@ function renderDashboard(data) {
       <p>Ache publicações, selecione e gere um relatório só delas</p>
     </div>
 
-    <div class="busca-barra">
-      <label class="busca-campo">
-        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        <input type="search" id="busca-texto" placeholder="Buscar na legenda — artista, evento, tema…" autocomplete="off">
-      </label>
+    <label class="busca-campo" style="margin-bottom:10px">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="search" id="busca-texto" placeholder="Buscar na legenda — artista, evento, tema…" autocomplete="off">
+    </label>
+
+    <div class="busca-filtros">
       <div class="chart-filters">
         <button class="filter-btn busca-tipo active" data-tipo="todos">Todos</button>
         <button class="filter-btn busca-tipo" data-tipo="reels">Reels</button>
         <button class="filter-btn busca-tipo" data-tipo="posts">Posts</button>
       </div>
+
       <select id="busca-mes" class="rel-barra-select"></select>
+
+      <div class="busca-periodo">
+        <span class="busca-periodo-rot">Período</span>
+        <input type="date" id="busca-de" aria-label="Data inicial">
+        <span class="busca-periodo-sep">até</span>
+        <input type="date" id="busca-ate" aria-label="Data final">
+        <button class="busca-periodo-x" id="busca-periodo-limpar" title="Usar o mês inteiro" hidden>✕</button>
+      </div>
     </div>
 
     <div class="busca-info" id="busca-info" hidden>
@@ -4053,7 +4132,7 @@ const _selecionados = new Set();
 const _selecionadosFora = new Set();
 const _acervoSelecionado = new Map();
 let _buscaTodas = [];
-let _buscaFiltro = { texto: '', tipo: 'todos', mes: 'todos' };
+let _buscaFiltro = { texto: '', tipo: 'todos', mes: 'todos', de: '', ate: '' };
 
 // Sem acento e em minúscula: procurar "sertao" tem que achar "sertão"
 function normaliza(t){
@@ -4089,10 +4168,37 @@ async function carregarBuscador(ym){
   const idsVisiveis = new Set(_buscaTodas.map(p => p.id));
   [..._selecionados].forEach(id => { if(!idsVisiveis.has(id)) _selecionadosFora.add(id); });
 
+  ajustarLimitesData(alvo, _buscaTodas);
   desenharBusca();
 
   const badge = document.getElementById('badge-busca');
   if(badge) badge.textContent = _buscaTodas.length || '';
+}
+
+
+// Os campos de data só aceitam dias do mês carregado — pedir 12/07 num mês de
+// setembro não devolveria nada e pareceria bug.
+function ajustarLimitesData(ym, posts){
+  const de = document.getElementById('busca-de');
+  const ate = document.getElementById('busca-ate');
+  if(!de || !ate) return;
+
+  const datas = posts.map(p => p.date).filter(Boolean).sort();
+  const min = datas[0] || (ym + '-01');
+  const max = datas[datas.length - 1] || (ym + '-31');
+
+  [de, ate].forEach(el => { el.min = min; el.max = max; el.value = ''; });
+  _buscaFiltro.de = '';
+  _buscaFiltro.ate = '';
+  marcarPeriodo();
+}
+
+function marcarPeriodo(){
+  const caixa = document.querySelector('.busca-periodo');
+  const x = document.getElementById('busca-periodo-limpar');
+  const ativo = !!(_buscaFiltro.de || _buscaFiltro.ate);
+  if(caixa) caixa.classList.toggle('ativo', ativo);
+  if(x) x.hidden = !ativo;
 }
 
 function filtrarBusca(){
@@ -4100,6 +4206,8 @@ function filtrarBusca(){
   return _buscaTodas.filter(p => {
     if(_buscaFiltro.tipo === 'reels' && !p.isVideo) return false;
     if(_buscaFiltro.tipo === 'posts' && p.isVideo) return false;
+    if(_buscaFiltro.de && (!p.date || p.date < _buscaFiltro.de)) return false;
+    if(_buscaFiltro.ate && (!p.date || p.date > _buscaFiltro.ate)) return false;
     if(t && !normaliza(p.caption).includes(t)) return false;
     return true;
   });
@@ -4113,9 +4221,13 @@ function desenharBusca(){
   const cont = document.getElementById('busca-contagem');
   if(cont){
     const mes = _buscaFiltro.mes ? nomeMes(_buscaFiltro.mes) : '';
-    cont.textContent = achadas.length === _buscaTodas.length
+    const recorte = (_buscaFiltro.de || _buscaFiltro.ate)
+      ? ' · ' + (_buscaFiltro.de ? diaMes(_buscaFiltro.de) : 'início') +
+        ' a ' + (_buscaFiltro.ate ? diaMes(_buscaFiltro.ate) : 'fim')
+      : '';
+    cont.textContent = (achadas.length === _buscaTodas.length
       ? _buscaTodas.length + ' publicações em ' + mes
-      : achadas.length + ' de ' + _buscaTodas.length + ' em ' + mes;
+      : achadas.length + ' de ' + _buscaTodas.length + ' em ' + mes) + recorte;
   }
 
   if(!achadas.length){
@@ -4197,6 +4309,34 @@ function ligarBuscador(){
   }
 
   if(sel) sel.onchange = () => { carregarBuscador(sel.value); };
+
+  const de = document.getElementById('busca-de');
+  const ate = document.getElementById('busca-ate');
+  const limparPeriodo = document.getElementById('busca-periodo-limpar');
+
+  if(de) de.onchange = () => {
+    _buscaFiltro.de = de.value;
+    // Inverter as pontas devolveria lista vazia; melhor arrastar a outra
+    if(ate && ate.value && de.value > ate.value){ ate.value = de.value; _buscaFiltro.ate = de.value; }
+    marcarPeriodo();
+    desenharBusca();
+  };
+
+  if(ate) ate.onchange = () => {
+    _buscaFiltro.ate = ate.value;
+    if(de && de.value && ate.value < de.value){ de.value = ate.value; _buscaFiltro.de = ate.value; }
+    marcarPeriodo();
+    desenharBusca();
+  };
+
+  if(limparPeriodo) limparPeriodo.onclick = () => {
+    if(de) de.value = '';
+    if(ate) ate.value = '';
+    _buscaFiltro.de = '';
+    _buscaFiltro.ate = '';
+    marcarPeriodo();
+    desenharBusca();
+  };
 
   document.querySelectorAll('.busca-tipo').forEach(b => {
     b.onclick = () => {
