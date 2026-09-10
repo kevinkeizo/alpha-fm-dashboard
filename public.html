@@ -2546,7 +2546,7 @@ body.sem-login #btn-sair { display: none; }
 /* Linha selecionável: o clique inteiro alterna, não só a caixinha */
 .busca-item {
   display: grid;
-  grid-template-columns: 22px 46px minmax(0, 1fr) 88px 88px;
+  grid-template-columns: 22px 42px 46px minmax(0, 1fr) 88px 88px;
   align-items: center;
   gap: 13px;
   padding: 9px 14px;
@@ -2558,7 +2558,7 @@ body.sem-login #btn-sair { display: none; }
 }
 
 @media (max-width: 1000px) {
-  .busca-item { grid-template-columns: 22px 46px minmax(0, 1fr) 80px; }
+  .busca-item { grid-template-columns: 22px 42px 46px minmax(0, 1fr) 80px; }
   .busca-item .busca-col-esconde { display: none; }
 }
 
@@ -2716,6 +2716,58 @@ body.sem-login #btn-sair { display: none; }
 }
 
 .busca-periodo.ativo .busca-periodo-rot { color: var(--signal-600); }
+
+
+
+/* ══ Data da publicação ══════════════════════════════════════════════════════
+   Em coluna própria, alinhada, não solta na sub-linha. Ali ela disputava com
+   a data que muitas legendas trazem no texto ("hoje, 9 de setembro"), e a que
+   importa era a menos visível das duas. */
+.busca-data {
+  text-align: center;
+  font-family: var(--font-mono);
+  line-height: 1.15;
+  padding: 5px 0;
+  border-radius: 7px;
+  background: var(--bg-2);
+  flex-shrink: 0;
+}
+
+.busca-data-dia {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.busca-data-mes {
+  display: block;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 1px;
+}
+
+.busca-data-hora {
+  display: block;
+  font-size: 9.5px;
+  color: var(--ink-4);
+  margin-top: 3px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Os dois dias mais recentes ganham cor: é a leitura que se faz primeiro */
+.busca-data.recente { background: var(--signal-100); }
+.busca-data.recente .busca-data-dia { color: var(--signal-600); }
+.busca-data.recente .busca-data-mes { color: var(--signal-500); }
+
+/* Primeira linha de cada dia ganha respiro, pra o olho separar os blocos */
+.busca-item.vira-dia { margin-top: 9px; }
+.busca-item.vira-dia:first-child { margin-top: 0; }
 
 </style>
 </head>
@@ -4213,6 +4265,23 @@ function filtrarBusca(){
   });
 }
 
+
+const MES_CURTO = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+
+// Bloco de data: dia grande, mês abreviado, hora embaixo. Alinhado em coluna,
+// dá pra varrer a lista verticalmente e achar o intervalo de uma campanha.
+function blocoData(p, hoje, ontem){
+  if(!p.date) return '<span class="busca-data"></span>';
+  const dia = p.date.slice(8);
+  const mes = MES_CURTO[+p.date.slice(5, 7) - 1] || '';
+  const recente = (p.date === hoje || p.date === ontem) ? ' recente' : '';
+  return '<span class="busca-data' + recente + '">' +
+    '<span class="busca-data-dia">' + dia + '</span>' +
+    '<span class="busca-data-mes">' + mes + '</span>' +
+    '<span class="busca-data-hora">' + (p.hora || '') + '</span>' +
+  '</span>';
+}
+
 function desenharBusca(){
   const lista = document.getElementById('busca-lista');
   if(!lista) return;
@@ -4238,16 +4307,23 @@ function desenharBusca(){
   }
 
   // 200 já é mais do que alguém percorre; o filtro é o caminho pra chegar
+  const hoje = new Date().toISOString().slice(0, 10);
+  const ontem = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  let diaAnterior = null;
+
   lista.innerHTML = achadas.slice(0, 200).map(p => {
     const tipo = p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM';
-    return '<div class="busca-item' + (_selecionados.has(p.id) ? ' marcado' : '') + '" data-id="' + p.id + '">' +
+    const vira = p.date && p.date !== diaAnterior;
+    diaAnterior = p.date;
+    return '<div class="busca-item' + (_selecionados.has(p.id) ? ' marcado' : '') +
+      (vira ? ' vira-dia' : '') + '" data-id="' + p.id + '">' +
       '<span class="busca-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span>' +
+      blocoData(p, hoje, ontem) +
       (p.media_url ? '<img class="busca-thumb" src="' + p.media_url + '" loading="lazy" alt="">' : '<span class="busca-thumb"></span>') +
       '<div class="busca-meta">' +
         '<div class="busca-cap">' + (p.caption || '(sem legenda)') + '</div>' +
         '<div class="busca-sub">' +
           '<span class="rank-tag ' + (p.isVideo ? 'reel' : '') + '">' + tipo + '</span>' +
-          '<span>' + diaMes(p.date) + ' ' + (p.hora || '') + '</span>' +
           (p.permalink ? '<a class="busca-abrir" href="' + p.permalink + '" target="_blank" rel="noopener" data-parar="1">abrir ↗</a>' : '') +
         '</div>' +
       '</div>' +
