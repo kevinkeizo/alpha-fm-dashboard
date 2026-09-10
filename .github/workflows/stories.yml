@@ -1,0 +1,47 @@
+name: Captura de stories
+
+on:
+  schedule:
+    # De 3 em 3 horas, no minuto 47 — defasado da âncora (minuto 17) pra os
+    # dois não disputarem o mesmo push. Story vive 24h, então três leituras
+    # por dia já pegam cada um perto do fim da vida, com os números cheios.
+    - cron: '47 */3 * * *'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+# Mesmo grupo do snapshot: todos escrevem no repositório.
+concurrency:
+  group: snapshot
+  cancel-in-progress: false
+
+jobs:
+  stories:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Lê os stories no ar
+        env:
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          IG_USER_ID: ${{ vars.IG_USER_ID }}
+        run: node scripts/stories.mjs
+
+      - name: Commita
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add stories-recentes.json stories-diario.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Stories"
+          for tentativa in 1 2 3; do
+            if git push; then exit 0; fi
+            git pull --rebase --autostash origin main
+          done
+          echo "Não foi possível empurrar após 3 tentativas"
+          exit 1
