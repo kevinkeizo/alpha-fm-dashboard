@@ -2,12 +2,23 @@
   "2026-09-09": {
     "date": "2026-09-09",
     "qtd": 5,
-    "views": 7763,
+    "views": 7971,
     "alcanceMaximo": 1609,
-    "alcanceMedio": 1316,
+    "alcanceMedio": 1342,
     "replies": 8,
-    "interactions": 153,
-    "navigation": 7164,
-    "atualizado": "2026-09-10T18:41:13.290Z"
+    "interactions": 157,
+    "navigation": 7328,
+    "atualizado": "2026-09-10T21:13:10.830Z"
+  },
+  "2026-09-10": {
+    "date": "2026-09-10",
+    "qtd": 4,
+    "views": 1600,
+    "alcanceMaximo": 354,
+    "alcanceMedio": 314,
+    "replies": 1,
+    "interactions": 40,
+    "navigation": 1334,
+    "atualizado": "2026-09-10T21:13:10.830Z"
   }
 }

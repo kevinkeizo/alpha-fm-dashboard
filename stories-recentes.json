@@ -6,11 +6,11 @@
     "timestamp": "2026-09-09T23:11:47+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3982705518581975374",
     "media_type": "VIDEO",
-    "views": 1236,
-    "reach": 1039,
+    "views": 1444,
+    "reach": 1169,
     "replies": 0,
-    "navigation": 1159,
-    "interactions": 20,
+    "navigation": 1323,
+    "interactions": 24,
     "shares": 0
   },
   "18062247737785926": {
@@ -67,6 +67,62 @@
     "replies": 1,
     "navigation": 1664,
     "interactions": 26,
+    "shares": 1
+  },
+  "18088673033199425": {
+    "id": "18088673033199425",
+    "date": "2026-09-10",
+    "hora": "15:52",
+    "timestamp": "2026-09-10T18:52:32+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/3983299738857974649",
+    "media_type": "VIDEO",
+    "views": 363,
+    "reach": 284,
+    "replies": 0,
+    "navigation": 317,
+    "interactions": 7,
+    "shares": 0
+  },
+  "18119845952293911": {
+    "id": "18119845952293911",
+    "date": "2026-09-10",
+    "hora": "15:51",
+    "timestamp": "2026-09-10T18:51:36+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/3983299264423496017",
+    "media_type": "VIDEO",
+    "views": 391,
+    "reach": 308,
+    "replies": 1,
+    "navigation": 345,
+    "interactions": 16,
+    "shares": 0
+  },
+  "17941834425346689": {
+    "id": "17941834425346689",
+    "date": "2026-09-10",
+    "hora": "15:51",
+    "timestamp": "2026-09-10T18:51:30+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/3983299215123656115",
+    "media_type": "VIDEO",
+    "views": 384,
+    "reach": 311,
+    "replies": 0,
+    "navigation": 333,
+    "interactions": 9,
+    "shares": 0
+  },
+  "18390572122161420": {
+    "id": "18390572122161420",
+    "date": "2026-09-10",
+    "hora": "15:50",
+    "timestamp": "2026-09-10T18:50:35+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/3983298751686578472",
+    "media_type": "VIDEO",
+    "views": 462,
+    "reach": 354,
+    "replies": 0,
+    "navigation": 339,
+    "interactions": 8,
     "shares": 1
   }
 }
