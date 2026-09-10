@@ -486,8 +486,11 @@ async function main(){
       const mesPath = new URL('../meses/' + ym + '.json', import.meta.url);
       let doMes = { mes: ym, posts: [] };
       try{ doMes = JSON.parse(await fs.readFile(mesPath, 'utf8')); }catch(e){}
+      // O arquivo do mês leva TODAS as publicações do dia, não só as do
+      // ranking: o Buscador precisa achar qualquer post de uma campanha, e a
+      // conta publica ~35 por dia — guardar 10 deixava 70% invisível.
       const porId = new Map();
-      [...(doMes.posts || []), ...topDoDia].forEach(p => { if(p && p.id) porId.set(p.id, p); });
+      [...(doMes.posts || []), ...comMetricas].forEach(p => { if(p && p.id) porId.set(p.id, p); });
       const lista = [...porId.values()].sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
       await fs.mkdir(new URL('../meses/', import.meta.url), { recursive: true });
       await fs.writeFile(mesPath, JSON.stringify(

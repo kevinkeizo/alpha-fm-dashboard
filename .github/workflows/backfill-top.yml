@@ -36,6 +36,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add top-posts.json
+          git add top-posts.json meses/
           git diff --cached --quiet || git commit -m "Backfill do ranking de publicações"
           git push

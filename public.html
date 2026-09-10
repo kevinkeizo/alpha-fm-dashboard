@@ -3596,6 +3596,7 @@ function renderDashboard(data) {
   `;
 
   ligarNavegacao();
+  ligarBuscador();   // vive dentro de #app: só existe depois deste render
   animarNumeros(document.getElementById('app'));
 
   // Guarda o estado atual pro pulso saber de onde animar
@@ -4047,6 +4048,10 @@ function cardProjecao(hist){
 // e monta um relatório só do que foi marcado. Serve pra mostrar a um
 // anunciante o desempenho da campanha dele, sem o ruído do resto do mês.
 const _selecionados = new Set();
+// Publicações marcadas que não estão no mês visível — o relatório precisa
+// delas, mas a lista não as mostra
+const _selecionadosFora = new Set();
+const _acervoSelecionado = new Map();
 let _buscaTodas = [];
 let _buscaFiltro = { texto: '', tipo: 'todos', mes: 'todos' };
 
@@ -4055,25 +4060,36 @@ function normaliza(t){
   return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
 
-async function carregarBuscador(){
+// Carrega UM mês. Com todas as publicações arquivadas (a conta faz ~35 por
+// dia) cada mês passa de 1 MB — puxar o acervo inteiro de uma vez travaria a
+// aba. O mês é o recorte natural de campanha, então serve como filtro e como
+// unidade de carga ao mesmo tempo.
+async function carregarBuscador(ym){
   const lista = document.getElementById('busca-lista');
   if(!lista) return;
 
   const meses = mesesDisponiveis(window.__hist || []);
+  if(!meses.length) return;
+
   const sel = document.getElementById('busca-mes');
   if(sel && !sel.options.length){
-    sel.innerHTML = '<option value="todos">Todos os meses</option>' +
-      meses.map(m => '<option value="' + m + '">' + nomeMes(m) + '</option>').join('');
+    sel.innerHTML = meses.map(m => '<option value="' + m + '">' + nomeMes(m) + '</option>').join('');
   }
 
-  // Um mês por vez, pra a lista já aparecer enquanto o resto chega
-  const porId = new Map();
-  for(const ym of meses){
-    const posts = await postsDoMes(ym);
-    posts.forEach(p => { if(p && p.id) porId.set(p.id, p); });
-    _buscaTodas = [...porId.values()].sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
-    desenharBusca();
-  }
+  const alvo = ym || (sel && sel.value) || meses[0];
+  _buscaFiltro.mes = alvo;
+  if(sel) sel.value = alvo;
+
+  lista.innerHTML = '<div class="skeleton sk-linha"></div>'.repeat(4);
+
+  const posts = await postsDoMes(alvo);
+  _buscaTodas = posts.slice().sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+
+  // Selecionar em um mês e trocar pra outro perderia a seleção em silêncio
+  const idsVisiveis = new Set(_buscaTodas.map(p => p.id));
+  [..._selecionados].forEach(id => { if(!idsVisiveis.has(id)) _selecionadosFora.add(id); });
+
+  desenharBusca();
 
   const badge = document.getElementById('badge-busca');
   if(badge) badge.textContent = _buscaTodas.length || '';
@@ -4084,7 +4100,6 @@ function filtrarBusca(){
   return _buscaTodas.filter(p => {
     if(_buscaFiltro.tipo === 'reels' && !p.isVideo) return false;
     if(_buscaFiltro.tipo === 'posts' && p.isVideo) return false;
-    if(_buscaFiltro.mes !== 'todos' && (!p.date || p.date.slice(0, 7) !== _buscaFiltro.mes)) return false;
     if(t && !normaliza(p.caption).includes(t)) return false;
     return true;
   });
@@ -4097,9 +4112,10 @@ function desenharBusca(){
   const achadas = filtrarBusca();
   const cont = document.getElementById('busca-contagem');
   if(cont){
+    const mes = _buscaFiltro.mes ? nomeMes(_buscaFiltro.mes) : '';
     cont.textContent = achadas.length === _buscaTodas.length
-      ? _buscaTodas.length + ' publicações no acervo'
-      : achadas.length + ' de ' + _buscaTodas.length;
+      ? _buscaTodas.length + ' publicações em ' + mes
+      : achadas.length + ' de ' + _buscaTodas.length + ' em ' + mes;
   }
 
   if(!achadas.length){
@@ -4143,10 +4159,12 @@ function atualizarSelecao(){
   info.hidden = n === 0;
   if(!n) return;
 
-  const marcadas = _buscaTodas.filter(p => _selecionados.has(p.id));
+  const marcadas = [..._acervoSelecionado.values()];
   const inter = marcadas.reduce((a, p) => a + (p.interactions || 0), 0);
+  const fora = marcadas.filter(p => !_buscaTodas.some(x => x.id === p.id)).length;
   txt.innerHTML = '<b>' + n + (n === 1 ? ' publicação selecionada' : ' publicações selecionadas') +
-    '</b> · ' + formatNum(inter) + ' interações somadas';
+    '</b> · ' + formatNum(inter) + ' interações somadas' +
+    (fora ? ' · <span style="opacity:.75">' + fora + ' de outro mês</span>' : '');
 }
 
 function ligarBuscador(){
@@ -4161,9 +4179,24 @@ function ligarBuscador(){
       // Redesenhar a cada tecla trava a lista; 180ms é imperceptível
       debounce = setTimeout(() => { _buscaFiltro.texto = campo.value; desenharBusca(); }, 180);
     };
+
+    campo.onkeydown = ev => {
+      if(ev.key === 'Enter'){
+        // Sem form em volta, Enter não faria nada — e quem digita espera que faça
+        ev.preventDefault();
+        clearTimeout(debounce);
+        _buscaFiltro.texto = campo.value;
+        desenharBusca();
+      }
+      if(ev.key === 'Escape' && campo.value){
+        campo.value = '';
+        _buscaFiltro.texto = '';
+        desenharBusca();
+      }
+    };
   }
 
-  if(sel) sel.onchange = () => { _buscaFiltro.mes = sel.value; desenharBusca(); };
+  if(sel) sel.onchange = () => { carregarBuscador(sel.value); };
 
   document.querySelectorAll('.busca-tipo').forEach(b => {
     b.onclick = () => {
@@ -4181,14 +4214,29 @@ function ligarBuscador(){
       const item = ev.target.closest('.busca-item');
       if(!item) return;
       const id = item.dataset.id;
-      if(_selecionados.has(id)) _selecionados.delete(id); else _selecionados.add(id);
+      if(_selecionados.has(id)){
+        _selecionados.delete(id);
+        _acervoSelecionado.delete(id);
+        _selecionadosFora.delete(id);
+      }else{
+        _selecionados.add(id);
+        // Guarda a publicação, não só o id: ela pode sair da lista quando
+        // trocar de mês, e o relatório continua precisando dos números
+        const p = _buscaTodas.find(x => x.id === id);
+        if(p) _acervoSelecionado.set(id, p);
+      }
       item.classList.toggle('marcado');
       atualizarSelecao();
     };
   }
 
   const limpar = document.getElementById('busca-limpar');
-  if(limpar) limpar.onclick = () => { _selecionados.clear(); desenharBusca(); };
+  if(limpar) limpar.onclick = () => {
+    _selecionados.clear();
+    _acervoSelecionado.clear();
+    _selecionadosFora.clear();
+    desenharBusca();
+  };
 
   const gerar = document.getElementById('busca-relatorio');
   if(gerar) gerar.onclick = () => abrirRelatorioSelecao();
@@ -4221,6 +4269,7 @@ function analiseDaSelecao(posts){
     ' de alcance</b> ' + periodo + '.');
 
   // Comparação com o desempenho geral do acervo — é o que dá régua ao número
+  // Régua: o mês que está carregado no Buscador
   const universo = _buscaTodas.filter(p => typeof p.interactions === 'number');
   if(universo.length >= 20){
     const mediaGeral = universo.reduce((a, p) => a + p.interactions, 0) / universo.length;
@@ -4255,8 +4304,7 @@ function montarRelatorioSelecao(){
   const corpo = document.getElementById('rel-corpo');
   if(!corpo) return;
 
-  const posts = _buscaTodas
-    .filter(p => _selecionados.has(p.id))
+  const posts = [..._acervoSelecionado.values()]
     .sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
 
   if(!posts.length){
@@ -5458,7 +5506,6 @@ function ligarPortao(){
 async function iniciar(){
   ligarPortao();
   ligarRelatorio();
-  ligarBuscador();
   if(await verificarAcesso()){
     abrirPortao();
     load();

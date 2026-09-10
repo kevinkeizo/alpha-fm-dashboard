@@ -122,6 +122,21 @@ async function main(){
       .toISOString().slice(0, 10);
     top = mesclaTop(top, topDoDia, corte);
 
+    // Arquivo do mês recebe todas as publicações do dia, não só o ranking —
+    // é o que o Buscador precisa pra achar qualquer post de campanha.
+    try{
+      const ym = dia.slice(0, 7);
+      const mesPath = new URL('../meses/' + ym + '.json', import.meta.url);
+      let doMes = { mes: ym, posts: [] };
+      try{ doMes = JSON.parse(await fs.readFile(mesPath, 'utf8')); }catch(e){}
+      const porId = new Map();
+      [...(doMes.posts || []), ...comMetricas].forEach(p => { if(p && p.id) porId.set(p.id, p); });
+      const lista = [...porId.values()].sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
+      await fs.mkdir(new URL('../meses/', import.meta.url), { recursive: true });
+      await fs.writeFile(mesPath, JSON.stringify(
+        { mes: ym, posts: lista, atualizado: new Date().toISOString() }, null, 2) + String.fromCharCode(10));
+    }catch(e){ console.warn('Arquivo do mês falhou em ' + dia + ':', e.message); }
+
     const melhor = topDoDia[0];
     // Grava a cada dia: se a API cair no meio, o que já veio fica salvo
     await fs.writeFile(topPath, JSON.stringify(top, null, 2) + '\n');
