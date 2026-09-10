@@ -2093,7 +2093,7 @@ body.sem-login #btn-sair { display: none; }
   z-index: 2;
 }
 
-.rel-barra select {
+.rel-barra select, .rel-barra-select {
   padding: 7px 10px;
   border: 1px solid var(--line-strong);
   border-radius: 8px;
@@ -2475,6 +2475,179 @@ body.sem-login #btn-sair { display: none; }
 /* Na tela o endereço só polui a tabela — lá o clique resolve */
 .rel-abrir { font-size: 9px; }
 
+
+
+/* ══ Buscador ════════════════════════════════════════════════════════════════ */
+.busca-barra {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 900px) { .busca-barra { grid-template-columns: 1fr; } }
+
+.busca-campo {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.busca-campo svg {
+  position: absolute;
+  left: 13px;
+  width: 16px; height: 16px;
+  stroke: var(--ink-4);
+  stroke-width: 2;
+  fill: none;
+  pointer-events: none;
+}
+
+.busca-campo input {
+  width: 100%;
+  padding: 11px 13px 11px 38px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface);
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  color: var(--ink-1);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.busca-campo input:focus {
+  outline: none;
+  border-color: var(--signal-500);
+  box-shadow: 0 0 0 3px rgba(61, 91, 254, 0.12);
+}
+
+.busca-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 11px 15px;
+  background: var(--signal-100);
+  border: 1px solid var(--signal-200);
+  border-radius: 10px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
+  color: var(--signal-700);
+}
+
+.busca-info[hidden] { display: none; }
+
+.busca-acoes { display: flex; gap: 8px; }
+
+.busca-lista { display: flex; flex-direction: column; gap: 7px; }
+
+/* Linha selecionável: o clique inteiro alterna, não só a caixinha */
+.busca-item {
+  display: grid;
+  grid-template-columns: 22px 46px minmax(0, 1fr) 88px 88px;
+  align-items: center;
+  gap: 13px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 140ms var(--ease-out);
+}
+
+@media (max-width: 1000px) {
+  .busca-item { grid-template-columns: 22px 46px minmax(0, 1fr) 80px; }
+  .busca-item .busca-col-esconde { display: none; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .busca-item:hover { border-color: var(--signal-200); background: #FBFCFF; }
+}
+
+.busca-item:active { transform: scale(0.997); }
+
+.busca-item.marcado {
+  border-color: var(--signal-500);
+  background: var(--signal-100);
+}
+
+.busca-check {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+
+.busca-item.marcado .busca-check {
+  background: var(--signal-500);
+  border-color: var(--signal-500);
+}
+
+.busca-check svg { width: 11px; height: 11px; stroke: #fff; stroke-width: 3.2; fill: none; opacity: 0; }
+.busca-item.marcado .busca-check svg { opacity: 1; }
+
+.busca-thumb {
+  width: 46px; height: 46px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+
+.busca-meta { min-width: 0; }
+
+.busca-cap {
+  font-size: 12.5px;
+  color: var(--ink-1);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.busca-sub {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10.5px;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  margin-top: 4px;
+}
+
+.busca-num { text-align: right; }
+.busca-num-v {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+}
+.busca-num-l {
+  font-size: 9px;
+  color: var(--ink-4);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 1px;
+}
+
+.busca-abrir {
+  color: var(--signal-500);
+  text-decoration: none;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 5px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .busca-abrir:hover { background: var(--signal-100); }
+}
+
 </style>
 </head>
 <body>
@@ -2567,6 +2740,11 @@ body.sem-login #btn-sair { display: none; }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>
         <span>Publicações</span>
         <span class="nav-badge" id="badge-posts"></span>
+      </button>
+      <button class="nav-item" data-view="buscador" title="Buscador">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <span>Buscador</span>
+        <span class="nav-badge" id="badge-busca"></span>
       </button>
       <button class="nav-item" data-view="audiencia" title="Audiência">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
@@ -3248,6 +3426,44 @@ function renderDashboard(data) {
     </div>
     </section>
 
+    <section class="view" data-view="buscador">
+    <div class="view-head">
+      <h2>Buscador</h2>
+      <p>Ache publicações, selecione e gere um relatório só delas</p>
+    </div>
+
+    <div class="busca-barra">
+      <label class="busca-campo">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="search" id="busca-texto" placeholder="Buscar na legenda — artista, evento, tema…" autocomplete="off">
+      </label>
+      <div class="chart-filters">
+        <button class="filter-btn busca-tipo active" data-tipo="todos">Todos</button>
+        <button class="filter-btn busca-tipo" data-tipo="reels">Reels</button>
+        <button class="filter-btn busca-tipo" data-tipo="posts">Posts</button>
+      </div>
+      <select id="busca-mes" class="rel-barra-select"></select>
+    </div>
+
+    <div class="busca-info" id="busca-info" hidden>
+      <span id="busca-info-txt"></span>
+      <div class="busca-acoes">
+        <button class="rel-btn" id="busca-limpar">Limpar seleção</button>
+        <button class="rel-btn principal" id="busca-relatorio">Gerar relatório</button>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <div class="chart-title">
+        <span>Publicações</span>
+        <span id="busca-contagem" class="kpi-sub"></span>
+      </div>
+      <div class="busca-lista" id="busca-lista">
+        <div class="skeleton sk-linha"></div><div class="skeleton sk-linha"></div><div class="skeleton sk-linha"></div>
+      </div>
+    </div>
+    </section>
+
     <section class="view" data-view="audiencia">
     <div class="view-head">
       <h2>Audiência</h2>
@@ -3591,6 +3807,7 @@ async function load(){
 
     carregarAudiencia();
     carregarStories();
+    carregarBuscador();
   }catch(e){
     document.getElementById('app').innerHTML =
       '<div class="loading" style="color:var(--drop)">Erro ao montar o painel: ' + e.message + '</div>';
@@ -3824,6 +4041,337 @@ function cardProjecao(hist){
 }
 
 
+
+// ── Buscador ────────────────────────────────────────────────────────────────
+// Junta as publicações de todos os meses arquivados, filtra por texto e tipo,
+// e monta um relatório só do que foi marcado. Serve pra mostrar a um
+// anunciante o desempenho da campanha dele, sem o ruído do resto do mês.
+const _selecionados = new Set();
+let _buscaTodas = [];
+let _buscaFiltro = { texto: '', tipo: 'todos', mes: 'todos' };
+
+// Sem acento e em minúscula: procurar "sertao" tem que achar "sertão"
+function normaliza(t){
+  return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+async function carregarBuscador(){
+  const lista = document.getElementById('busca-lista');
+  if(!lista) return;
+
+  const meses = mesesDisponiveis(window.__hist || []);
+  const sel = document.getElementById('busca-mes');
+  if(sel && !sel.options.length){
+    sel.innerHTML = '<option value="todos">Todos os meses</option>' +
+      meses.map(m => '<option value="' + m + '">' + nomeMes(m) + '</option>').join('');
+  }
+
+  // Um mês por vez, pra a lista já aparecer enquanto o resto chega
+  const porId = new Map();
+  for(const ym of meses){
+    const posts = await postsDoMes(ym);
+    posts.forEach(p => { if(p && p.id) porId.set(p.id, p); });
+    _buscaTodas = [...porId.values()].sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+    desenharBusca();
+  }
+
+  const badge = document.getElementById('badge-busca');
+  if(badge) badge.textContent = _buscaTodas.length || '';
+}
+
+function filtrarBusca(){
+  const t = normaliza(_buscaFiltro.texto);
+  return _buscaTodas.filter(p => {
+    if(_buscaFiltro.tipo === 'reels' && !p.isVideo) return false;
+    if(_buscaFiltro.tipo === 'posts' && p.isVideo) return false;
+    if(_buscaFiltro.mes !== 'todos' && (!p.date || p.date.slice(0, 7) !== _buscaFiltro.mes)) return false;
+    if(t && !normaliza(p.caption).includes(t)) return false;
+    return true;
+  });
+}
+
+function desenharBusca(){
+  const lista = document.getElementById('busca-lista');
+  if(!lista) return;
+
+  const achadas = filtrarBusca();
+  const cont = document.getElementById('busca-contagem');
+  if(cont){
+    cont.textContent = achadas.length === _buscaTodas.length
+      ? _buscaTodas.length + ' publicações no acervo'
+      : achadas.length + ' de ' + _buscaTodas.length;
+  }
+
+  if(!achadas.length){
+    lista.innerHTML = '<div class="vazio-msg">' +
+      (_buscaTodas.length ? 'Nada encontrado com esse filtro' : 'Carregando publicações…') + '</div>';
+    atualizarSelecao();
+    return;
+  }
+
+  // 200 já é mais do que alguém percorre; o filtro é o caminho pra chegar
+  lista.innerHTML = achadas.slice(0, 200).map(p => {
+    const tipo = p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM';
+    return '<div class="busca-item' + (_selecionados.has(p.id) ? ' marcado' : '') + '" data-id="' + p.id + '">' +
+      '<span class="busca-check"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></span>' +
+      (p.media_url ? '<img class="busca-thumb" src="' + p.media_url + '" loading="lazy" alt="">' : '<span class="busca-thumb"></span>') +
+      '<div class="busca-meta">' +
+        '<div class="busca-cap">' + (p.caption || '(sem legenda)') + '</div>' +
+        '<div class="busca-sub">' +
+          '<span class="rank-tag ' + (p.isVideo ? 'reel' : '') + '">' + tipo + '</span>' +
+          '<span>' + diaMes(p.date) + ' ' + (p.hora || '') + '</span>' +
+          (p.permalink ? '<a class="busca-abrir" href="' + p.permalink + '" target="_blank" rel="noopener" data-parar="1">abrir ↗</a>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="busca-num"><div class="busca-num-v">' + formatNum(p.interactions) + '</div><div class="busca-num-l">interações</div></div>' +
+      '<div class="busca-num busca-col-esconde"><div class="busca-num-v">' + formatNum(p.reach) + '</div><div class="busca-num-l">alcance</div></div>' +
+    '</div>';
+  }).join('') +
+  (achadas.length > 200
+    ? '<div class="vazio-msg">mostrando as 200 mais recentes de ' + achadas.length + ' — refine a busca</div>'
+    : '');
+
+  atualizarSelecao();
+}
+
+function atualizarSelecao(){
+  const info = document.getElementById('busca-info');
+  const txt = document.getElementById('busca-info-txt');
+  if(!info || !txt) return;
+
+  const n = _selecionados.size;
+  info.hidden = n === 0;
+  if(!n) return;
+
+  const marcadas = _buscaTodas.filter(p => _selecionados.has(p.id));
+  const inter = marcadas.reduce((a, p) => a + (p.interactions || 0), 0);
+  txt.innerHTML = '<b>' + n + (n === 1 ? ' publicação selecionada' : ' publicações selecionadas') +
+    '</b> · ' + formatNum(inter) + ' interações somadas';
+}
+
+function ligarBuscador(){
+  const lista = document.getElementById('busca-lista');
+  const campo = document.getElementById('busca-texto');
+  const sel = document.getElementById('busca-mes');
+
+  if(campo){
+    let debounce;
+    campo.oninput = () => {
+      clearTimeout(debounce);
+      // Redesenhar a cada tecla trava a lista; 180ms é imperceptível
+      debounce = setTimeout(() => { _buscaFiltro.texto = campo.value; desenharBusca(); }, 180);
+    };
+  }
+
+  if(sel) sel.onchange = () => { _buscaFiltro.mes = sel.value; desenharBusca(); };
+
+  document.querySelectorAll('.busca-tipo').forEach(b => {
+    b.onclick = () => {
+      document.querySelectorAll('.busca-tipo').forEach(o => o.classList.remove('active'));
+      b.classList.add('active');
+      _buscaFiltro.tipo = b.dataset.tipo;
+      desenharBusca();
+    };
+  });
+
+  if(lista){
+    lista.onclick = ev => {
+      // Clicar em "abrir" não deve marcar a linha
+      if(ev.target.closest('[data-parar]')) return;
+      const item = ev.target.closest('.busca-item');
+      if(!item) return;
+      const id = item.dataset.id;
+      if(_selecionados.has(id)) _selecionados.delete(id); else _selecionados.add(id);
+      item.classList.toggle('marcado');
+      atualizarSelecao();
+    };
+  }
+
+  const limpar = document.getElementById('busca-limpar');
+  if(limpar) limpar.onclick = () => { _selecionados.clear(); desenharBusca(); };
+
+  const gerar = document.getElementById('busca-relatorio');
+  if(gerar) gerar.onclick = () => abrirRelatorioSelecao();
+}
+
+
+// ── Relatório de uma seleção ────────────────────────────────────────────────
+// Mesma folha do relatório mensal, mas o recorte são as publicações marcadas.
+// Aqui não existe "crescimento do período": seguidor não é atribuível a um
+// conjunto de posts, e fingir que é seria o erro que tiramos da tabela.
+// O que este relatório responde é: quanto ESSAS publicações entregaram.
+function analiseDaSelecao(posts){
+  const L = [];
+  if(!posts.length) return L;
+
+  const pct = (a, b) => b ? ((a - b) / b) * 100 : 0;
+  const inter = posts.reduce((a, p) => a + (p.interactions || 0), 0);
+  const alc = posts.reduce((a, p) => a + (p.reach || 0), 0);
+  const media = inter / posts.length;
+
+  const datas = posts.map(p => p.date).filter(Boolean).sort();
+  const periodo = datas.length
+    ? (datas[0] === datas[datas.length-1]
+        ? 'em ' + diaMes(datas[0])
+        : 'entre ' + diaMes(datas[0]) + ' e ' + diaMes(datas[datas.length-1]))
+    : '';
+
+  L.push('As <b>' + posts.length + '</b> publicações selecionadas somaram <b>' +
+    formatNum(inter) + ' interações</b> e <b>' + formatNum(alc) +
+    ' de alcance</b> ' + periodo + '.');
+
+  // Comparação com o desempenho geral do acervo — é o que dá régua ao número
+  const universo = _buscaTodas.filter(p => typeof p.interactions === 'number');
+  if(universo.length >= 20){
+    const mediaGeral = universo.reduce((a, p) => a + p.interactions, 0) / universo.length;
+    const dif = pct(media, mediaGeral);
+    if(Math.abs(dif) >= 10){
+      L.push('A média de <b>' + formatNum(Math.round(media)) + ' interações</b> por publicação ficou <b>' +
+        Math.abs(dif).toFixed(0) + '% ' + (dif > 0 ? 'acima' : 'abaixo') +
+        '</b> da média do acervo (' + formatNum(Math.round(mediaGeral)) + ').');
+    }else{
+      L.push('A média de <b>' + formatNum(Math.round(media)) + ' interações</b> por publicação ficou em linha com a média do acervo.');
+    }
+  }
+
+  const fmts = analisaFormatos(posts).filter(f => f.qtd >= 3);
+  if(fmts.length >= 2){
+    L.push('<b>' + fmts[0].nome + '</b> rendeu mais dentro da seleção: <b>' +
+      formatNum(fmts[0].media) + '</b> por publicação, contra ' +
+      formatNum(fmts[1].media) + ' de ' + fmts[1].nome.toLowerCase() + '.');
+  }
+
+  const top = [...posts].sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1))[0];
+  if(top && top.interactions && media && pct(top.interactions, media) >= 80){
+    L.push('A de maior desempenho fez <b>' + formatNum(top.interactions) + ' interações</b>, <b>' +
+      (top.interactions / media).toFixed(1).replace('.', ',') + 'x a média</b> da seleção.');
+    L.destaquePost = top;
+  }
+
+  return L;
+}
+
+function montarRelatorioSelecao(){
+  const corpo = document.getElementById('rel-corpo');
+  if(!corpo) return;
+
+  const posts = _buscaTodas
+    .filter(p => _selecionados.has(p.id))
+    .sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
+
+  if(!posts.length){
+    corpo.innerHTML = '<div class="vazio-msg">Nenhuma publicação selecionada</div>';
+    return;
+  }
+
+  const num = (v, l, sub, destaque) =>
+    '<div class="rel-num' + (destaque ? ' rel-num-ganho' : '') + '">' +
+      '<div class="rel-v">' + v + '</div><div class="rel-l">' + l + '</div>' +
+      (sub ? '<div class="rel-s">' + sub + '</div>' : '') +
+    '</div>';
+
+  const soma = c => posts.reduce((a, p) => a + (p[c] || 0), 0);
+  const datas = posts.map(p => p.date).filter(Boolean).sort();
+  const fmts = analisaFormatos(posts);
+  const horas = posts.length >= 8 ? analisaHoras(posts) : null;
+
+  let html = '';
+
+  html += '<div class="rel-cab">' + REL_LOGO +
+    '<div class="rel-cab-tit">' +
+      '<h1>Relatório de publicações</h1>' +
+      '<div class="periodo">Alpha FM 101.7 · seleção de ' + posts.length + ' publicações</div>' +
+    '</div>' +
+    '<div class="emissao">emitido em ' + new Date().toLocaleDateString('pt-BR') +
+      (datas.length ? '<br>' + diaMes(datas[0]) + ' a ' + diaMes(datas[datas.length-1]) : '') +
+    '</div>' +
+  '</div>';
+
+  const analise = analiseDaSelecao(posts);
+  if(analise.length){
+    html += '<div class="rel-destaques"><h2>Leitura da seleção</h2><ul>' +
+      analise.map(t => '<li><span>' + t + '</span></li>').join('') +
+    '</ul>' + mencaoPost(analise.destaquePost) + '</div>';
+  }
+
+  html += '<div class="rel-secao"><h2>Desempenho somado</h2><div class="rel-grade">' +
+    num(formatNum(soma('interactions')), 'Interações',
+      formatNum(Math.round(soma('interactions') / posts.length)) + ' por publicação', true) +
+    num(formatNum(soma('reach')), 'Alcance somado',
+      formatNum(Math.round(soma('reach') / posts.length)) + ' por publicação') +
+    num(formatNum(soma('views')), 'Visualizações',
+      posts.filter(p => p.isVideo).length + ' de vídeo') +
+    num(formatNum(posts.length), 'Publicações',
+      fmts.map(f => f.qtd + ' ' + f.nome.toLowerCase()).join(' · ')) +
+  '</div></div>';
+
+  html += '<div class="rel-secao"><h2>Publicações selecionadas</h2><table class="rel-tabela">' +
+    '<tr><th class="pos"></th><th>Publicação</th><th class="num">Interações</th><th class="num">Alcance</th></tr>' +
+    posts.map((p, i) =>
+      '<tr><td class="num pos">' + (i+1) + '</td>' +
+      '<td><div class="rel-post">' +
+        (p.media_url ? '<img class="rel-thumb" src="' + p.media_url + '" alt="" loading="lazy">' : '') +
+        '<div class="rel-post-txt">' +
+          '<div class="cap"><a class="rel-link" href="' + p.permalink + '" target="_blank" rel="noopener"' +
+            ' data-url="' + urlCurta(p.permalink) + '">' + (p.caption || '(sem legenda)') + '</a></div>' +
+          '<div style="margin-top:4px"><span class="rel-tag">' +
+            (p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM') +
+          '</span> <span style="font-size:9.5px;color:#A8ACBE;font-family:monospace">' +
+            diaMes(p.date) + ' ' + (p.hora || '') + '</span></div>' +
+        '</div>' +
+      '</div></td>' +
+      '<td class="num">' + formatNum(p.interactions) + '</td>' +
+      '<td class="num">' + formatNum(p.reach) + '</td></tr>'
+    ).join('') +
+  '</table></div>';
+
+  if(fmts.length >= 2){
+    const teto = Math.max(...fmts.map(f => f.media), 1);
+    html += '<div class="rel-secao"><h2>Rendimento por formato</h2><table class="rel-tabela">' +
+      '<tr><th>Formato</th><th class="rel-barra-cel"></th><th class="num">Interações (média)</th>' +
+      '<th class="num">Alcance (média)</th><th class="num">Publicações</th></tr>' +
+      fmts.map(f => '<tr><td><span class="rel-tag">' + f.nome + '</span></td>' +
+        '<td class="rel-barra-cel"><div class="rel-barra-tr"><div class="rel-barra-pr" style="width:' +
+          ((f.media / teto) * 100).toFixed(1) + '%"></div></div></td>' +
+        '<td class="num">' + formatNum(f.media) + '</td>' +
+        '<td class="num">' + formatNum(f.alcance) + '</td>' +
+        '<td class="num">' + f.qtd + (f.qtd < 3 ? ' ⚠' : '') + '</td></tr>').join('') +
+    '</table>' +
+    (horas && horas.max > 0
+      ? '<div style="margin-top:14px;font-size:11.5px;color:#454B63">Melhor horário da seleção: <b>' +
+        String(horas.melhor).padStart(2,'0') + 'h</b>, média de ' +
+        formatNum(Math.round(horas.max)) + ' interações.</div>'
+      : '') +
+    '</div>';
+  }
+
+  const notas = [];
+  notas.push('Recorte manual de ' + posts.length + ' publicações' +
+    (datas.length ? ', de ' + diaMes(datas[0]) + ' a ' + diaMes(datas[datas.length-1]) : '') + '.');
+  notas.push('Alcance somado repete quem viu mais de uma destas publicações — não é público único.');
+  notas.push('Crescimento de seguidores não entra aqui: o Instagram não atribui seguidor a publicação em reels, que são a maior parte do conteúdo.');
+  if(fmts.some(f => f.qtd < 3)) notas.push('Formatos com ⚠ têm menos de 3 publicações na seleção; a média deles oscila muito.');
+  html += '<div class="rel-rodape">' + notas.map(n => '· ' + n).join('<br>') + '</div>';
+
+  corpo.innerHTML = html;
+}
+
+function abrirRelatorioSelecao(){
+  const fundo = document.getElementById('rel-fundo');
+  if(!fundo) return;
+  if(!_selecionados.size){ alert('Selecione ao menos uma publicação.'); return; }
+
+  // A barra de mês não faz sentido num recorte manual
+  const barraMes = document.getElementById('rel-mes');
+  if(barraMes) barraMes.style.display = 'none';
+  const rotulo = document.querySelector('.rel-barra label');
+  if(rotulo) rotulo.style.display = 'none';
+
+  fundo.hidden = false;
+  document.body.style.overflow = 'hidden';
+  montarRelatorioSelecao();
+}
+
 // ── Relatório mensal ────────────────────────────────────────────────────────
 // Monta a partir do que já está em memória: histórico diário, ranking de
 // publicações e demografia. Nenhuma chamada nova — abre na hora.
@@ -3999,6 +4547,33 @@ const REL_LOGO = '<svg class="rel-logo" viewBox="0 0 240 240" xmlns="http://www.
 // Demografia daquele mês, se já tiver sido capturada. Sem registro, cai pro
 // retrato atual — que é o que existia antes — mas a tela passa a dizer qual
 // dos dois está mostrando.
+
+// Agregado diário de stories. A Meta só expõe as últimas 24h, então esses
+// números vêm do que o job de 3 em 3 horas foi acumulando — não dá pra
+// recuperar story de um mês que passou sem captura.
+let _storiesDiario = null;
+
+async function storiesDoMes(ym){
+  if(_storiesDiario === null){
+    try{
+      const r = await fetch("https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/stories-diario.json");
+      _storiesDiario = r.ok ? await r.json() : {};
+    }catch(e){ _storiesDiario = {}; }
+  }
+  const dias = Object.values(_storiesDiario || {}).filter(d => d && d.date && d.date.slice(0, 7) === ym);
+  if(!dias.length) return null;
+  const soma = c => dias.reduce((a, d) => a + (d[c] || 0), 0);
+  const alcances = dias.map(d => d.alcanceMedio).filter(v => typeof v === 'number');
+  return {
+    dias: dias.length,
+    qtd: soma('qtd'),
+    views: soma('views'),
+    replies: soma('replies'),
+    interactions: soma('interactions'),
+    alcanceMedio: alcances.length ? Math.round(alcances.reduce((a, b) => a + b, 0) / alcances.length) : null
+  };
+}
+
 let _demoHistorico = null;
 
 async function demografiaDoMes(ym){
@@ -4136,6 +4711,17 @@ async function montarRelatorio(ym){
     num(engMedia != null ? engMedia.toFixed(1).replace('.', ',') + '%' : '—', 'Engajamento médio', 'interações por alcance') +
   '</div></div>';
 
+  // ── Stories ──
+  const st = await storiesDoMes(ym);
+  if(st){
+    html += '<div class="rel-secao"><h2>Stories</h2><div class="rel-grade">' +
+      num(formatNum(st.qtd), 'Stories publicados', st.dias + (st.dias === 1 ? ' dia com captura' : ' dias com captura')) +
+      num(formatNum(st.views), 'Visualizações', st.qtd ? formatNum(Math.round(st.views / st.qtd)) + ' por story' : '') +
+      num(formatNum(st.alcanceMedio), 'Alcance médio', 'por story') +
+      num(formatNum(st.replies), 'Respostas', 'mensagens recebidas') +
+    '</div></div>';
+  }
+
   // ── Melhores publicações ──
   if(posts.length){
     html += '<div class="rel-secao"><h2>Melhores publicações</h2><table class="rel-tabela">' +
@@ -4224,6 +4810,7 @@ async function montarRelatorio(ym){
   if(posts.length) notas.push('O ranking cobre as publicações de melhor desempenho de cada dia, não todas as do período.');
   if(fmts.some(f => f.qtd < 5)) notas.push('Formatos marcados com ⚠ têm menos de 5 publicações; a média deles ainda oscila muito.');
   notas.push('Alcance somado repete quem viu em mais de um dia — não é público único do período.');
+  if(st) notas.push('Stories cobrem ' + st.dias + ' dia(s) com captura no mês; a Meta só expõe as últimas 24h, então dias anteriores ao início da captura não existem.');
   if(demo && !demo.doPeriodo) notas.push('O perfil da audiência é o retrato atual da base, não do período — a captura mensal começou depois deste mês.');
   if(demo && demo.doPeriodo && demo.dados.capturadoEm) notas.push('Perfil da audiência capturado em ' + new Date(demo.dados.capturadoEm).toLocaleDateString('pt-BR') + '.');
   if(proj) notas.push('A projeção é uma regressão linear sobre ' + proj.baseDias + ' dias e assume que o ritmo se mantém.');
@@ -4278,6 +4865,11 @@ async function abrirRelatorio(){
 
   sel.innerHTML = meses.map(m => '<option value="' + m + '">' + nomeMes(m) + '</option>').join('');
   sel.onchange = () => { montarRelatorio(sel.value); };
+
+  // O relatório de seleção esconde a barra de mês; aqui ela volta
+  sel.style.display = '';
+  const rotuloMes = document.querySelector('.rel-barra label');
+  if(rotuloMes) rotuloMes.style.display = '';
 
   // Abre já, com esqueleto: esperar de tela branca parece travado
   fundo.hidden = false;
@@ -4866,6 +5458,7 @@ function ligarPortao(){
 async function iniciar(){
   ligarPortao();
   ligarRelatorio();
+  ligarBuscador();
   if(await verificarAcesso()){
     abrirPortao();
     load();
