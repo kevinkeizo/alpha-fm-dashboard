@@ -484,8 +484,18 @@ async function main(){
     try{
       const ym = todayKey.slice(0, 7);
       const mesPath = new URL('../meses/' + ym + '.json', import.meta.url);
-      let doMes = { mes: ym, posts: [] };
-      try{ doMes = JSON.parse(await fs.readFile(mesPath, 'utf8')); }catch(e){}
+      // Ler mal um arquivo que EXISTE e seguir com lista vazia regravaria o
+      // mês inteiro com as publicações de um dia só. Arquivo ausente é
+      // normal (mês novo); arquivo ilegível é motivo pra não escrever nada.
+      let doMes = null;
+      try{
+        doMes = JSON.parse(await fs.readFile(mesPath, 'utf8'));
+      }catch(e){
+        if(e.code === 'ENOENT'){ doMes = { mes: ym, posts: [] }; }
+        else throw new Error('arquivo de ' + ym + ' ilegível (' + e.message + '); não vou sobrescrever');
+      }
+      if(!Array.isArray(doMes.posts)) throw new Error('arquivo de ' + ym + ' sem lista de posts; não vou sobrescrever');
+      const antes = doMes.posts.length;
       // O arquivo do mês leva TODAS as publicações do dia, não só as do
       // ranking: o Buscador precisa achar qualquer post de uma campanha, e a
       // conta publica ~35 por dia — guardar 10 deixava 70% invisível.
@@ -493,6 +503,11 @@ async function main(){
       [...(doMes.posts || []), ...comMetricas].forEach(p => { if(p && p.id) porId.set(p.id, p); });
       const lista = [...porId.values()].sort((a, b) => (b.interactions ?? -1) - (a.interactions ?? -1));
       await fs.mkdir(new URL('../meses/', import.meta.url), { recursive: true });
+      // Segunda camada: o arquivo do mês só cresce. Se ficaria menor, algo
+      // deu errado na leitura — melhor não gravar e deixar o log gritar.
+      if(lista.length < antes){
+        throw new Error('arquivo de ' + ym + ' encolheria de ' + antes + ' para ' + lista.length + '; abortado');
+      }
       await fs.writeFile(mesPath, JSON.stringify(
         { mes: ym, posts: lista, atualizado: new Date().toISOString() }, null, 2) + String.fromCharCode(10));
       console.log('Arquivo de', ym + ':', lista.length, 'publicações.');
