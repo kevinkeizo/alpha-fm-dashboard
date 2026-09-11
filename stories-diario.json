@@ -8,17 +8,28 @@
     "replies": 8,
     "interactions": 157,
     "navigation": 7328,
-    "atualizado": "2026-09-11T11:50:06.989Z"
+    "atualizado": "2026-09-11T16:46:13.207Z"
   },
   "2026-09-10": {
     "date": "2026-09-10",
     "qtd": 4,
-    "views": 5702,
-    "alcanceMaximo": 1495,
-    "alcanceMedio": 1187,
-    "replies": 15,
-    "interactions": 157,
-    "navigation": 5132,
-    "atualizado": "2026-09-11T11:50:06.989Z"
+    "views": 7185,
+    "alcanceMaximo": 1828,
+    "alcanceMedio": 1440,
+    "replies": 17,
+    "interactions": 191,
+    "navigation": 6333,
+    "atualizado": "2026-09-11T16:46:13.208Z"
+  },
+  "2026-09-11": {
+    "date": "2026-09-11",
+    "qtd": 3,
+    "views": 899,
+    "alcanceMaximo": 301,
+    "alcanceMedio": 287,
+    "replies": 7,
+    "interactions": 48,
+    "navigation": 652,
+    "atualizado": "2026-09-11T16:46:13.208Z"
   }
 }
