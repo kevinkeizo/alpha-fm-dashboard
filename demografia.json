@@ -1,132 +1,132 @@
 [
   {
     "mes": "2026-09",
-    "capturadoEm": "2026-09-13T09:24:55.716Z",
+    "capturadoEm": "2026-09-14T09:46:58.402Z",
     "idade": [
       {
         "chave": "13-17",
-        "valor": 6340
+        "valor": 6362
       },
       {
         "chave": "18-24",
-        "valor": 27844
+        "valor": 27946
       },
       {
         "chave": "25-34",
-        "valor": 111278
+        "valor": 111753
       },
       {
         "chave": "35-44",
-        "valor": 215149
+        "valor": 215440
       },
       {
         "chave": "45-54",
-        "valor": 303650
+        "valor": 304262
       },
       {
         "chave": "55-64",
-        "valor": 207297
+        "valor": 207903
       },
       {
         "chave": "65+",
-        "valor": 108795
+        "valor": 109225
       }
     ],
     "genero": [
       {
         "chave": "Feminino",
-        "valor": 499950
+        "valor": 501394
       },
       {
         "chave": "Masculino",
-        "valor": 375982
+        "valor": 376834
       },
       {
         "chave": "Não informado",
-        "valor": 104421
+        "valor": 104663
       }
     ],
     "cidade": [
       {
         "chave": "São Paulo",
         "uf": "São Paulo",
-        "valor": 210841
+        "valor": 211395
       },
       {
         "chave": "Rio de Janeiro",
         "uf": "Rio de Janeiro",
-        "valor": 31847
+        "valor": 32017
       },
       {
         "chave": "Guarulhos",
         "uf": "São Paulo",
-        "valor": 17303
+        "valor": 17362
       },
       {
         "chave": "Santo André",
         "uf": "São Paulo",
-        "valor": 12583
+        "valor": 12631
       },
       {
         "chave": "São Bernardo do Campo",
         "uf": "São Paulo",
-        "valor": 11607
+        "valor": 11622
       },
       {
         "chave": "Belo Horizonte, Minas Gerais",
         "uf": null,
-        "valor": 11570
+        "valor": 11584
       },
       {
         "chave": "Osasco",
         "uf": "São Paulo",
-        "valor": 11022
+        "valor": 11088
       },
       {
         "chave": "Fortaleza, Ceará",
         "uf": null,
-        "valor": 10563
+        "valor": 10596
       }
     ],
     "pais": [
       {
         "chave": "BR",
-        "valor": 820883
+        "valor": 823079
       },
       {
         "chave": "US",
-        "valor": 25539
-      },
-      {
-        "chave": "AR",
-        "valor": 11964
+        "valor": 25588
       },
       {
         "chave": "PT",
-        "valor": 11953
+        "valor": 11998
+      },
+      {
+        "chave": "AR",
+        "valor": 11996
       },
       {
         "chave": "IT",
-        "valor": 9269
+        "valor": 9293
       },
       {
         "chave": "CL",
-        "valor": 8064
+        "valor": 8069
       },
       {
         "chave": "VE",
-        "valor": 7802
+        "valor": 7811
       },
       {
-        "chave": "MX",
-        "valor": 7295
+        "chave": "ES",
+        "valor": 7338
       }
     ],
     "totais": {
-      "idade": 980353,
-      "genero": 980353,
-      "cidade": 481068,
-      "pais": 965741
+      "idade": 982891,
+      "genero": 982891,
+      "cidade": 482431,
+      "pais": 968261
     }
   }
 ]
