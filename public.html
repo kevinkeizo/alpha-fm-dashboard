@@ -2769,6 +2769,78 @@ body.sem-login #btn-sair { display: none; }
 .busca-item.vira-dia { margin-top: 9px; }
 .busca-item.vira-dia:first-child { margin-top: 0; }
 
+
+
+/* ══ Indicadores do relatório ════════════════════════════════════════════════
+   Visualizações, engajamento e ganho de seguidores são os três números que a
+   redação leva pra qualquer reunião. Estavam corretos mas espalhados em
+   seções diferentes — quem abria o relatório tinha que caçar os três. */
+.rel-indicadores {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.rel-ind {
+  padding: 20px 22px;
+  border-radius: 13px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+}
+
+.rel-ind.destaque {
+  background: var(--signal-100);
+  border-color: var(--signal-200);
+}
+
+.rel-ind.ganho {
+  background: var(--gain-soft);
+  border-color: rgba(18, 133, 95, 0.2);
+}
+
+.rel-ind-rot {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.rel-ind.destaque .rel-ind-rot { color: var(--signal-600); }
+.rel-ind.ganho .rel-ind-rot { color: var(--gain); }
+
+.rel-ind-v {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--ink-1);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  margin-top: 8px;
+}
+
+.rel-ind.destaque .rel-ind-v { color: var(--signal-700); }
+.rel-ind.ganho .rel-ind-v { color: var(--gain); }
+
+.rel-ind-s {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  margin-top: 5px;
+  line-height: 1.45;
+}
+
+@media (max-width: 700px) {
+  .rel-indicadores { grid-template-columns: 1fr; }
+}
+
+@media print {
+  .rel-ind { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .rel-indicadores { page-break-inside: avoid; }
+}
+
 </style>
 </head>
 <body>
@@ -4464,6 +4536,28 @@ function ligarBuscador(){
 // Aqui não existe "crescimento do período": seguidor não é atribuível a um
 // conjunto de posts, e fingir que é seria o erro que tiramos da tabela.
 // O que este relatório responde é: quanto ESSAS publicações entregaram.
+
+// Ganho de seguidores nos dias que a seleção cobre. NÃO é o que essas
+// publicações trouxeram — o Instagram não atribui seguidor a reel, e o
+// numero inclui tudo que a conta fez naqueles dias. Serve de contexto,
+// e o rótulo tem que dizer isso, senão vira número enganoso numa
+// conversa comercial.
+function ganhoNosDias(datas){
+  if(!datas || !datas.length) return null;
+  const hist = (window.__hist || []).filter(h => h.followers != null);
+  if(hist.length < 2) return null;
+
+  const de = datas[0], ate = datas[datas.length - 1];
+  // Base: último fechamento ANTES do primeiro dia da seleção
+  const antes = hist.filter(h => h.date < de);
+  const base = antes.length ? antes[antes.length - 1] : null;
+  const fim = [...hist].reverse().find(h => h.date <= ate);
+  if(!base || !fim || fim.date <= base.date) return null;
+
+  const dias = Math.max(1, Math.round((Date.parse(fim.date) - Date.parse(base.date)) / 86400000));
+  return { valor: fim.followers - base.followers, dias, de: base.date, ate: fim.date };
+}
+
 function analiseDaSelecao(posts){
   const L = [];
   if(!posts.length) return L;
@@ -4552,6 +4646,29 @@ function montarRelatorioSelecao(){
     '</div>' +
   '</div>';
 
+  // ── Indicadores, na mesma ordem do relatório mensal ──
+  const datasOrd = posts.map(p => p.date).filter(Boolean).sort();
+  const engSel = soma('reach') ? (soma('interactions') / soma('reach')) * 100 : null;
+  const gSel = ganhoNosDias(datasOrd);
+
+  const ind = (rot, v, sub, classe) =>
+    '<div class="rel-ind' + (classe ? ' ' + classe : '') + '">' +
+      '<div class="rel-ind-rot">' + rot + '</div>' +
+      '<div class="rel-ind-v">' + v + '</div>' +
+      (sub ? '<div class="rel-ind-s">' + sub + '</div>' : '') +
+    '</div>';
+
+  html += '<div class="rel-indicadores">' +
+    ind('Visualizações', formatNum(soma('views')),
+      formatNum(Math.round(soma('views') / posts.length)) + ' por publicação', 'destaque') +
+    ind('Engajamento', engSel != null ? engSel.toFixed(1).replace('.', ',') + '%' : '—',
+      'interações por alcance') +
+    (gSel
+      ? ind('Seguidores no período', (gSel.valor >= 0 ? '+' : '') + formatNum(gSel.valor),
+          'da conta inteira em ' + gSel.dias + (gSel.dias === 1 ? ' dia' : ' dias') + ', não só destas', 'ganho')
+      : ind('Seguidores no período', '—', 'sem histórico nesses dias')) +
+  '</div>';
+
   const analise = analiseDaSelecao(posts);
   if(analise.length){
     html += '<div class="rel-destaques"><h2>Leitura da seleção</h2><ul>' +
@@ -4618,7 +4735,7 @@ function montarRelatorioSelecao(){
   notas.push('Recorte manual de ' + posts.length + ' publicações' +
     (datas.length ? ', de ' + diaMes(datas[0]) + ' a ' + diaMes(datas[datas.length-1]) : '') + '.');
   notas.push('Alcance somado repete quem viu mais de uma destas publicações — não é público único.');
-  notas.push('Crescimento de seguidores não entra aqui: o Instagram não atribui seguidor a publicação em reels, que são a maior parte do conteúdo.');
+  notas.push('O ganho de seguidores mostrado é o da CONTA nos dias que a seleção cobre, não o que estas publicações trouxeram — o Instagram não atribui seguidor a reel, e naqueles dias saiu muito mais conteúdo além destas.');
   if(fmts.some(f => f.qtd < 3)) notas.push('Formatos com ⚠ têm menos de 3 publicações na seleção; a média deles oscila muito.');
   html += '<div class="rel-rodape">' + notas.map(n => '· ' + n).join('<br>') + '</div>';
 
@@ -4949,6 +5066,26 @@ async function montarRelatorio(ym){
   '</div>';
 
   // ── Destaques: a leitura antes dos números ──
+  const engs = hist.map(h => h.engagementRate).filter(v => typeof v === 'number');
+  const engMedia = engs.length ? engs.reduce((a, b) => a + b, 0) / engs.length : null;
+
+  // ── Os três indicadores, antes de tudo ──
+  const ind = (rot, v, sub, classe) =>
+    '<div class="rel-ind' + (classe ? ' ' + classe : '') + '">' +
+      '<div class="rel-ind-rot">' + rot + '</div>' +
+      '<div class="rel-ind-v">' + v + '</div>' +
+      (sub ? '<div class="rel-ind-s">' + sub + '</div>' : '') +
+    '</div>';
+
+  html += '<div class="rel-indicadores">' +
+    ind('Visualizações', formatNum(soma('views')),
+      formatNum(Math.round(soma('views') / dias)) + ' por dia', 'destaque') +
+    ind('Engajamento', engMedia != null ? engMedia.toFixed(1).replace('.', ',') + '%' : '—',
+      'interações por alcance') +
+    ind('Ganho de seguidores', ganho != null ? (ganho >= 0 ? '+' : '') + formatNum(ganho) : '—',
+      (ganho != null && diasDesdeBase > 0 ? formatNum(Math.round(ganho / diasDesdeBase)) + ' por dia' : ''), 'ganho') +
+  '</div>';
+
   const analise = analiseDoMes(hist, posts, proj);
   if(analise.length){
     html += '<div class="rel-destaques"><h2>Destaques do período</h2><ul>' +
@@ -4961,23 +5098,20 @@ async function montarRelatorio(ym){
     num(fim ? formatNum(fim.followers) : '—', 'Seguidores ao fim',
       inicio ? (baseParcial ? 'de ' + formatNum(inicio.followers) + ' em ' + diaMes(inicio.date)
                             : 'de ' + formatNum(inicio.followers) + ' no fim de ' + diaMes(inicio.date)) : '') +
-    num((ganho != null ? (ganho >= 0 ? '+' : '') + formatNum(ganho) : '—'), 'Ganho no período',
-      (ganho != null && diasDesdeBase > 0 ? formatNum(Math.round(ganho / diasDesdeBase)) + ' por dia' : ''), true) +
-    num(pctCresc != null ? pctCresc.toFixed(2).replace('.', ',') + '%' : '—', 'Crescimento', 'sobre a base inicial') +
-    num(formatNum(soma('posts')), 'Publicações', formatNum(Math.round(soma('posts') / dias)) + ' por dia') +
+    num(pctCresc != null ? pctCresc.toFixed(2).replace('.', ',') + '%' : '—', 'Crescimento', 'sobre a base do período') +
+    num(formatNum(Math.round(soma('views') / Math.max(1, fim ? fim.followers : 1) * 100) / 100).replace('.', ','),
+      'Views por seguidor', 'quantas vezes a base viu no mês') +
+    num(dias + (dias === 1 ? ' dia' : ' dias'), 'Período coberto', diaMes(hist[0].date) + ' a ' + diaMes(hist[hist.length-1].date)) +
   '</div>' +
   relGrafico(comSeg.map(h => ({ d: h.date, v: h.followers }))) +
   '</div>';
 
   // ── Alcance e engajamento ──
-  const engs = hist.map(h => h.engagementRate).filter(v => typeof v === 'number');
-  const engMedia = engs.length ? engs.reduce((a, b) => a + b, 0) / engs.length : null;
-
-  html += '<div class="rel-secao"><h2>Alcance e engajamento</h2><div class="rel-grade">' +
-    num(formatNum(soma('views')), 'Visualizações', formatNum(Math.round(soma('views') / dias)) + ' por dia') +
+  html += '<div class="rel-secao"><h2>Alcance e interações</h2><div class="rel-grade">' +
     num(formatNum(soma('reach')), 'Alcance somado', formatNum(Math.round(soma('reach') / dias)) + ' por dia') +
     num(formatNum(soma('interactions')), 'Interações', formatNum(Math.round(soma('interactions') / dias)) + ' por dia') +
-    num(engMedia != null ? engMedia.toFixed(1).replace('.', ',') + '%' : '—', 'Engajamento médio', 'interações por alcance') +
+    num(formatNum(soma('posts')), 'Publicações', formatNum(Math.round(soma('posts') / dias)) + ' por dia') +
+    num(formatNum(soma('reelViews')), 'Views de reels', 'dos reels publicados no mês') +
   '</div></div>';
 
   // ── Stories ──
