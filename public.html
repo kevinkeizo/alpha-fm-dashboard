@@ -2841,6 +2841,49 @@ body.sem-login #btn-sair { display: none; }
   .rel-indicadores { page-break-inside: avoid; }
 }
 
+
+
+/* ══ Ajuste de diagramação ═══════════════════════════════════════════════════
+   Os números longos da conta (dezenas de milhões) não cabiam no corpo fixo, e
+   os textos de apoio passavam da largura da coluna e quebravam em duas linhas,
+   deixando os cards de alturas diferentes. */
+.rel-grade { gap: 14px; align-items: start; }
+
+.rel-v {
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.rel-l {
+  line-height: 1.3;
+  /* Duas linhas de rótulo alinham os valores abaixo em qualquer combinação */
+  min-height: 2.6em;
+}
+
+.rel-s {
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.rel-ind { padding: 18px 20px; }
+
+.rel-ind-v {
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+
+.rel-ind-rot { line-height: 1.3; }
+
+.rel-ind-s { line-height: 1.4; }
+
+/* Sinal de + e separador de milhar somem no espaçamento tabular; a fonte
+   mono nos textos de apoio já garante o alinhamento vertical */
+.rel-indicadores { gap: 12px; }
+
+@media (max-width: 560px) {
+  .rel-grade { grid-template-columns: repeat(2, 1fr); }
+}
+
 </style>
 </head>
 <body>
@@ -4625,7 +4668,8 @@ function montarRelatorioSelecao(){
 
   const num = (v, l, sub, destaque) =>
     '<div class="rel-num' + (destaque ? ' rel-num-ganho' : '') + '">' +
-      '<div class="rel-v">' + v + '</div><div class="rel-l">' + l + '</div>' +
+      '<div class="rel-v" style="font-size:' + corpoNumero(v, 25) + 'px">' + v + '</div>' +
+      '<div class="rel-l">' + l + '</div>' +
       (sub ? '<div class="rel-s">' + sub + '</div>' : '') +
     '</div>';
 
@@ -4654,7 +4698,7 @@ function montarRelatorioSelecao(){
   const ind = (rot, v, sub, classe) =>
     '<div class="rel-ind' + (classe ? ' ' + classe : '') + '">' +
       '<div class="rel-ind-rot">' + rot + '</div>' +
-      '<div class="rel-ind-v">' + v + '</div>' +
+      '<div class="rel-ind-v" style="font-size:' + corpoNumero(v, 30) + 'px">' + v + '</div>' +
       (sub ? '<div class="rel-ind-s">' + sub + '</div>' : '') +
     '</div>';
 
@@ -5008,6 +5052,17 @@ function nomeMes(ym){
   return nomes[+m - 1] + ' de ' + a;
 }
 
+async 
+// Tamanho do número conforme o comprimento: "39.853.202" e "51%" não podem
+// ter o mesmo corpo, senão um estoura a caixa ou o outro fica perdido nela.
+function corpoNumero(v, base){
+  const n = String(v).length;
+  if(n >= 12) return Math.round(base * 0.66);
+  if(n >= 10) return Math.round(base * 0.76);
+  if(n >= 8)  return Math.round(base * 0.88);
+  return base;
+}
+
 async function montarRelatorio(ym){
   const hist = (window.__hist || []).filter(h => h.date.slice(0, 7) === ym);
   const corpo = document.getElementById('rel-corpo');
@@ -5049,7 +5104,7 @@ async function montarRelatorio(ym){
 
   const num = (v, l, sub, destaque) =>
     '<div class="rel-num' + (destaque ? ' rel-num-ganho' : '') + '">' +
-      '<div class="rel-v">' + v + '</div><div class="rel-l">' + l + '</div>' +
+      '<div class="rel-v" style="font-size:' + corpoNumero(v, 25) + 'px">' + v + '</div><div class="rel-l">' + l + '</div>' +
       (sub ? '<div class="rel-s">' + sub + '</div>' : '') +
     '</div>';
 
@@ -5073,7 +5128,7 @@ async function montarRelatorio(ym){
   const ind = (rot, v, sub, classe) =>
     '<div class="rel-ind' + (classe ? ' ' + classe : '') + '">' +
       '<div class="rel-ind-rot">' + rot + '</div>' +
-      '<div class="rel-ind-v">' + v + '</div>' +
+      '<div class="rel-ind-v" style="font-size:' + corpoNumero(v, 30) + 'px">' + v + '</div>' +
       (sub ? '<div class="rel-ind-s">' + sub + '</div>' : '') +
     '</div>';
 
@@ -5096,11 +5151,10 @@ async function montarRelatorio(ym){
   // ── Crescimento ──
   html += '<div class="rel-secao"><h2>Crescimento</h2><div class="rel-grade">' +
     num(fim ? formatNum(fim.followers) : '—', 'Seguidores ao fim',
-      inicio ? (baseParcial ? 'de ' + formatNum(inicio.followers) + ' em ' + diaMes(inicio.date)
-                            : 'de ' + formatNum(inicio.followers) + ' no fim de ' + diaMes(inicio.date)) : '') +
-    num(pctCresc != null ? pctCresc.toFixed(2).replace('.', ',') + '%' : '—', 'Crescimento', 'sobre a base do período') +
+      inicio ? ('de ' + formatNum(inicio.followers) + (baseParcial ? ' · ' : ' · fecho ') + diaMes(inicio.date)) : '') +
+    num(pctCresc != null ? pctCresc.toFixed(2).replace('.', ',') + '%' : '—', 'Crescimento', 'sobre a base') +
     num(formatNum(Math.round(soma('views') / Math.max(1, fim ? fim.followers : 1) * 100) / 100).replace('.', ','),
-      'Views por seguidor', 'quantas vezes a base viu no mês') +
+      'Views por seguidor', 'no mês') +
     num(dias + (dias === 1 ? ' dia' : ' dias'), 'Período coberto', diaMes(hist[0].date) + ' a ' + diaMes(hist[hist.length-1].date)) +
   '</div>' +
   relGrafico(comSeg.map(h => ({ d: h.date, v: h.followers }))) +
@@ -5111,17 +5165,17 @@ async function montarRelatorio(ym){
     num(formatNum(soma('reach')), 'Alcance somado', formatNum(Math.round(soma('reach') / dias)) + ' por dia') +
     num(formatNum(soma('interactions')), 'Interações', formatNum(Math.round(soma('interactions') / dias)) + ' por dia') +
     num(formatNum(soma('posts')), 'Publicações', formatNum(Math.round(soma('posts') / dias)) + ' por dia') +
-    num(formatNum(soma('reelViews')), 'Views de reels', 'dos reels publicados no mês') +
+    num(formatNum(soma('reelViews')), 'Views de reels', 'reels do mês') +
   '</div></div>';
 
   // ── Stories ──
   const st = await storiesDoMes(ym);
   if(st){
     html += '<div class="rel-secao"><h2>Stories</h2><div class="rel-grade">' +
-      num(formatNum(st.qtd), 'Stories publicados', st.dias + (st.dias === 1 ? ' dia com captura' : ' dias com captura')) +
+      num(formatNum(st.qtd), 'Stories publicados', st.dias + (st.dias === 1 ? ' dia' : ' dias') + ' com captura') +
       num(formatNum(st.views), 'Visualizações', st.qtd ? formatNum(Math.round(st.views / st.qtd)) + ' por story' : '') +
       num(formatNum(st.alcanceMedio), 'Alcance médio', 'por story') +
-      num(formatNum(st.replies), 'Respostas', 'mensagens recebidas') +
+      num(formatNum(st.replies), 'Respostas', 'mensagens') +
     '</div></div>';
   }
 
