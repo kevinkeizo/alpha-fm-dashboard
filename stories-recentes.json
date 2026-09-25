@@ -1224,12 +1224,12 @@
     "timestamp": "2026-09-25T17:19:00+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3994124870522867540",
     "media_type": "VIDEO",
-    "views": null,
-    "reach": null,
-    "replies": null,
-    "navigation": null,
-    "interactions": null,
-    "shares": null
+    "views": 480,
+    "reach": 402,
+    "replies": 0,
+    "navigation": 447,
+    "interactions": 4,
+    "shares": 0
   },
   "17999248790814352": {
     "id": "17999248790814352",
@@ -1238,12 +1238,12 @@
     "timestamp": "2026-09-25T17:17:50+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3994123848496837237",
     "media_type": "VIDEO",
-    "views": null,
-    "reach": null,
-    "replies": null,
-    "navigation": null,
-    "interactions": null,
-    "shares": null
+    "views": 495,
+    "reach": 422,
+    "replies": 0,
+    "navigation": 437,
+    "interactions": 7,
+    "shares": 0
   },
   "17878378017544281": {
     "id": "17878378017544281",
@@ -1252,12 +1252,12 @@
     "timestamp": "2026-09-25T17:16:41+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3994123124316677983",
     "media_type": "VIDEO",
-    "views": null,
-    "reach": null,
-    "replies": null,
-    "navigation": null,
-    "interactions": null,
-    "shares": null
+    "views": 495,
+    "reach": 423,
+    "replies": 0,
+    "navigation": 449,
+    "interactions": 8,
+    "shares": 0
   },
   "18612455593002495": {
     "id": "18612455593002495",
@@ -1266,11 +1266,11 @@
     "timestamp": "2026-09-25T17:16:19+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3994123130926920970",
     "media_type": "VIDEO",
-    "views": 68,
-    "reach": 19,
+    "views": 493,
+    "reach": 426,
     "replies": 0,
-    "navigation": 0,
-    "interactions": 2,
+    "navigation": 443,
+    "interactions": 10,
     "shares": 0
   },
   "18106173434337303": {
@@ -1280,11 +1280,11 @@
     "timestamp": "2026-09-25T17:15:40+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3994122620245238117",
     "media_type": "VIDEO",
-    "views": 76,
-    "reach": 20,
+    "views": 516,
+    "reach": 451,
     "replies": 0,
-    "navigation": 21,
-    "interactions": 1,
+    "navigation": 478,
+    "interactions": 6,
     "shares": 0
   },
   "18102191093017031": {
@@ -1294,11 +1294,11 @@
     "timestamp": "2026-09-25T17:15:19+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3994122439328081581",
     "media_type": "VIDEO",
-    "views": 78,
-    "reach": 14,
-    "replies": 0,
-    "navigation": 14,
-    "interactions": 3,
+    "views": 529,
+    "reach": 451,
+    "replies": 2,
+    "navigation": 478,
+    "interactions": 13,
     "shares": 0
   },
   "18099802508238460": {
@@ -1308,11 +1308,11 @@
     "timestamp": "2026-09-25T17:14:54+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3994122235946294041",
     "media_type": "VIDEO",
-    "views": 82,
-    "reach": 25,
+    "views": 562,
+    "reach": 453,
     "replies": 0,
-    "navigation": 0,
-    "interactions": 1,
+    "navigation": 504,
+    "interactions": 4,
     "shares": 0
   },
   "18008178119986486": {
@@ -1322,12 +1322,12 @@
     "timestamp": "2026-09-25T17:14:10+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3994121860312793560",
     "media_type": "VIDEO",
-    "views": null,
-    "reach": null,
-    "replies": null,
-    "navigation": null,
-    "interactions": null,
-    "shares": null
+    "views": 597,
+    "reach": 506,
+    "replies": 1,
+    "navigation": 539,
+    "interactions": 15,
+    "shares": 0
   },
   "18134866867656105": {
     "id": "18134866867656105",
@@ -1336,11 +1336,11 @@
     "timestamp": "2026-09-25T15:49:42+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/3994079456335584163",
     "media_type": "VIDEO",
-    "views": 349,
-    "reach": 268,
+    "views": 835,
+    "reach": 696,
     "replies": 0,
-    "navigation": 281,
-    "interactions": 4,
+    "navigation": 718,
+    "interactions": 9,
     "shares": 0
   }
 }
