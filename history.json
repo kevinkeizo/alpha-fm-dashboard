@@ -172,7 +172,7 @@
       "quando": "2026-08-27T16:38:04.593Z"
     },
     "reach": 793100,
-    "views": 1697810,
+    "views": 1697811,
     "reelViews": 620739,
     "reels": 20,
     "posts": 44,
@@ -204,7 +204,7 @@
       "quando": "2026-08-29T10:58:25.837Z"
     },
     "reach": 633832,
-    "views": 1338899,
+    "views": 1338900,
     "reelViews": 472030,
     "reels": 16,
     "posts": 41,
@@ -220,7 +220,7 @@
       "quando": "2026-08-30T09:52:42.252Z"
     },
     "reach": 811945,
-    "views": 1611173,
+    "views": 1611174,
     "reelViews": 458439,
     "reels": 11,
     "posts": 17,
@@ -268,7 +268,7 @@
       "quando": "2026-09-02T18:56:02.402Z"
     },
     "reach": 628805,
-    "views": 1355337,
+    "views": 1355340,
     "reelViews": 467008,
     "reels": 18,
     "posts": 34,
@@ -292,7 +292,7 @@
     "followers": 979253,
     "followersRef": null,
     "reach": 418951,
-    "views": 888194,
+    "views": 888198,
     "reelViews": 158411,
     "reels": 14,
     "posts": 27,
@@ -316,7 +316,7 @@
     "followers": 980627,
     "followersRef": null,
     "reach": 991609,
-    "views": 2268821,
+    "views": 2268825,
     "reelViews": 1440286,
     "reels": 33,
     "posts": 38,
@@ -344,7 +344,7 @@
     "followers": 982826,
     "followersRef": null,
     "reach": 1042716,
-    "views": 2457544,
+    "views": 2457546,
     "reelViews": 789917,
     "reels": 42,
     "posts": 48,
@@ -372,8 +372,8 @@
     "reelViews": 489545,
     "reels": 32,
     "posts": 51,
-    "interactions": 115471,
-    "engagementRate": 16.861855766450645
+    "interactions": 115470,
+    "engagementRate": 16.861709739692703
   },
   {
     "date": "2026-09-10",
@@ -407,7 +407,7 @@
       "quando": "2026-09-13T09:23:12.294Z"
     },
     "reach": 1196243,
-    "views": 2884080,
+    "views": 2884081,
     "reelViews": 938259,
     "reels": 60,
     "posts": 67,
@@ -439,7 +439,7 @@
       "quando": "2026-09-15T09:20:13.595Z"
     },
     "reach": 1352794,
-    "views": 3013471,
+    "views": 3013472,
     "reelViews": 1909634,
     "reels": 56,
     "posts": 77,
@@ -455,12 +455,12 @@
       "quando": "2026-09-17T09:21:37.180Z"
     },
     "reach": 529572,
-    "views": 1255597,
+    "views": 1255598,
     "reelViews": 297072,
     "reels": 13,
     "posts": 33,
-    "interactions": 83531,
-    "engagementRate": 15.773303724517158,
+    "interactions": 83529,
+    "engagementRate": 15.772926061045522,
     "followersEstimado": true
   },
   {
@@ -480,7 +480,7 @@
     "followers": 993704,
     "followersRef": null,
     "reach": 409761,
-    "views": 983338,
+    "views": 983343,
     "reelViews": 195615,
     "reels": 15,
     "posts": 29,
@@ -495,12 +495,12 @@
       "quando": "2026-09-20T09:12:35.813Z"
     },
     "reach": 575529,
-    "views": 1223602,
+    "views": 1223606,
     "reelViews": 582929,
     "reels": 15,
     "posts": 20,
-    "interactions": 94761,
-    "engagementRate": 16.465026089041558,
+    "interactions": 94760,
+    "engagementRate": 16.464852335851017,
     "followersEstimado": true
   },
   {
@@ -511,12 +511,12 @@
       "quando": "2026-09-21T09:49:38.836Z"
     },
     "reach": 857143,
-    "views": 1570752,
+    "views": 1570760,
     "reelViews": 233829,
     "reels": 7,
     "posts": 12,
-    "interactions": 127309,
-    "engagementRate": 14.8527141912143,
+    "interactions": 127308,
+    "engagementRate": 14.852597524567079,
     "followersEstimado": true
   },
   {
@@ -527,7 +527,7 @@
       "quando": "2026-09-22T09:13:25.900Z"
     },
     "reach": 655781,
-    "views": 1465416,
+    "views": 1465418,
     "reelViews": 529418,
     "reels": 18,
     "posts": 36,
@@ -543,12 +543,12 @@
       "quando": "2026-09-23T09:13:42.567Z"
     },
     "reach": 832910,
-    "views": 2019237,
+    "views": 2019241,
     "reelViews": 386645,
     "reels": 13,
     "posts": 43,
-    "interactions": 123106,
-    "engagementRate": 14.780228356004852,
+    "interactions": 123104,
+    "engagementRate": 14.779988234022884,
     "followersEstimado": true
   },
   {
@@ -559,12 +559,12 @@
       "quando": "2026-09-24T09:12:32.953Z"
     },
     "reach": 656199,
-    "views": 1478182,
+    "views": 1478204,
     "reelViews": 281384,
     "reels": 15,
     "posts": 34,
-    "interactions": 90205,
-    "engagementRate": 13.74659211611112,
+    "interactions": 90199,
+    "engagementRate": 13.745677759338248,
     "followersEstimado": true
   },
   {
@@ -575,12 +575,28 @@
       "quando": "2026-09-25T09:31:40.689Z"
     },
     "reach": 462474,
-    "views": 1047082,
+    "views": 1047664,
     "reelViews": 156413,
     "reels": 10,
     "posts": 26,
-    "interactions": 88620,
-    "engagementRate": 19.162158305115533,
+    "interactions": 88610,
+    "engagementRate": 19.15999602139796,
+    "followersEstimado": true
+  },
+  {
+    "date": "2026-09-25",
+    "followers": 996971,
+    "followersRef": {
+      "valor": 997277,
+      "quando": "2026-09-26T09:16:39.073Z"
+    },
+    "reach": 725859,
+    "views": 1868188,
+    "reelViews": 1041230,
+    "reels": 25,
+    "posts": 50,
+    "interactions": 145503,
+    "engagementRate": 20.045628696482375,
     "followersEstimado": true
   }
 ]
