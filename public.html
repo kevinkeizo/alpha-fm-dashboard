@@ -2783,18 +2783,19 @@ body.sem-login #btn-sair { display: none; }
 }
 
 .rel-ind {
+  display: block;   /* trava: nenhuma classe de fora impõe grid aqui */
   padding: 20px 22px;
   border-radius: 13px;
   background: var(--bg-2);
   border: 1px solid var(--line);
 }
 
-.rel-ind.destaque {
+.rel-ind.rel-ind-vis {
   background: var(--signal-100);
   border-color: var(--signal-200);
 }
 
-.rel-ind.ganho {
+.rel-ind.rel-ind-gan {
   background: var(--gain-soft);
   border-color: rgba(18, 133, 95, 0.2);
 }
@@ -2807,8 +2808,8 @@ body.sem-login #btn-sair { display: none; }
   color: var(--ink-3);
 }
 
-.rel-ind.destaque .rel-ind-rot { color: var(--signal-600); }
-.rel-ind.ganho .rel-ind-rot { color: var(--gain); }
+.rel-ind.rel-ind-vis .rel-ind-rot { color: var(--signal-600); }
+.rel-ind.rel-ind-gan .rel-ind-rot { color: var(--gain); }
 
 .rel-ind-v {
   font-family: var(--font-display);
@@ -2821,8 +2822,8 @@ body.sem-login #btn-sair { display: none; }
   margin-top: 8px;
 }
 
-.rel-ind.destaque .rel-ind-v { color: var(--signal-700); }
-.rel-ind.ganho .rel-ind-v { color: var(--gain); }
+.rel-ind.rel-ind-vis .rel-ind-v { color: var(--signal-700); }
+.rel-ind.rel-ind-gan .rel-ind-v { color: var(--gain); }
 
 .rel-ind-s {
   font-size: 10.5px;
@@ -4228,7 +4229,23 @@ function skHoras(){
 //
 // A faixa não é enfeite: com 19 dias de base, um número único de data seria
 // falsa precisão. O desvio dos ganhos diários vira o intervalo.
-const META = 1000000;
+// A marca de 1 milhão caiu em 07/10/2026. A partir dela o alvo anda de 100 em
+// 100 mil, então a projeção nunca fica apontando um número já batido.
+const PASSO_META = 100000;
+
+function proximaMeta(atual){
+  return Math.ceil((atual + 1) / PASSO_META) * PASSO_META;
+}
+
+// 1.100.000 vira "1,1 milhão"; 2.000.000 vira "2 milhões"
+function rotuloMeta(n){
+  const mi = n / 1000000;
+  if(mi >= 1){
+    const txt = (Math.round(mi * 10) / 10).toString().replace('.', ',');
+    return txt + (mi >= 2 ? ' milhões' : ' milhão');
+  }
+  return Math.round(n / 1000) + ' mil';
+}
 
 function projecao(hist){
   const pts = hist
@@ -4264,16 +4281,21 @@ function projecao(hist){
   const ritmo7 = ult7.length ? ult7.reduce((a, g) => a + g, 0) / ult7.length : ritmo;
 
   const atual = pts[pts.length - 1].v;
-  const falta = META - atual;
-  if(falta <= 0) return { atingida: true, atual };
+  const meta = proximaMeta(atual);
+  const falta = meta - atual;
+  if(falta <= 0) return { atingida: true, atual, meta };
 
   const dataDe = r => new Date(Date.now() + (falta / r) * 86400000);
 
   return {
     atingida: false,
     atual,
+    meta,
+    rotulo: rotuloMeta(meta),
     falta,
-    pct: (atual / META) * 100,
+    // Progresso dentro do passo atual, não desde zero: sair de 1.002.028 rumo
+    // a 1.100.000 é 2% do caminho, não 91%.
+    pct: ((atual - (meta - PASSO_META)) / PASSO_META) * 100,
     ritmo,
     ritmo7,
     media,
@@ -4293,18 +4315,22 @@ function dataLonga(d){
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
-function dataCurta(d){
-  return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+function dataCurta(d, comAno){
+  // A faixa da projeção pode cruzar o ano. Sem o ano, "04/01 a 22/09" parece
+  // um intervalo de 8 meses dentro do mesmo ano, quando são anos diferentes.
+  const base = { day: '2-digit', month: '2-digit' };
+  if(comAno || d.getFullYear() !== new Date().getFullYear()) base.year = '2-digit';
+  return d.toLocaleDateString('pt-BR', base);
 }
 
 function cardProjecao(hist){
   const p = projecao(hist);
   if(!p) return '<div class="vazio-msg">Histórico ainda curto para projetar</div>';
-  if(p.atingida) return '<div class="meta-atingida">🎉 1 milhão alcançado</div>';
+  if(p.atingida) return '<div class="meta-atingida">🎉 ' + rotuloMeta(p.meta) + ' alcançado</div>';
 
   return '<div class="meta-topo">' +
       '<div>' +
-        '<div class="hero-label">Previsão para 1 milhão</div>' +
+        '<div class="hero-label">Previsão para ' + p.rotulo + '</div>' +
         '<div class="meta-data">' + dataLonga(p.data) + '</div>' +
         '<div class="meta-faixa">entre ' + dataCurta(p.dataOtimista) + ' e ' + dataCurta(p.dataPessimista) +
           ' · ritmo de ' + formatNum(Math.round(p.ritmo)) + '/dia</div>' +
@@ -4316,7 +4342,7 @@ function cardProjecao(hist){
     '</div>' +
     '<div class="meta-trilho"><div class="meta-preenche" style="width:' + p.pct.toFixed(2) + '%"></div></div>' +
     '<div class="meta-rodape">' +
-      '<span><b>' + formatNum(p.atual) + '</b> de ' + formatNum(META) + '</span>' +
+      '<span><b>' + formatNum(p.atual) + '</b> de ' + formatNum(p.meta) + '</span>' +
       '<span>' + p.pct.toFixed(1).replace('.', ',') + '%</span>' +
       '<span>faltam <b>' + formatNum(p.falta) + '</b></span>' +
     '</div>' +
@@ -4742,12 +4768,12 @@ function montarRelatorioSelecao(){
 
   html += '<div class="rel-indicadores">' +
     ind('Visualizações', formatNum(soma('views')),
-      formatNum(Math.round(soma('views') / posts.length)) + ' por publicação', 'destaque') +
+      formatNum(Math.round(soma('views') / posts.length)) + ' por publicação', 'rel-ind-vis') +
     ind('Engajamento', engSel != null ? engSel.toFixed(1).replace('.', ',') + '%' : '—',
       'interações por alcance') +
     (gSel
       ? ind('Seguidores no período', (gSel.valor >= 0 ? '+' : '') + formatNum(gSel.valor),
-          'da conta inteira em ' + gSel.dias + (gSel.dias === 1 ? ' dia' : ' dias') + ', não só destas', 'ganho')
+          'da conta inteira em ' + gSel.dias + (gSel.dias === 1 ? ' dia' : ' dias') + ', não só destas', 'rel-ind-gan')
       : ind('Seguidores no período', '—', 'sem histórico nesses dias')) +
   '</div>';
 
@@ -4916,7 +4942,7 @@ function analiseDoMes(hist, posts, proj){
 
   // 6. Projeção
   if(proj && !proj.atingida && proj.dias <= 400){
-    L.push('No ritmo atual, a marca de <b>1 milhão</b> deve ser alcançada por volta de <b>' +
+    L.push('No ritmo atual, a marca de <b>' + proj.rotulo + '</b> deve ser alcançada por volta de <b>' +
       dataLonga(proj.data) + '</b> — faltam ' + formatNum(proj.falta) + ' seguidores.');
   }
 
@@ -5171,11 +5197,11 @@ async function montarRelatorio(ym){
 
   html += '<div class="rel-indicadores">' +
     ind('Visualizações', formatNum(soma('views')),
-      formatNum(Math.round(soma('views') / dias)) + ' por dia', 'destaque') +
+      formatNum(Math.round(soma('views') / dias)) + ' por dia', 'rel-ind-vis') +
     ind('Engajamento', engMedia != null ? engMedia.toFixed(1).replace('.', ',') + '%' : '—',
       'interações por alcance') +
     ind('Ganho de seguidores', ganho != null ? (ganho >= 0 ? '+' : '') + formatNum(ganho) : '—',
-      (ganho != null && diasDesdeBase > 0 ? formatNum(Math.round(ganho / diasDesdeBase)) + ' por dia' : ''), 'ganho') +
+      (ganho != null && diasDesdeBase > 0 ? formatNum(Math.round(ganho / diasDesdeBase)) + ' por dia' : ''), 'rel-ind-gan') +
   '</div>';
 
   const analise = analiseDoMes(hist, posts, proj);
@@ -5285,7 +5311,7 @@ async function montarRelatorio(ym){
 
   // ── Projeção ──
   if(proj && !proj.atingida){
-    html += '<div class="rel-secao"><h2>Projeção para 1 milhão</h2><div class="rel-proj">' +
+    html += '<div class="rel-secao"><h2>Projeção para ' + proj.rotulo + '</h2><div class="rel-proj">' +
       '<div><div class="rel-proj-data">' + dataLonga(proj.data) + '</div>' +
       '<div style="font-size:10.5px;color:#7B8098;font-family:monospace;margin-top:3px">' +
         'entre ' + dataCurta(proj.dataOtimista) + ' e ' + dataCurta(proj.dataPessimista) +
