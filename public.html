@@ -2924,7 +2924,7 @@ body.sem-login #btn-sair { display: none; }
 </div>
 
 <div class="portao" id="portao">
-  <form class="portao-caixa" id="portao-form" autocomplete="on">
+  <form class="portao-caixa" id="portao-form" autocomplete="on" action="#" method="post" onsubmit="return false">
     <div class="portao-marca">
       <svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">
         <defs><linearGradient id="logoGradL" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -5090,7 +5090,6 @@ function nomeMes(ym){
   return nomes[+m - 1] + ' de ' + a;
 }
 
-async 
 // Tamanho do número conforme o comprimento: "39.853.202" e "51%" não podem
 // ter o mesmo corpo, senão um estoura a caixa ou o outro fica perdido nela.
 function corpoNumero(v, base){
