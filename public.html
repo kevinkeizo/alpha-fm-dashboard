@@ -2884,6 +2884,27 @@ body.sem-login #btn-sair { display: none; }
   .rel-grade { grid-template-columns: repeat(2, 1fr); }
 }
 
+
+
+/* Saída de emergência: token corrompido no navegador trancava a pessoa do
+   lado de fora sem jeito de sair pela própria tela. */
+.portao-limpar {
+  display: block;
+  margin: 9px auto 0;
+  border: none;
+  background: none;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 3px 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .portao-limpar:hover { color: var(--signal-600); }
+}
+
 </style>
 </head>
 <body>
@@ -2932,7 +2953,10 @@ body.sem-login #btn-sair { display: none; }
     <button type="submit" class="portao-btn" id="portao-btn">Entrar</button>
     <div class="portao-erro" id="portao-erro"></div>
 
-    <div class="portao-rodape">acesso restrito · equipe Alpha FM</div>
+    <div class="portao-rodape">
+      acesso restrito · equipe Alpha FM
+      <button type="button" class="portao-limpar" id="portao-limpar">Limpar dados deste navegador</button>
+    </div>
   </form>
 </div>
 
@@ -3048,9 +3072,21 @@ const LOGO_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACN
 async function fetchAllData(){
   const res = await fetch(comToken(API_URL));
   if(res.status === 401){
-    // Token venceu ou foi revogado: volta pro login em vez de erro solto
+    // Token venceu ou foi revogado: volta pro login em vez de erro solto.
+    // A trava impede o ciclo login → 401 → recarga → login, que na tela
+    // aparece como uma página recarregando sozinha sem nunca entrar.
+    let voltas = 0;
+    try{ voltas = parseInt(sessionStorage.getItem('alpha-voltas') || '0', 10); }catch(e){}
     guardarToken('');
-    location.reload();
+    if(voltas < 2){
+      try{ sessionStorage.setItem('alpha-voltas', String(voltas + 1)); }catch(e){}
+      location.reload();
+    }else{
+      try{ sessionStorage.removeItem('alpha-voltas'); }catch(e){}
+      mostrarFaixa('critico',
+        '<b>A sessão foi recusada logo após o login.</b> Entre de novo; se repetir, ' +
+        'use "Limpar dados deste navegador" na tela de acesso.', 'erro 401');
+    }
     throw new Error('sessao-expirada');
   }
   if(!res.ok) throw new Error('API error: ' + res.status);
@@ -4041,6 +4077,8 @@ async function load(){
       data.ontem = sorted[sorted.length - 1] || null;
       data.historico = sorted;
     }
+
+    try{ sessionStorage.removeItem('alpha-voltas'); }catch(e){}
 
     renderDashboard(data);
     renderPosts(posts.posts, posts.resumo);
@@ -5900,13 +5938,32 @@ function ligarPortao(){
       caixa.classList.add('errou');
       document.getElementById('senha').select();
     }catch(e){
-      erro.textContent = 'Sem conexão com o servidor';
+      // "Sem conexão" escondia a causa: bloqueio de rede, CORS e servidor fora
+      // do ar davam a mesma mensagem, e ninguém sabia o que tentar.
+      console.error('Falha no login:', e);
+      let msg = 'Não foi possível falar com o servidor.';
+      if(!navigator.onLine){
+        msg = 'Sem internet. Confira a conexão e tente de novo.';
+      }else if(/Failed to fetch|NetworkError|Load failed/i.test(e.message || '')){
+        msg = 'O servidor não respondeu. Pode ser bloqueio de rede da rádio, ' +
+              'VPN ou extensão do navegador. Tente numa aba anônima ou em outra rede.';
+      }else if(e.message){
+        msg = 'Erro: ' + e.message;
+      }
+      erro.innerHTML = msg;
       erro.classList.add('visivel');
     }finally{
       btn.disabled = false;
       btn.textContent = 'Entrar';
     }
   });
+
+  const limpar = document.getElementById('portao-limpar');
+  if(limpar) limpar.onclick = () => {
+    try{ localStorage.clear(); sessionStorage.clear(); }catch(e){}
+    erro.innerHTML = 'Dados limpos. Pode entrar.';
+    erro.classList.add('visivel');
+  };
 
   document.getElementById('usuario').focus();
 }
