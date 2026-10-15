@@ -916,11 +916,25 @@
     "timestamp": "2026-10-15T17:14:10+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4008617380917932739",
     "media_type": "VIDEO",
-    "views": null,
-    "reach": null,
-    "replies": null,
-    "navigation": null,
-    "interactions": null,
-    "shares": null
+    "views": 654,
+    "reach": 525,
+    "replies": 0,
+    "navigation": 561,
+    "interactions": 15,
+    "shares": 0
+  },
+  "18144168532582945": {
+    "id": "18144168532582945",
+    "date": "2026-10-15",
+    "hora": "16:17",
+    "timestamp": "2026-10-15T19:17:42+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/4008679560895415713",
+    "media_type": "VIDEO",
+    "views": 424,
+    "reach": 302,
+    "replies": 0,
+    "navigation": 356,
+    "interactions": 10,
+    "shares": 0
   }
 }

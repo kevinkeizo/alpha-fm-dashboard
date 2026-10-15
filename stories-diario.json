@@ -261,7 +261,7 @@
     "replies": 7,
     "interactions": 119,
     "navigation": 6025,
-    "atualizado": "2026-10-15T17:22:41.858Z"
+    "atualizado": "2026-10-15T21:47:52.744Z"
   },
   "2026-10-06": {
     "date": "2026-10-06",
@@ -272,7 +272,7 @@
     "replies": 4,
     "interactions": 167,
     "navigation": 9810,
-    "atualizado": "2026-10-15T17:22:41.858Z"
+    "atualizado": "2026-10-15T21:47:52.744Z"
   },
   "2026-10-07": {
     "date": "2026-10-07",
@@ -283,7 +283,7 @@
     "replies": 4,
     "interactions": 171,
     "navigation": 9559,
-    "atualizado": "2026-10-15T17:22:41.858Z"
+    "atualizado": "2026-10-15T21:47:52.744Z"
   },
   "2026-10-08": {
     "date": "2026-10-08",
@@ -294,7 +294,7 @@
     "replies": 5,
     "interactions": 68,
     "navigation": 5194,
-    "atualizado": "2026-10-15T17:22:41.858Z"
+    "atualizado": "2026-10-15T21:47:52.744Z"
   },
   "2026-10-09": {
     "date": "2026-10-09",
@@ -305,7 +305,7 @@
     "replies": 143,
     "interactions": 595,
     "navigation": 23538,
-    "atualizado": "2026-10-15T17:22:41.858Z"
+    "atualizado": "2026-10-15T21:47:52.744Z"
   },
   "2026-10-12": {
     "date": "2026-10-12",
@@ -316,7 +316,7 @@
     "replies": 1,
     "interactions": 16,
     "navigation": 1599,
-    "atualizado": "2026-10-15T17:22:41.858Z"
+    "atualizado": "2026-10-15T21:47:52.744Z"
   },
   "2026-10-13": {
     "date": "2026-10-13",
@@ -327,7 +327,7 @@
     "replies": 14,
     "interactions": 234,
     "navigation": 16407,
-    "atualizado": "2026-10-15T17:22:41.858Z"
+    "atualizado": "2026-10-15T21:47:52.744Z"
   },
   "2026-10-14": {
     "date": "2026-10-14",
@@ -338,17 +338,17 @@
     "replies": 6,
     "interactions": 101,
     "navigation": 9365,
-    "atualizado": "2026-10-15T17:22:41.858Z"
+    "atualizado": "2026-10-15T21:47:52.744Z"
   },
   "2026-10-15": {
     "date": "2026-10-15",
-    "qtd": 1,
-    "views": 0,
-    "alcanceMaximo": null,
-    "alcanceMedio": null,
+    "qtd": 2,
+    "views": 1078,
+    "alcanceMaximo": 525,
+    "alcanceMedio": 414,
     "replies": 0,
-    "interactions": 0,
-    "navigation": 0,
-    "atualizado": "2026-10-15T17:22:41.858Z"
+    "interactions": 25,
+    "navigation": 917,
+    "atualizado": "2026-10-15T21:47:52.744Z"
   }
 }
