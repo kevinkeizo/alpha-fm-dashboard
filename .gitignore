@@ -33,3 +33,14 @@ out/
 # Logs
 logs/
 *.log
+
+# Material comercial e interno — este repositório é PÚBLICO.
+# Padrões genéricos de propósito: o próprio nome do arquivo não deve
+# entregar cliente nem valor de proposta.
+*.pdf
+*.mp4
+*.mov
+orcamento-*.html
+proposta-*.html
+defesa-*.html
+public-premium.html

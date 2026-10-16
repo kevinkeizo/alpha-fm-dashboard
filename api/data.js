@@ -174,6 +174,45 @@ async function fetchAllData() {
   return data;
 }
 
+// A data de vencimento vinha chumbada no código, então renovar o token não
+// apagava o aviso: era preciso lembrar de editar aqui também. Agora ela vem do
+// próprio debug_token da Meta, que devolve expires_at. Zero significa que o
+// token não expira, que é o caso de um page token de longa duração.
+async function statusDoToken() {
+  try {
+    const url = 'https://graph.facebook.com/v22.0/debug_token'
+      + '?input_token=' + encodeURIComponent(process.env.IG_TOKEN)
+      + '&access_token=' + encodeURIComponent(process.env.IG_TOKEN);
+    const r = await fetch(url);
+    const j = await r.json();
+    const d = (j && j.data) || {};
+
+    // O token de página não expira, mas a Meta corta o ACESSO AOS DADOS 90 dias
+    // depois da última autorização, e aí o sistema para do mesmo jeito. Quem
+    // manda é o prazo que vier primeiro, senão o aviso mente.
+    const prazos = [d.expires_at, d.data_access_expires_at].filter(v => v > 0);
+
+    if (!prazos.length) {
+      return { expiryDate: null, daysUntilExpiry: null, naoExpira: true, isExpired: false, isWarning: false };
+    }
+
+    const exp = Math.min(...prazos);
+    const vence = new Date(exp * 1000);
+    const dias = Math.ceil((vence - Date.now()) / 86400000);
+    return {
+      expiryDate: vence.toISOString().split('T')[0],
+      daysUntilExpiry: dias,
+      naoExpira: false,
+      motivo: d.expires_at > 0 && d.expires_at <= (d.data_access_expires_at || Infinity) ? 'token' : 'acesso-a-dados',
+      isExpired: dias <= 0,
+      isWarning: dias > 0 && dias <= 20
+    };
+  } catch (e) {
+    // Se a checagem falhar, não inventa aviso nem derruba o painel.
+    return { expiryDate: null, daysUntilExpiry: null, naoExpira: false, isExpired: false, isWarning: false, erro: true };
+  }
+}
+
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -195,18 +234,7 @@ module.exports = async (req, res) => {
   try {
     const data = await fetchAllData();
 
-    // Calcula dias até expiração (token dura ~60 dias)
-    // Renovado em 2026-08-18, expira em 2026-10-17
-    const expiryDate = new Date('2026-10-17');
-    const today = new Date();
-    const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-
-    data.tokenStatus = {
-      expiryDate: expiryDate.toISOString().split('T')[0],
-      daysUntilExpiry: daysUntilExpiry,
-      isExpired: daysUntilExpiry <= 0,
-      isWarning: daysUntilExpiry > 0 && daysUntilExpiry <= 10
-    };
+    data.tokenStatus = await statusDoToken();
 
     res.status(200).json(data);
   } catch (e) {
