@@ -1154,11 +1154,11 @@
     "timestamp": "2026-10-22T17:05:45+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4013686570821439248",
     "media_type": "VIDEO",
-    "views": 567,
-    "reach": 459,
+    "views": 1028,
+    "reach": 895,
     "replies": 0,
-    "navigation": 502,
-    "interactions": 16,
+    "navigation": 978,
+    "interactions": 32,
     "shares": 1
   },
   "18119997622995524": {
@@ -1182,11 +1182,11 @@
     "timestamp": "2026-10-22T16:39:07+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4013673207928316720",
     "media_type": "VIDEO",
-    "views": 666,
-    "reach": 551,
+    "views": 1198,
+    "reach": 1054,
     "replies": 0,
-    "navigation": 602,
-    "interactions": 13,
+    "navigation": 1125,
+    "interactions": 24,
     "shares": 0
   },
   "18021299993938658": {
@@ -1196,12 +1196,12 @@
     "timestamp": "2026-10-22T21:46:04+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4013827766378119392",
     "media_type": "VIDEO",
-    "views": null,
-    "reach": null,
-    "replies": null,
-    "navigation": null,
-    "interactions": null,
-    "shares": null
+    "views": 601,
+    "reach": 531,
+    "replies": 0,
+    "navigation": 587,
+    "interactions": 14,
+    "shares": 0
   },
   "18028915457861348": {
     "id": "18028915457861348",
@@ -1210,11 +1210,11 @@
     "timestamp": "2026-10-22T21:44:01+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4013826741944561774",
     "media_type": "VIDEO",
-    "views": 60,
-    "reach": 7,
-    "replies": 0,
-    "navigation": 0,
-    "interactions": 1,
+    "views": 628,
+    "reach": 548,
+    "replies": 1,
+    "navigation": 600,
+    "interactions": 15,
     "shares": 0
   },
   "18373763551208915": {
@@ -1224,12 +1224,12 @@
     "timestamp": "2026-10-22T21:42:59+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4013826109695161111",
     "media_type": "VIDEO",
-    "views": null,
-    "reach": null,
-    "replies": null,
-    "navigation": null,
-    "interactions": null,
-    "shares": null
+    "views": 663,
+    "reach": 561,
+    "replies": 1,
+    "navigation": 642,
+    "interactions": 19,
+    "shares": 0
   },
   "18129634843811111": {
     "id": "18129634843811111",
@@ -1238,12 +1238,12 @@
     "timestamp": "2026-10-22T21:42:53+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4013826058821778074",
     "media_type": "IMAGE",
-    "views": null,
-    "reach": null,
-    "replies": null,
-    "navigation": null,
-    "interactions": null,
-    "shares": null
+    "views": 706,
+    "reach": 596,
+    "replies": 1,
+    "navigation": 666,
+    "interactions": 14,
+    "shares": 0
   },
   "17949543036320035": {
     "id": "17949543036320035",
@@ -1252,11 +1252,11 @@
     "timestamp": "2026-10-22T21:42:46+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4013825994997755973",
     "media_type": "VIDEO",
-    "views": null,
-    "reach": null,
-    "replies": null,
-    "navigation": null,
-    "interactions": null,
-    "shares": null
+    "views": 739,
+    "reach": 639,
+    "replies": 5,
+    "navigation": 688,
+    "interactions": 37,
+    "shares": 3
   }
 }
