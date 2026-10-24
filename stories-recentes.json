@@ -1342,5 +1342,33 @@
     "navigation": 1148,
     "interactions": 32,
     "shares": 4
+  },
+  "18348463303251339": {
+    "id": "18348463303251339",
+    "date": "2026-10-24",
+    "hora": "14:15",
+    "timestamp": "2026-10-24T17:15:42+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/4015141168694260049",
+    "media_type": "VIDEO",
+    "views": 453,
+    "reach": 374,
+    "replies": 0,
+    "navigation": 402,
+    "interactions": 12,
+    "shares": 0
+  },
+  "18424197424153482": {
+    "id": "18424197424153482",
+    "date": "2026-10-24",
+    "hora": "14:15",
+    "timestamp": "2026-10-24T17:15:33+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/4015141053703248192",
+    "media_type": "VIDEO",
+    "views": 510,
+    "reach": 436,
+    "replies": 1,
+    "navigation": 451,
+    "interactions": 11,
+    "shares": 0
   }
 }
