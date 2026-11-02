@@ -258,5 +258,135 @@
       "cidade": 492609,
       "pais": 992351
     }
+  },
+  {
+    "mes": "2026-11",
+    "capturadoEm": "2026-11-02T12:14:53.701Z",
+    "idade": [
+      {
+        "chave": "13-17",
+        "valor": 6142
+      },
+      {
+        "chave": "18-24",
+        "valor": 28088
+      },
+      {
+        "chave": "25-34",
+        "valor": 113155
+      },
+      {
+        "chave": "35-44",
+        "valor": 218837
+      },
+      {
+        "chave": "45-54",
+        "valor": 312239
+      },
+      {
+        "chave": "55-64",
+        "valor": 215169
+      },
+      {
+        "chave": "65+",
+        "valor": 114457
+      }
+    ],
+    "genero": [
+      {
+        "chave": "Feminino",
+        "valor": 514791
+      },
+      {
+        "chave": "Masculino",
+        "valor": 387248
+      },
+      {
+        "chave": "Não informado",
+        "valor": 106048
+      }
+    ],
+    "cidade": [
+      {
+        "chave": "São Paulo",
+        "uf": "São Paulo",
+        "valor": 215734
+      },
+      {
+        "chave": "Rio de Janeiro",
+        "uf": "Rio de Janeiro",
+        "valor": 32875
+      },
+      {
+        "chave": "Guarulhos",
+        "uf": "São Paulo",
+        "valor": 17562
+      },
+      {
+        "chave": "Santo André",
+        "uf": "São Paulo",
+        "valor": 12707
+      },
+      {
+        "chave": "São Bernardo do Campo",
+        "uf": "São Paulo",
+        "valor": 11918
+      },
+      {
+        "chave": "Belo Horizonte, Minas Gerais",
+        "uf": null,
+        "valor": 11840
+      },
+      {
+        "chave": "Osasco",
+        "uf": "São Paulo",
+        "valor": 11440
+      },
+      {
+        "chave": "Fortaleza, Ceará",
+        "uf": null,
+        "valor": 10865
+      }
+    ],
+    "pais": [
+      {
+        "chave": "BR",
+        "valor": 841798
+      },
+      {
+        "chave": "US",
+        "valor": 27748
+      },
+      {
+        "chave": "PT",
+        "valor": 12475
+      },
+      {
+        "chave": "AR",
+        "valor": 12177
+      },
+      {
+        "chave": "IT",
+        "valor": 9384
+      },
+      {
+        "chave": "CL",
+        "valor": 8232
+      },
+      {
+        "chave": "VE",
+        "valor": 7916
+      },
+      {
+        "chave": "ES",
+        "valor": 7627
+      }
+    ],
+    "totais": {
+      "idade": 1008087,
+      "genero": 1008087,
+      "cidade": 492927,
+      "pais": 993019
+    }
   }
 ]
