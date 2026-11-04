@@ -3068,6 +3068,11 @@ body.sem-login #btn-sair { display: none; }
 // telão é risco de perda de contexto e calor de GPU sem contrapartida visual.
 
 const API_URL = 'https://alpha-fm-api-git-main-alpha-fm1.vercel.app/api/data';
+// Os dados vinham do raw.githubusercontent, o que deixava o acervo da conta
+// baixável sem senha e prendia o painel a um repositório público. Agora saem
+// pelo mesmo endpoint autenticado dos outros dados.
+const ARQUIVO_URL = 'https://alpha-fm-api-git-main-alpha-fm1.vercel.app/api/arquivo';
+const arquivo = nome => comToken(ARQUIVO_URL + '?f=' + encodeURIComponent(nome));
 const LOGO_SRC = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAACXBIWXMAABcSAAAXEgFxLsqaAAAA20lEQVQYV5XRMQ7CMBBFUYrEVliQkJhYmZiZWBhYWViYuAEn4AZcgBtwAk7ACbgBFwCLhKBgYmKhhYSSloGEhsiwieVJblJ7b8+/99vd3/+Zx+NxvV6f7/d5WJYFj8cj7vf7P/v9Pns8nnhZFn6eJ8vLdR0+z1N+npdxXZflcRjSNE3par/ff1MU5e12o2maeJ5HnudRVRW0bRvO53N+PIe2bZNlmbhcLjQvS0ZRRJIkfP9Rvq4rKorCjxKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQikUgkEolEIpFIJBKJRCKRSCQSiUQi/fgDJ1jH8cPMxfwAAAAASUVORK5CYII=';
 
 async function fetchAllData(){
@@ -3096,7 +3101,7 @@ async function fetchAllData(){
 
 async function fetchHistory(){
   try {
-    const res = await fetch('https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/history.json');
+    const res = await fetch(arquivo('history'));
     if(!res.ok) return [];
     return res.json();
   } catch(e) {
@@ -3119,7 +3124,7 @@ async function fetchPosts(){
 // Ranking guardado pelo snapshot noturno: 35 dias de recentes + top de sempre
 async function fetchTopGuardado(){
   try{
-    const res = await fetch('https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/top-posts.json');
+    const res = await fetch(arquivo('top-posts'));
     if(!res.ok) return { recentes: [], allTime: [] };
     const j = await res.json();
     return { recentes: j.recentes || [], allTime: j.allTime || [] };
@@ -5050,7 +5055,7 @@ let _storiesDiario = null;
 async function storiesDoMes(ym){
   if(_storiesDiario === null){
     try{
-      const r = await fetch("https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/stories-diario.json");
+      const r = await fetch(arquivo('stories-diario'));
       _storiesDiario = r.ok ? await r.json() : {};
     }catch(e){ _storiesDiario = {}; }
   }
@@ -5073,7 +5078,7 @@ let _demoHistorico = null;
 async function demografiaDoMes(ym){
   if(_demoHistorico === null){
     try{
-      const r = await fetch("https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/demografia.json");
+      const r = await fetch(arquivo('demografia'));
       _demoHistorico = r.ok ? await r.json() : [];
     }catch(e){ _demoHistorico = []; }
   }
@@ -5087,7 +5092,7 @@ const _cacheMes = {};
 async function postsDoMes(ym){
   if(_cacheMes[ym]) return _cacheMes[ym];
   try{
-    const r = await fetch("https://raw.githubusercontent.com/kevinkeizo/alpha-fm-dashboard/main/meses/" + ym + ".json");
+    const r = await fetch(arquivo('meses/' + ym));
     if(r.ok){
       const j = await r.json();
       if(j && Array.isArray(j.posts) && j.posts.length){
