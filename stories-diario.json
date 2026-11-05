@@ -448,7 +448,7 @@
     "replies": 7,
     "interactions": 101,
     "navigation": 6183,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "atualizado": "2026-11-05T20:17:38.811Z"
   },
   "2026-10-25": {
     "date": "2026-10-25",
@@ -459,7 +459,7 @@
     "replies": 6,
     "interactions": 169,
     "navigation": 12885,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "atualizado": "2026-11-05T20:17:38.811Z"
   },
   "2026-10-26": {
     "date": "2026-10-26",
@@ -470,7 +470,7 @@
     "replies": 4,
     "interactions": 80,
     "navigation": 4066,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "atualizado": "2026-11-05T20:17:38.811Z"
   },
   "2026-10-27": {
     "date": "2026-10-27",
@@ -481,7 +481,7 @@
     "replies": 4,
     "interactions": 110,
     "navigation": 4985,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "atualizado": "2026-11-05T20:17:38.811Z"
   },
   "2026-10-28": {
     "date": "2026-10-28",
@@ -492,7 +492,7 @@
     "replies": 7,
     "interactions": 105,
     "navigation": 3960,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "atualizado": "2026-11-05T20:17:38.811Z"
   },
   "2026-10-29": {
     "date": "2026-10-29",
@@ -503,7 +503,7 @@
     "replies": 9,
     "interactions": 94,
     "navigation": 6656,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "atualizado": "2026-11-05T20:17:38.811Z"
   },
   "2026-10-30": {
     "date": "2026-10-30",
@@ -514,7 +514,7 @@
     "replies": 6,
     "interactions": 146,
     "navigation": 11597,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "atualizado": "2026-11-05T20:17:38.811Z"
   },
   "2026-10-31": {
     "date": "2026-10-31",
@@ -525,7 +525,7 @@
     "replies": 26,
     "interactions": 517,
     "navigation": 30794,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "atualizado": "2026-11-05T20:17:38.811Z"
   },
   "2026-11-01": {
     "date": "2026-11-01",
@@ -536,17 +536,28 @@
     "replies": 15,
     "interactions": 301,
     "navigation": 12775,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "atualizado": "2026-11-05T20:17:38.811Z"
   },
   "2026-11-04": {
     "date": "2026-11-04",
     "qtd": 9,
-    "views": 8669,
+    "views": 9183,
     "alcanceMaximo": 1394,
-    "alcanceMedio": 873,
+    "alcanceMedio": 924,
     "replies": 8,
-    "interactions": 112,
-    "navigation": 7470,
-    "atualizado": "2026-11-05T11:33:14.427Z"
+    "interactions": 125,
+    "navigation": 7959,
+    "atualizado": "2026-11-05T20:17:38.811Z"
+  },
+  "2026-11-05": {
+    "date": "2026-11-05",
+    "qtd": 5,
+    "views": 1413,
+    "alcanceMaximo": 366,
+    "alcanceMedio": 244,
+    "replies": 1,
+    "interactions": 50,
+    "navigation": 1242,
+    "atualizado": "2026-11-05T20:17:38.811Z"
   }
 }
