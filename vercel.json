@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/arquivo.js": {
+      "includeFiles": "{history.json,top-posts.json,stories-diario.json,stories-recentes.json,demografia.json,anchors.json,meses/**}"
+    }
+  }
+}
