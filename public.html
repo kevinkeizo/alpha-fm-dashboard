@@ -4370,6 +4370,72 @@ const _acervoSelecionado = new Map();
 let _buscaTodas = [];
 let _buscaFiltro = { texto: '', tipo: 'todos', mes: 'todos', de: '', ate: '' };
 
+// Recorte que varre o acervo inteiro. Campanha de trilha fica no ar dois ou
+// três meses, e procurar um mês de cada vez nunca a encontra inteira.
+const MES_TODOS = 'todos';
+let _mesesCarregados = new Set();
+let _mesesDoAcervo = [];
+let _mesesExtras = [];
+
+// Meses arquivados ANTES do começo do histórico de seguidores. O acervo de
+// publicações é mais antigo que a série de seguidores, então mesesDisponiveis()
+// deixava esses meses de fora e eles não apareciam em busca nenhuma. Para no
+// primeiro mês vazio: o acervo é contínuo, um buraco significa o fim dele.
+async function mesesAnterioresComPosts(primeiro){
+  const achados = [];
+  let [a, m] = primeiro.split('-').map(Number);
+  for(let i = 0; i < 12; i++){
+    if(--m < 1){ m = 12; a--; }
+    const ym = a + '-' + String(m).padStart(2, '0');
+    const posts = await postsDoMes(ym);
+    if(!posts || !posts.length) break;
+    achados.push(ym);
+  }
+  return achados;
+}
+
+// Todos os 'YYYY-MM' entre as duas pontas, inclusive — é o que diz quais
+// arquivos de mês o período pede.
+function mesesDoIntervalo(de, ate){
+  if(!de && !ate) return [];
+  const ini = (de || ate).slice(0, 7);
+  const fim = (ate || de).slice(0, 7);
+  if(fim < ini) return [];
+  const out = [];
+  let [a, m] = ini.split('-').map(Number);
+  const [af, mf] = fim.split('-').map(Number);
+  while((a < af || (a === af && m <= mf)) && out.length < 240){
+    out.push(a + '-' + String(m).padStart(2, '0'));
+    if(++m > 12){ m = 1; a++; }
+  }
+  return out;
+}
+
+// Último dia do mês, pra fechar o limite dos campos de data sem chutar 31.
+function fimDoMesISO(ym){
+  const [a, m] = ym.split('-').map(Number);
+  return ym + '-' + String(new Date(Date.UTC(a, m, 0)).getUTCDate()).padStart(2, '0');
+}
+
+// Junta vários meses sem repetir publicação: o mesmo id pode aparecer no
+// arquivo do mês e na memória do ranking recente.
+async function postsDeVariosMeses(lista){
+  const partes = await Promise.all(lista.map(m => postsDoMes(m)));
+  const vistos = new Set();
+  const todas = [];
+  partes.forEach(parte => (parte || []).forEach(p => {
+    if(!p || !p.id || vistos.has(p.id)) return;
+    vistos.add(p.id);
+    todas.push(p);
+  }));
+  return todas;
+}
+
+function rotuloMesBusca(){
+  if(_buscaFiltro.mes === MES_TODOS) return 'todo o acervo';
+  return _buscaFiltro.mes ? nomeMes(_buscaFiltro.mes) : '';
+}
+
 // Sem acento e em minúscula: procurar "sertao" tem que achar "sertão"
 function normaliza(t){
   return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -4379,16 +4445,31 @@ function normaliza(t){
 // dia) cada mês passa de 1 MB — puxar o acervo inteiro de uma vez travaria a
 // aba. O mês é o recorte natural de campanha, então serve como filtro e como
 // unidade de carga ao mesmo tempo.
-async function carregarBuscador(ym){
+async function carregarBuscador(ym, opts){
   const lista = document.getElementById('busca-lista');
   if(!lista) return;
 
-  const meses = mesesDisponiveis(window.__hist || []);
+  let meses = mesesDisponiveis(window.__hist || []);
   if(!meses.length) return;
 
   const sel = document.getElementById('busca-mes');
-  if(sel && !sel.options.length){
-    sel.innerHTML = meses.map(m => '<option value="' + m + '">' + nomeMes(m) + '</option>').join('');
+  const montarSelect = !!(sel && !sel.options.length);
+
+  // Descobre uma vez os meses anteriores ao histórico e guarda, senão o
+  // acervo encolhe na segunda chamada.
+  if(montarSelect) _mesesExtras = await mesesAnterioresComPosts(meses[meses.length - 1]);
+  if(_mesesExtras.length) meses = [...new Set([...meses, ..._mesesExtras])].sort().reverse();
+  _mesesDoAcervo = meses;
+
+  if(montarSelect){
+    // "Todos os meses" primeiro: é o recorte que acha campanha longa, e quem
+    // quer um mês fechado escolhe logo abaixo.
+    sel.innerHTML = '<option value="' + MES_TODOS + '">Todos os meses</option>' +
+      meses.map(m => '<option value="' + m + '">' + nomeMes(m) + '</option>').join('');
+    // Abre no mês mais recente, não em "todos": o painel carrega o buscador
+    // junto com o resto e o telão não deve puxar o acervo inteiro sem que
+    // alguém peça. Quem precisa do acervo escolhe, ou só marca o período.
+    sel.value = meses[0];
   }
 
   const alvo = ym || (sel && sel.value) || meses[0];
@@ -4397,14 +4478,22 @@ async function carregarBuscador(ym){
 
   lista.innerHTML = '<div class="skeleton sk-linha"></div>'.repeat(4);
 
-  const posts = await postsDoMes(alvo);
+  // O acervo inteiro são ~3.400 publicações e menos de 4 MB somados, com
+  // cache por mês em postsDoMes — carrega uma vez e as buscas seguintes são
+  // instantâneas. A lista desenhada continua limitada a 200 linhas.
+  const aCarregar = alvo === MES_TODOS ? meses : [alvo];
+  const posts = await postsDeVariosMeses(aCarregar);
+  _mesesCarregados = new Set(aCarregar);
   _buscaTodas = posts.slice().sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
 
   // Selecionar em um mês e trocar pra outro perderia a seleção em silêncio
   const idsVisiveis = new Set(_buscaTodas.map(p => p.id));
-  [..._selecionados].forEach(id => { if(!idsVisiveis.has(id)) _selecionadosFora.add(id); });
+  [..._selecionados].forEach(id => {
+    if(idsVisiveis.has(id)) _selecionadosFora.delete(id);
+    else _selecionadosFora.add(id);
+  });
 
-  ajustarLimitesData(alvo, _buscaTodas);
+  ajustarLimitesData(meses, !(opts && opts.manterPeriodo));
   desenharBusca();
 
   const badge = document.getElementById('badge-busca');
@@ -4412,21 +4501,41 @@ async function carregarBuscador(ym){
 }
 
 
-// Os campos de data só aceitam dias do mês carregado — pedir 12/07 num mês de
-// setembro não devolveria nada e pareceria bug.
-function ajustarLimitesData(ym, posts){
+// Os campos de data cobrem o ACERVO inteiro, não o mês carregado. Travar no
+// mês era o que impedia procurar uma campanha de trilha: ela fica no ar dois
+// ou três meses, e pedir 12/09 estando em novembro era recusado pelo próprio
+// campo. Agora o período manda, e o mês que faltar é carregado sozinho.
+function ajustarLimitesData(meses, limpar){
   const de = document.getElementById('busca-de');
   const ate = document.getElementById('busca-ate');
   if(!de || !ate) return;
 
-  const datas = posts.map(p => p.date).filter(Boolean).sort();
-  const min = datas[0] || (ym + '-01');
-  const max = datas[datas.length - 1] || (ym + '-31');
+  const ordenados = (meses || []).slice().sort();
+  const primeiro = ordenados[0];
+  const ultimo = ordenados[ordenados.length - 1];
 
-  [de, ate].forEach(el => { el.min = min; el.max = max; el.value = ''; });
-  _buscaFiltro.de = '';
-  _buscaFiltro.ate = '';
+  [de, ate].forEach(el => {
+    if(primeiro) el.min = primeiro + '-01';
+    if(ultimo) el.max = fimDoMesISO(ultimo);
+    if(limpar) el.value = '';
+  });
+
+  if(limpar){
+    _buscaFiltro.de = '';
+    _buscaFiltro.ate = '';
+  }
   marcarPeriodo();
+}
+
+// Um período que sai do que está carregado tem que trazer os meses que
+// faltam. Sem isso a lista volta vazia e parece que não existe nada lá.
+async function garantirMesesDoPeriodo(){
+  const pedidos = mesesDoIntervalo(_buscaFiltro.de, _buscaFiltro.ate)
+    .filter(m => _mesesDoAcervo.includes(m));
+  if(!pedidos.length) return false;
+  if(pedidos.every(m => _mesesCarregados.has(m))) return false;
+  await carregarBuscador(MES_TODOS, { manterPeriodo: true });
+  return true;
 }
 
 function marcarPeriodo(){
@@ -4473,7 +4582,7 @@ function desenharBusca(){
   const achadas = filtrarBusca();
   const cont = document.getElementById('busca-contagem');
   if(cont){
-    const mes = _buscaFiltro.mes ? nomeMes(_buscaFiltro.mes) : '';
+    const mes = rotuloMesBusca();
     const recorte = (_buscaFiltro.de || _buscaFiltro.ate)
       ? ' · ' + (_buscaFiltro.de ? diaMes(_buscaFiltro.de) : 'início') +
         ' a ' + (_buscaFiltro.ate ? diaMes(_buscaFiltro.ate) : 'fim')
@@ -4574,18 +4683,20 @@ function ligarBuscador(){
   const ate = document.getElementById('busca-ate');
   const limparPeriodo = document.getElementById('busca-periodo-limpar');
 
-  if(de) de.onchange = () => {
+  if(de) de.onchange = async () => {
     _buscaFiltro.de = de.value;
     // Inverter as pontas devolveria lista vazia; melhor arrastar a outra
     if(ate && ate.value && de.value > ate.value){ ate.value = de.value; _buscaFiltro.ate = de.value; }
     marcarPeriodo();
+    if(await garantirMesesDoPeriodo()) return;
     desenharBusca();
   };
 
-  if(ate) ate.onchange = () => {
+  if(ate) ate.onchange = async () => {
     _buscaFiltro.ate = ate.value;
     if(de && de.value && ate.value < de.value){ de.value = ate.value; _buscaFiltro.de = ate.value; }
     marcarPeriodo();
+    if(await garantirMesesDoPeriodo()) return;
     desenharBusca();
   };
 
