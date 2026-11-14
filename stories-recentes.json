@@ -706,11 +706,11 @@
     "timestamp": "2026-11-13T04:33:44+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4029253131132461058",
     "media_type": "IMAGE",
-    "views": 2034,
-    "reach": 1503,
+    "views": 2983,
+    "reach": 2279,
     "replies": 3,
-    "navigation": 1793,
-    "interactions": 23,
+    "navigation": 2673,
+    "interactions": 27,
     "shares": 0
   },
   "17866128180692222": {
@@ -720,12 +720,12 @@
     "timestamp": "2026-11-13T19:33:50+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4029706174932355985",
     "media_type": "VIDEO",
-    "views": 301,
-    "reach": 134,
-    "replies": 2,
-    "navigation": 162,
-    "interactions": 16,
-    "shares": 0
+    "views": 1546,
+    "reach": 1172,
+    "replies": 9,
+    "navigation": 1403,
+    "interactions": 62,
+    "shares": 1
   },
   "17996690292053265": {
     "id": "17996690292053265",
@@ -734,11 +734,11 @@
     "timestamp": "2026-11-13T19:33:39+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4029706085937642932",
     "media_type": "VIDEO",
-    "views": 319,
-    "reach": 93,
-    "replies": 1,
-    "navigation": 108,
-    "interactions": 7,
+    "views": 1499,
+    "reach": 1221,
+    "replies": 2,
+    "navigation": 1409,
+    "interactions": 24,
     "shares": 0
   },
   "18574837777075638": {
@@ -748,11 +748,25 @@
     "timestamp": "2026-11-13T18:44:39+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4029681448604824012",
     "media_type": "VIDEO",
-    "views": 704,
-    "reach": 474,
+    "views": 1960,
+    "reach": 1599,
     "replies": 1,
-    "navigation": 518,
-    "interactions": 13,
+    "navigation": 1593,
+    "interactions": 23,
+    "shares": 2
+  },
+  "17886042129525030": {
+    "id": "17886042129525030",
+    "date": "2026-11-13",
+    "hora": "17:12",
+    "timestamp": "2026-11-13T20:12:05+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/4029725466851712849",
+    "media_type": "VIDEO",
+    "views": 1508,
+    "reach": 1200,
+    "replies": 1,
+    "navigation": 1194,
+    "interactions": 25,
     "shares": 1
   }
 }
