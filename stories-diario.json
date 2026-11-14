@@ -547,7 +547,7 @@
     "replies": 8,
     "interactions": 125,
     "navigation": 7959,
-    "atualizado": "2026-11-14T01:49:19.382Z"
+    "atualizado": "2026-11-14T10:58:15.703Z"
   },
   "2026-11-05": {
     "date": "2026-11-05",
@@ -558,7 +558,7 @@
     "replies": 3,
     "interactions": 134,
     "navigation": 6324,
-    "atualizado": "2026-11-14T01:49:19.382Z"
+    "atualizado": "2026-11-14T10:58:15.703Z"
   },
   "2026-11-06": {
     "date": "2026-11-06",
@@ -569,7 +569,7 @@
     "replies": 3,
     "interactions": 11,
     "navigation": 1594,
-    "atualizado": "2026-11-14T01:49:19.382Z"
+    "atualizado": "2026-11-14T10:58:15.703Z"
   },
   "2026-11-09": {
     "date": "2026-11-09",
@@ -580,7 +580,7 @@
     "replies": 21,
     "interactions": 244,
     "navigation": 9343,
-    "atualizado": "2026-11-14T01:49:19.382Z"
+    "atualizado": "2026-11-14T10:58:15.703Z"
   },
   "2026-11-10": {
     "date": "2026-11-10",
@@ -591,7 +591,7 @@
     "replies": 0,
     "interactions": 29,
     "navigation": 1181,
-    "atualizado": "2026-11-14T01:49:19.382Z"
+    "atualizado": "2026-11-14T10:58:15.703Z"
   },
   "2026-11-11": {
     "date": "2026-11-11",
@@ -602,7 +602,7 @@
     "replies": 11,
     "interactions": 172,
     "navigation": 9880,
-    "atualizado": "2026-11-14T01:49:19.382Z"
+    "atualizado": "2026-11-14T10:58:15.703Z"
   },
   "2026-11-12": {
     "date": "2026-11-12",
@@ -613,17 +613,17 @@
     "replies": 30,
     "interactions": 111,
     "navigation": 4786,
-    "atualizado": "2026-11-14T01:49:19.382Z"
+    "atualizado": "2026-11-14T10:58:15.703Z"
   },
   "2026-11-13": {
     "date": "2026-11-13",
     "qtd": 5,
-    "views": 9496,
+    "views": 10820,
     "alcanceMaximo": 2279,
-    "alcanceMedio": 1494,
-    "replies": 16,
-    "interactions": 161,
-    "navigation": 8272,
-    "atualizado": "2026-11-14T01:49:19.382Z"
+    "alcanceMedio": 1730,
+    "replies": 18,
+    "interactions": 178,
+    "navigation": 9380,
+    "atualizado": "2026-11-14T10:58:15.703Z"
   }
 }
