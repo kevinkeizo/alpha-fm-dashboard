@@ -830,6 +830,13 @@ body.tv-mode .chart-section { padding: 26px 30px; }
 
 .rank-tag.reel { background: var(--peak-soft); color: var(--peak); }
 
+/* Em tela estreita as colunas da direita do ranking somem. O alcance e,
+   principalmente, os seguidores ganhos por publicação não podem sumir junto:
+   é o número que responde "esse post trouxe gente?". Voltam aqui, compactos,
+   na mesma linha da data. */
+.rank-compacto { display: none; }
+.rank-compacto.ganho { color: var(--gain); }
+
 .rank-nums { display: flex; gap: 20px; text-align: right; flex-shrink: 0; }
 
 .rank-num-v {
@@ -1376,6 +1383,7 @@ body.tv-mode .gain-tile { min-height: 260px; }
 @media (max-width: 1100px) {
   .rank-linha { grid-template-columns: 24px 40px minmax(0, 1fr) 76px; }
   .rank-num.esconde { display: none; }
+  .rank-compacto { display: inline; }
 }
 
 
@@ -4802,6 +4810,20 @@ function analiseDaSelecao(posts){
     formatNum(alc) + ' contas</b>, somaram <b>' + formatNum(vis) +
     ' visualizações</b> e <b>' + formatNum(inter) + ' interações</b> ' + periodo + '.');
 
+  // Seguidores que a própria Meta atribui a cada publicação. Só existe para
+  // imagem e carrossel — reel não reporta esse dado —, então a soma é um
+  // piso, nunca o total. O rótulo precisa dizer isso, senão vira número
+  // enganoso numa conversa comercial.
+  const comFollows = posts.filter(p => typeof p.follows === 'number');
+  const somaF = comFollows.reduce((a, p) => a + p.follows, 0);
+  const reels = posts.length - comFollows.length;
+  if(comFollows.length && somaF > 0){
+    L.push('O Instagram atribui <b>' + formatNum(somaF) + ' novos seguidores</b> a estas publicações' +
+      (reels
+        ? ', e esse número é um piso: ' + reels + ' ' + (reels === 1 ? 'reel da seleção não reporta' : 'reels da seleção não reportam') + ' seguidores.'
+        : '.'));
+  }
+
   // Comparação com o desempenho geral do acervo — é o que dá régua ao número
   // Régua: o mês que está carregado no Buscador
   const universo = _buscaTodas.filter(p => typeof p.interactions === 'number');
@@ -4915,7 +4937,8 @@ function montarRelatorioSelecao(){
 
   html += '<div class="rel-secao"><h2>Publicações selecionadas</h2><table class="rel-tabela">' +
     '<tr><th class="pos"></th><th>Publicação</th><th class="num">Alcance</th>' +
-    '<th class="num">Visualizações</th><th class="num">Interações</th></tr>' +
+    '<th class="num">Visualizações</th><th class="num">Interações</th>' +
+    '<th class="num">Seguidores</th></tr>' +
     posts.map((p, i) =>
       '<tr><td class="num pos">' + (i+1) + '</td>' +
       '<td><div class="rel-post">' +
@@ -4931,7 +4954,10 @@ function montarRelatorioSelecao(){
       '</div></td>' +
       '<td class="num">' + formatNum(p.reach) + '</td>' +
       '<td class="num">' + formatNum(p.views) + '</td>' +
-      '<td class="num">' + formatNum(p.interactions) + '</td></tr>'
+      '<td class="num">' + formatNum(p.interactions) + '</td>' +
+      // Travessão em reel é a informação certa: não é zero seguidor, é dado
+      // que o Instagram não entrega para esse formato.
+      '<td class="num">' + (typeof p.follows === 'number' ? '+' + formatNum(p.follows) : '—') + '</td></tr>'
     ).join('') +
   '</table></div>';
 
@@ -5868,6 +5894,8 @@ function renderTop(hoje, guardado){
           <span class="rank-sub">
             <span class="rank-tag ${p.isVideo ? 'reel' : ''}">${p.isVideo ? 'REEL' : p.media_type === 'CAROUSEL_ALBUM' ? 'CARROSSEL' : 'IMAGEM'}</span>
             <span>${diaMes(p.date)} ${p.hora || ''}</span>
+            <span class="rank-compacto">${formatNum(p.reach)} alc.</span>
+            ${p.follows != null ? `<span class="rank-compacto ganho">+${formatNum(p.follows)} seg.</span>` : ''}
           </span>
         </span>
         <span class="rank-num"><span class="rank-num-v">${formatNum(p.interactions)}</span><span class="rank-num-l">interações</span></span>
