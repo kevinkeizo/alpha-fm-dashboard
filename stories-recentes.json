@@ -762,11 +762,11 @@
     "timestamp": "2026-11-19T21:24:32+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4034110552720197331",
     "media_type": "VIDEO",
-    "views": 999,
-    "reach": 850,
+    "views": 1395,
+    "reach": 1196,
     "replies": 0,
-    "navigation": 942,
-    "interactions": 20,
+    "navigation": 1325,
+    "interactions": 28,
     "shares": 1
   },
   "18111084644340494": {
@@ -776,12 +776,12 @@
     "timestamp": "2026-11-19T21:24:22+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4034110471241661842",
     "media_type": "VIDEO",
-    "views": 1030,
-    "reach": 897,
-    "replies": 3,
-    "navigation": 954,
-    "interactions": 34,
-    "shares": 0
+    "views": 1464,
+    "reach": 1264,
+    "replies": 4,
+    "navigation": 1351,
+    "interactions": 51,
+    "shares": 1
   },
   "18172864459485214": {
     "id": "18172864459485214",
@@ -790,12 +790,12 @@
     "timestamp": "2026-11-20T02:50:10+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4034274479022662353",
     "media_type": "VIDEO",
-    "views": 705,
-    "reach": 539,
-    "replies": 0,
-    "navigation": 526,
-    "interactions": 20,
-    "shares": 1
+    "views": 1217,
+    "reach": 990,
+    "replies": 2,
+    "navigation": 956,
+    "interactions": 38,
+    "shares": 2
   },
   "17955023100051353": {
     "id": "17955023100051353",
@@ -804,11 +804,25 @@
     "timestamp": "2026-11-20T02:46:03+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4034272415458627012",
     "media_type": "VIDEO",
-    "views": 602,
-    "reach": 493,
+    "views": 1102,
+    "reach": 937,
     "replies": 1,
-    "navigation": 537,
-    "interactions": 26,
+    "navigation": 1012,
+    "interactions": 43,
+    "shares": 1
+  },
+  "17894165793455639": {
+    "id": "17894165793455639",
+    "date": "2026-11-20",
+    "hora": "16:19",
+    "timestamp": "2026-11-20T19:19:43+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/4034772571001628595",
+    "media_type": "VIDEO",
+    "views": 281,
+    "reach": 214,
+    "replies": 0,
+    "navigation": 236,
+    "interactions": 17,
     "shares": 1
   }
 }
