@@ -832,11 +832,11 @@
     "timestamp": "2026-11-21T01:40:19+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4034964054812497098",
     "media_type": "VIDEO",
-    "views": 1405,
-    "reach": 1221,
+    "views": 2237,
+    "reach": 1980,
     "replies": 0,
-    "navigation": 1279,
-    "interactions": 24,
+    "navigation": 2058,
+    "interactions": 40,
     "shares": 1
   },
   "18022680704952542": {
@@ -846,12 +846,12 @@
     "timestamp": "2026-11-20T21:30:05+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4034838113217588202",
     "media_type": "VIDEO",
-    "views": 2300,
-    "reach": 2003,
+    "views": 3049,
+    "reach": 2656,
     "replies": 0,
-    "navigation": 2160,
-    "interactions": 43,
-    "shares": 3
+    "navigation": 2846,
+    "interactions": 62,
+    "shares": 5
   },
   "18577237393077342": {
     "id": "18577237393077342",
@@ -860,12 +860,12 @@
     "timestamp": "2026-11-21T03:40:06+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4035024341666210939",
     "media_type": "VIDEO",
-    "views": 907,
-    "reach": 781,
-    "replies": 0,
-    "navigation": 834,
-    "interactions": 34,
-    "shares": 1
+    "views": 1763,
+    "reach": 1514,
+    "replies": 2,
+    "navigation": 1660,
+    "interactions": 90,
+    "shares": 2
   },
   "18103333712092961": {
     "id": "18103333712092961",
@@ -874,11 +874,25 @@
     "timestamp": "2026-11-21T03:18:47+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4035013614532420889",
     "media_type": "VIDEO",
-    "views": 1000,
-    "reach": 866,
-    "replies": 1,
-    "navigation": 908,
-    "interactions": 47,
-    "shares": 2
+    "views": 1899,
+    "reach": 1661,
+    "replies": 3,
+    "navigation": 1731,
+    "interactions": 102,
+    "shares": 3
+  },
+  "18051023021829442": {
+    "id": "18051023021829442",
+    "date": "2026-11-21",
+    "hora": "14:42",
+    "timestamp": "2026-11-21T17:42:39+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/4035448450132386981",
+    "media_type": "VIDEO",
+    "views": 653,
+    "reach": 539,
+    "replies": 0,
+    "navigation": 530,
+    "interactions": 26,
+    "shares": 6
   }
 }
