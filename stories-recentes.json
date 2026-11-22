@@ -832,12 +832,12 @@
     "timestamp": "2026-11-21T01:40:19+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4034964054812497098",
     "media_type": "VIDEO",
-    "views": 2237,
-    "reach": 1980,
+    "views": 3064,
+    "reach": 2630,
     "replies": 0,
-    "navigation": 2058,
+    "navigation": 2787,
     "interactions": 40,
-    "shares": 1
+    "shares": 2
   },
   "18022680704952542": {
     "id": "18022680704952542",
@@ -860,10 +860,10 @@
     "timestamp": "2026-11-21T03:40:06+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4035024341666210939",
     "media_type": "VIDEO",
-    "views": 1763,
-    "reach": 1514,
-    "replies": 2,
-    "navigation": 1660,
+    "views": 2400,
+    "reach": 2101,
+    "replies": 3,
+    "navigation": 2238,
     "interactions": 90,
     "shares": 2
   },
@@ -874,12 +874,12 @@
     "timestamp": "2026-11-21T03:18:47+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4035013614532420889",
     "media_type": "VIDEO",
-    "views": 1899,
-    "reach": 1661,
+    "views": 2548,
+    "reach": 2261,
     "replies": 3,
-    "navigation": 1731,
+    "navigation": 2320,
     "interactions": 102,
-    "shares": 3
+    "shares": 6
   },
   "18051023021829442": {
     "id": "18051023021829442",
@@ -888,11 +888,25 @@
     "timestamp": "2026-11-21T17:42:39+0000",
     "permalink": "https://www.instagram.com/stories/radioalphafm/4035448450132386981",
     "media_type": "VIDEO",
-    "views": 653,
-    "reach": 539,
+    "views": 1658,
+    "reach": 1427,
     "replies": 0,
-    "navigation": 530,
+    "navigation": 1428,
     "interactions": 26,
     "shares": 6
+  },
+  "18185613052383745": {
+    "id": "18185613052383745",
+    "date": "2026-11-21",
+    "hora": "18:31",
+    "timestamp": "2026-11-21T21:31:34+0000",
+    "permalink": "https://www.instagram.com/stories/radioalphafm/4035563674843912442",
+    "media_type": "VIDEO",
+    "views": 1144,
+    "reach": 953,
+    "replies": 0,
+    "navigation": 993,
+    "interactions": 1,
+    "shares": 1
   }
 }
